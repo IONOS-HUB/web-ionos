@@ -28,3 +28,6 @@ pnpm-debug.log*
 
 # local review captures / tooling
 .impeccable/
+
+# local dev launch config
+.claude/

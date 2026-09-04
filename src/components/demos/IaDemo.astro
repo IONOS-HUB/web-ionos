@@ -29,15 +29,15 @@ const bars = [3, 6, 9, 14, 8, 12, 16, 10, 6, 11, 15, 9, 5, 8, 12, 7, 4, 9, 13, 6
       <span class="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-white/15"><Icon name="phone" size={18} /></span>
       <div class="leading-tight">
         <p class="text-[0.95rem] font-semibold">Llamada · Consultorio Dental Norte</p>
-        <p class="text-xs text-ice">Atendida por la IA de voz · 1:12</p>
+        <p class="text-xs text-ice">Atendida por la IA de voz · 1:12 · Ideal para consultorios y clínicas</p>
       </div>
     </div>
     <span class="shrink-0 rounded-full border border-white/30 px-2.5 py-1 text-[0.7rem] font-semibold uppercase tracking-wide text-ice">Demostración</span>
   </div>
 
   <!-- Onda de la llamada -->
-  <div class="flex h-12 items-end gap-[3px] border-b border-line-soft bg-ice-3 px-4 pb-2" aria-hidden="true">
-    {bars.map((h, i) => <span class:list={['w-1 rounded-full', i % 3 === 0 ? 'bg-cobalt' : 'bg-cobalt-glow/60']} style={`height:${h * 2}px`}></span>)}
+  <div class="wave-live flex h-12 items-end gap-[3px] border-b border-line-soft bg-ice-3 px-4 pb-2" aria-hidden="true">
+    {bars.map((h, i) => <span class:list={['wave-bar w-1 rounded-full', i % 3 === 0 ? 'bg-cobalt' : 'bg-cobalt-glow/60']} style={`height:${h * 2}px`}></span>)}
     <span class="ml-auto self-center text-[0.72rem] font-medium text-ink-3">Transcripción en vivo</span>
   </div>
 

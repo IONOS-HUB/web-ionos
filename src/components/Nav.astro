@@ -12,7 +12,8 @@ const isActive = (href: string) => current === href || (href !== '/' && current.
       <img src="/imgs/logo.png" alt="IonosHub" width="152" height="40" class="h-9 w-auto lg:h-10" decoding="async" />
     </a>
 
-    <ul class="hidden items-center gap-1 lg:flex">
+    <!-- lg (1024–1279): enlaces comprimidos y etiquetas cortas para que quepan seis enlaces + CTA sin desbordar; xl: tamaño completo. -->
+    <ul class="hidden items-center gap-0.5 lg:flex xl:gap-1">
       {
         NAV.map((item) => (
           <li>
@@ -20,11 +21,18 @@ const isActive = (href: string) => current === href || (href !== '/' && current.
               href={item.href}
               aria-current={isActive(item.href) ? 'page' : undefined}
               class:list={[
-                'rounded-full px-3.5 py-2 text-[0.95rem] font-medium transition-colors duration-300',
+                'block whitespace-nowrap rounded-full px-2.5 py-2 text-[0.9rem] font-medium transition-colors duration-300 xl:px-3.5 xl:text-[0.95rem]',
                 isActive(item.href) ? 'bg-ice text-cobalt-ink' : 'text-ink-2 hover:bg-ice-3 hover:text-ink',
               ]}
             >
-              {item.label}
+              {'short' in item ? (
+                <>
+                  <span class="xl:hidden">{item.short}</span>
+                  <span class="hidden xl:inline">{item.label}</span>
+                </>
+              ) : (
+                item.label
+              )}
             </a>
           </li>
         ))
@@ -32,8 +40,8 @@ const isActive = (href: string) => current === href || (href !== '/' && current.
     </ul>
 
     <div class="hidden items-center gap-3 lg:flex">
-      <a href="/#contacto" class="btn btn-primary !min-h-11 !px-5 text-[0.95rem]">
-        Agendar diagnóstico gratis
+      <a href="/#contacto" class="btn btn-primary !min-h-11 !px-4 text-[0.9rem] xl:!px-5 xl:text-[0.95rem]">
+        Agendar diagnóstico<span class="hidden xl:inline">&nbsp;gratis</span>
         <Icon name="arrow-right" size={18} />
       </a>
     </div>

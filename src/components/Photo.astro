@@ -1,0 +1,62 @@
+---
+/**
+ * Marco de fotografía. Con `src` muestra la foto; sin `src`, el marco de marca (ondas cobalto sobre hielo)
+ * con la indicación de la toma, para que el espacio exista desde ya y se llene sin tocar el layout.
+ */
+import Icon from './Icon.astro';
+import { photos, type PhotoId } from '../data/photos';
+
+interface Props {
+  id: PhotoId;
+  class?: string;
+  /** Clase de aspecto de Tailwind, p. ej. `aspect-[4/3]` */
+  aspect?: string;
+  caption?: string;
+  priority?: boolean;
+}
+
+const { id, class: className = '', aspect = 'aspect-[4/3]', caption, priority = false } = Astro.props;
+const p = photos[id];
+const gradId = `photo-wave-${id}`;
+---
+
+<figure class:list={['relative overflow-hidden rounded-[1.5rem] border border-line bg-ice-3', aspect, className]} data-photo-slot={id}>
+  {
+    p.src ? (
+      <img
+        src={p.src}
+        alt={p.alt}
+        width={p.width}
+        height={p.height}
+        loading={priority ? 'eager' : 'lazy'}
+        decoding="async"
+        class="absolute inset-0 h-full w-full object-cover"
+      />
+    ) : (
+      <div class="absolute inset-0" role="img" aria-label={p.alt}>
+        <svg class="absolute inset-0 h-full w-full" viewBox="0 0 400 300" preserveAspectRatio="none" aria-hidden="true">
+          <defs>
+            <linearGradient id={gradId} x1="0" y1="0" x2="1" y2="1">
+              <stop offset="0" stop-color="var(--color-cobalt-glow)" stop-opacity="0.35" />
+              <stop offset="1" stop-color="var(--color-cobalt)" stop-opacity="0.08" />
+            </linearGradient>
+          </defs>
+          <path d="M0 210 C 80 150, 140 260, 220 200 S 340 150, 400 190 L400 300 L0 300 Z" fill={`url(#${gradId})`} />
+          <path d="M0 250 C 90 200, 160 290, 250 240 S 350 210, 400 235 L400 300 L0 300 Z" fill={`url(#${gradId})`} />
+          <path d="M0 120 C 70 90, 120 160, 200 130 S 320 80, 400 120" fill="none" stroke="var(--color-cobalt)" stroke-opacity="0.18" stroke-width="1.5" />
+        </svg>
+        <span class="absolute bottom-4 left-4 right-4 inline-flex max-w-full items-center gap-2 self-start rounded-full bg-canvas/90 px-3.5 py-2 text-[0.8rem] font-medium leading-tight text-ink-3 backdrop-blur">
+          <Icon name="image" size={15} class="shrink-0 text-cobalt" />
+          <span class="truncate">{p.shot}</span>
+        </span>
+      </div>
+    )
+  }
+  {
+    caption && p.src && (
+      <figcaption class="absolute bottom-4 left-4 rounded-full bg-canvas/90 px-3.5 py-2 text-[0.8rem] font-medium text-ink-2 backdrop-blur">
+        {caption}
+      </figcaption>
+    )
+  }
+</figure>

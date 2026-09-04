@@ -23,6 +23,10 @@ export interface InboxConversation {
   preview: string;
   time: string;
   messages: InboxMessage[];
+  /** Sólo llamadas: duración que se muestra al colgar */
+  duration?: string;
+  /** Etiquetas de quién habla (transcripciones) */
+  speakers?: { client: string; ionic: string };
 }
 
 export const conversations: InboxConversation[] = [
@@ -35,6 +39,8 @@ export const conversations: InboxConversation[] = [
     pillar: 'ia',
     preview: 'Llamada atendida por la IA de voz · 1:12',
     time: '21:14',
+    duration: '1:12',
+    speakers: { client: 'Paciente', ionic: 'IA de voz' },
     messages: [
       { from: 'client', text: 'Buenas noches, quería una cita para limpieza dental esta semana.' },
       {
@@ -45,28 +51,31 @@ export const conversations: InboxConversation[] = [
       {
         from: 'ionic',
         text: 'Queda agendada. Le enviaré un recordatorio por WhatsApp el miércoles en la noche. ¡Hasta el jueves!',
-        card: { title: 'Cita agendada por voz', detail: 'Jueves · 10:30 · Recordatorio programado' },
+        card: { title: 'Cita agendada por voz', detail: 'Agenda del doctor · Jueves 10:30 · Recordatorio programado' },
       },
     ],
   },
   {
-    id: 'ferreteria',
-    business: 'Ferretería El Tornillo',
-    person: 'Don Marco',
-    initials: 'DM',
+    id: 'clinica',
+    business: 'Clínica Salud Total',
+    person: 'Dra. Salazar',
+    initials: 'DS',
     channel: 'WhatsApp',
     pillar: 'automatizaciones',
-    preview: '¿Me pasan el reporte de ventas de la semana?',
+    preview: '¿Cómo va la agenda de mañana?',
     time: '07:02',
     messages: [
-      { from: 'client', text: '¿Me pasan el reporte de ventas de la semana?' },
+      { from: 'client', text: '¿Cómo va la agenda de mañana?' },
       {
         from: 'ionic',
-        text: 'Aquí está, Don Marco. Se generó automáticamente a las 7:00 con los datos del sistema.',
-        card: { title: 'Reporte semanal listo', detail: 'Ventas · Inventario bajo · Cobros pendientes' },
+        text: 'Tiene 8 pacientes, doctora. Dos no habían confirmado: ya les envié el recordatorio por WhatsApp.',
+        card: { title: 'CRM de consultorio al día', detail: '8 citas · 2 recordatorios enviados · 0 huecos' },
       },
-      { from: 'client', text: 'Antes me tomaba toda la mañana 😅' },
-      { from: 'ionic', text: 'Ahora llega solo cada lunes. Si quieres, lo programo también para tu contadora.' },
+      { from: 'client', text: '¿Y la señora Vega, que canceló ayer?' },
+      {
+        from: 'ionic',
+        text: 'Reagendada para el viernes a las 9:00. Su cupo de mañana lo tomó un paciente de la lista de espera.',
+      },
     ],
   },
   {

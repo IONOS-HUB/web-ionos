@@ -2,6 +2,7 @@
 import BaseLayout from '../layouts/BaseLayout.astro';
 import Icon from '../components/Icon.astro';
 import Contact from '../components/home/Contact.astro';
+import Photo from '../components/Photo.astro';
 import { team } from '../data/team';
 
 const areas = ['Dirección', 'Desarrollo', 'Automatizaciones', 'Marketing'] as const;
@@ -22,6 +23,7 @@ const wa = 'Hola IonosHub, quiero conocer más del equipo y agendar un diagnóst
         juntos en cada proyecto, así que la persona que te atiende conoce tu negocio.
       </p>
     </div>
+    <Photo id="equipo-ibarra" aspect="aspect-[16/9] sm:aspect-[21/9]" class="mt-12" priority />
   </section>
 
   {

@@ -2,7 +2,10 @@
 import Icon from '../Icon.astro';
 import ContactForm from '../islands/ContactForm.tsx';
 import { pillarSelectOptions } from '../../data/pillars';
+import { team } from '../../data/team';
 import { waLink, WHATSAPP_DISPLAY, SITE, DEFAULT_WA_MESSAGE } from '../../lib/site';
+
+const founders = team.filter((m) => m.area === 'Dirección');
 
 interface Props {
   defaultInterest?: string;
@@ -17,8 +20,9 @@ const {
 ---
 
 <section id="contacto" class="scroll-mt-20 bg-ice-3 py-20 lg:py-28">
+  <!-- min-w-0 en ambas columnas: el <select> del formulario impone su ancho intrínseco a la pista y desborda en 360 px. -->
   <div class="wrap grid gap-12 lg:grid-cols-12 lg:gap-16">
-    <div class="lg:col-span-5" data-reveal>
+    <div class="min-w-0 lg:col-span-5" data-reveal>
       <h2 class="display-tight text-[clamp(2rem,4.2vw,3.25rem)] font-semibold text-ink">{title}</h2>
       <p class="mt-5 text-[clamp(1.05rem,1.4vw,1.25rem)] leading-relaxed text-ink-2">
         30 minutos para entender tu operación y proponerte un ecosistema viable. Te decimos por dónde empezar y qué
@@ -45,6 +49,22 @@ const {
         }
       </ol>
 
+      <div class="mt-8 flex items-center gap-4 rounded-[1.25rem] border border-line bg-canvas p-4">
+        <ul class="flex shrink-0 -space-x-3" aria-hidden="true">
+          {
+            founders.map((m) => (
+              <li>
+                <img src={m.photo} alt="" width="48" height="48" loading="lazy" decoding="async" class="h-12 w-12 rounded-full border-2 border-canvas object-cover object-top" />
+              </li>
+            ))
+          }
+        </ul>
+        <p class="text-[0.95rem] leading-snug text-ink-2">
+          <span class="font-semibold text-ink">El diagnóstico lo lleva un cofundador:</span>{' '}
+          {founders.map((m) => m.name.split(' ')[0]).join(' o ')}. Conocen tu proyecto desde el primer mensaje.
+        </p>
+      </div>
+
       <div class="mt-10 flex flex-col gap-3 border-t border-line pt-8">
         <p class="text-[0.95rem] font-semibold uppercase tracking-wide text-ink-3">¿Prefieres hablar ya?</p>
         <a href={waLink(waMessage)} target="_blank" rel="noopener noreferrer" class="btn btn-ghost self-start">
@@ -58,7 +78,7 @@ const {
       </div>
     </div>
 
-    <div class="rounded-[1.75rem] border border-line bg-canvas p-6 shadow-lift sm:p-8 lg:col-span-7 lg:p-10" data-reveal data-reveal-delay="100">
+    <div class="min-w-0 rounded-[1.75rem] border border-line bg-canvas p-6 shadow-lift sm:p-8 lg:col-span-7 lg:p-10" data-reveal data-reveal-delay="100">
       <ContactForm client:idle options={pillarSelectOptions} defaultInterest={defaultInterest} />
     </div>
   </div>

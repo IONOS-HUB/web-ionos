@@ -27,7 +27,7 @@ const kpis = [
 ];
 ---
 
-<div class="overflow-hidden rounded-[1.5rem] border border-line bg-canvas shadow-lift" aria-label="Demostración: flujo de automatización hacia un CRM unificado">
+<div class="flow-window overflow-hidden rounded-[1.5rem] border border-line bg-canvas shadow-lift" aria-label="Demostración: flujo de automatización hacia un CRM unificado">
   <div class="flex items-center justify-between gap-3 bg-cobalt px-4 py-3 text-white">
     <div class="flex items-center gap-3">
       <span class="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-white/15"><Icon name="automatizaciones" size={18} /></span>
@@ -114,6 +114,10 @@ const kpis = [
 </div>
 
 <style>
+  /* El flujo se tiende en horizontal según el ancho de la ventanilla, no del viewport: en lg la columna mide ~435 px y no cabe. */
+  .flow-window {
+    container-type: inline-size;
+  }
   .flow {
     display: flex;
     flex-direction: column;
@@ -164,7 +168,7 @@ const kpis = [
   .flow-line {
     display: none;
   }
-  @media (min-width: 640px) {
+  @container (min-width: 32rem) {
     .flow {
       display: grid;
       grid-template-columns: minmax(0, 1fr) 1.75rem minmax(0, 1.4fr) 1.75rem minmax(0, 1.15fr);
