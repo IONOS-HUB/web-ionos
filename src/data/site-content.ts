@@ -15,6 +15,13 @@ export const clients = [
   { src: '/imgs/clientes/pawau.png', alt: 'Pawau' },
 ];
 
+/* Conexiones oficiales: marcas reales; el sello de programa va en el texto, no se inventa un emblema. */
+export const partners = [
+  { brand: 'meta' as const, name: 'Meta', credential: 'Tech Provider' },
+  { brand: 'zapier' as const, name: 'Zapier', credential: 'Partner' },
+  { brand: 'anthropic' as const, name: 'Anthropic', credential: 'Partner · Claude' },
+];
+
 /* Certificaciones reales (repo v1, /public/imgs/certificados). */
 export const certifications = [
   {

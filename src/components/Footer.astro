@@ -1,7 +1,15 @@
 ---
 import Icon from './Icon.astro';
+import BrandMark from './BrandMark.astro';
 import { SITE, WHATSAPP_DISPLAY, waLink, LEGAL } from '../lib/site';
 import { pillars } from '../data/pillars';
+import { partners } from '../data/site-content';
+
+const footerMark = {
+  meta: { class: 'text-[#0081FB]', size: 16 },
+  zapier: { class: 'text-[#FF4A00]', size: 18 },
+  anthropic: { class: 'text-[#141413]', size: 15 },
+} as const;
 
 const year = new Date().getFullYear();
 ---
@@ -16,9 +24,14 @@ const year = new Date().getFullYear();
         IA, automatizaciones, marketing y software a medida para pequeñas y medianas empresas en Ecuador. De datos a resultados.
       </p>
       <ul class="mt-5 flex flex-wrap gap-2">
-        <li class="inline-flex items-center gap-2 rounded-full border border-line bg-canvas px-3.5 py-1.5 text-sm font-semibold text-cobalt-ink"><Icon name="shield" size={16} /> Meta Tech Provider</li>
-        <li class="inline-flex items-center gap-2 rounded-full border border-line bg-canvas px-3.5 py-1.5 text-sm font-semibold text-cobalt-ink">Partner de Zapier</li>
-        <li class="inline-flex items-center gap-2 rounded-full border border-line bg-canvas px-3.5 py-1.5 text-sm font-semibold text-cobalt-ink">Partner de Anthropic</li>
+        {
+          partners.map((p) => (
+            <li class="inline-flex items-center gap-2 rounded-full border border-line bg-canvas px-3.5 py-1.5 text-sm font-semibold text-cobalt-ink">
+              <BrandMark name={p.brand} size={footerMark[p.brand].size} class={footerMark[p.brand].class} />
+              {p.name} {p.credential}
+            </li>
+          ))
+        }
       </ul>
       <ul class="mt-6 flex items-center gap-2">
         <li>
