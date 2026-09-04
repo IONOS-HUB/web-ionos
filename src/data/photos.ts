@@ -18,11 +18,12 @@ export interface PhotoSlot {
 
 export const photos = {
   'dueno-local': {
-    src: null,
-    alt: 'Dueña de un negocio en Ibarra revisando el WhatsApp del local entre clientes',
+    src: '/imgs/fotos/dueno-local.webp',
+    alt: 'Dueña de un negocio revisando el WhatsApp del local entre clientes. Foto ilustrativa.',
     shot: 'Dueño/a de negocio con el celular en su local',
     width: 1600,
     height: 1200,
+    generic: true,
   },
   diagnostico: {
     src: '/imgs/fotos/reunion-generica.webp',
