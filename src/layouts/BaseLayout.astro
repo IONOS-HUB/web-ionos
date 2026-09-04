@@ -1,0 +1,86 @@
+---
+import '../styles/global.css';
+import Nav from '../components/Nav.astro';
+import Footer from '../components/Footer.astro';
+import WhatsAppFloat from '../components/WhatsAppFloat.astro';
+import { SITE, DEFAULT_WA_MESSAGE } from '../lib/site';
+
+interface Props {
+  title: string;
+  description: string;
+  /** Ruta canónica (sin dominio). Por defecto la actual. */
+  path?: string;
+  ogImage?: string;
+  waMessage?: string;
+  noindex?: boolean;
+}
+
+const {
+  title,
+  description,
+  path = Astro.url.pathname,
+  ogImage = '/imgs/icon.png',
+  waMessage = DEFAULT_WA_MESSAGE,
+  noindex = false,
+} = Astro.props;
+
+const fullTitle = title.includes('IonosHub') ? title : `${title} | IonosHub`;
+const canonical = new URL(path, SITE.url).href;
+const ogImageAbs = new URL(ogImage, SITE.url).href;
+
+const orgJsonLd = {
+  '@context': 'https://schema.org',
+  '@type': 'Organization',
+  name: 'IonosHub',
+  url: SITE.url,
+  logo: new URL('/imgs/logo.png', SITE.url).href,
+  email: SITE.email,
+  address: { '@type': 'PostalAddress', addressLocality: 'Ibarra', addressRegion: 'Imbabura', addressCountry: 'EC' },
+  sameAs: [SITE.social.linkedin, SITE.social.instagram, SITE.social.tiktok],
+};
+---
+
+<!doctype html>
+<html lang="es">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>{fullTitle}</title>
+    <meta name="description" content={description} />
+    <link rel="canonical" href={canonical} />
+    {noindex && <meta name="robots" content="noindex, nofollow" />}
+    <link rel="icon" type="image/png" href="/imgs/icon.png" />
+    <link rel="apple-touch-icon" href="/imgs/icon.png" />
+    <meta name="theme-color" content="#0e5fcb" />
+
+    <meta property="og:type" content="website" />
+    <meta property="og:site_name" content="IonosHub" />
+    <meta property="og:locale" content="es_EC" />
+    <meta property="og:title" content={fullTitle} />
+    <meta property="og:description" content={description} />
+    <meta property="og:url" content={canonical} />
+    <meta property="og:image" content={ogImageAbs} />
+    <meta name="twitter:card" content="summary_large_image" />
+    <meta name="twitter:title" content={fullTitle} />
+    <meta name="twitter:description" content={description} />
+    <meta name="twitter:image" content={ogImageAbs} />
+
+    <script type="application/ld+json" set:html={JSON.stringify(orgJsonLd)} />
+    <slot name="head" />
+  </head>
+  <body class="min-h-dvh flex flex-col">
+    <a
+      href="#contenido"
+      class="sr-only focus:not-sr-only focus:fixed focus:left-4 focus:top-4 focus:z-[100] focus:rounded-full focus:bg-cobalt focus:px-4 focus:py-2 focus:text-white"
+    >
+      Saltar al contenido
+    </a>
+    <Nav />
+    <main id="contenido" class="flex-1">
+      <slot />
+    </main>
+    <Footer />
+    <WhatsAppFloat message={waMessage} />
+    <script src="../scripts/motion.ts"></script>
+  </body>
+</html>

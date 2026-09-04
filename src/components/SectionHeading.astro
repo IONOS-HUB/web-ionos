@@ -1,0 +1,17 @@
+---
+interface Props {
+  title: string;
+  lead?: string;
+  align?: 'left' | 'center';
+  tone?: 'light' | 'dark' | 'cobalt';
+  class?: string;
+}
+const { title, lead, align = 'left', tone = 'light', class: className = '' } = Astro.props;
+const titleColor = tone === 'light' ? 'text-ink' : 'text-white';
+const leadColor = tone === 'light' ? 'text-ink-2' : tone === 'dark' ? 'text-night-text' : 'text-ice';
+---
+
+<div class:list={['max-w-3xl', align === 'center' && 'mx-auto text-center', className]} data-reveal>
+  <h2 class:list={['display-tight text-[clamp(2rem,4.2vw,3.25rem)] font-semibold', titleColor]}>{title}</h2>
+  {lead && <p class:list={['mt-5 text-[clamp(1.05rem,1.4vw,1.25rem)] leading-relaxed', leadColor]}>{lead}</p>}
+</div>

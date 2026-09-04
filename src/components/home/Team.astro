@@ -1,0 +1,45 @@
+---
+import Icon from '../Icon.astro';
+import { team } from '../../data/team';
+---
+
+<section class="bg-ice-3 py-20 lg:py-28">
+  <div class="wrap grid items-center gap-12 lg:grid-cols-12 lg:gap-16">
+    <div class="lg:col-span-5" data-reveal>
+      <h2 class="display-tight text-[clamp(2rem,4.2vw,3.25rem)] font-semibold text-ink">
+        Un equipo real en Ibarra, no una plataforma anónima.
+      </h2>
+      <p class="mt-5 text-[clamp(1.05rem,1.4vw,1.25rem)] leading-relaxed text-ink-2">
+        Dirección, desarrollo, automatizaciones y marketing bajo un mismo techo. Cuando escribes, te responde alguien
+        que conoce tu proyecto.
+      </p>
+      <a href="/equipo" class="btn btn-ghost mt-8">
+        Conocer al equipo
+        <Icon name="arrow-right" size={18} />
+      </a>
+    </div>
+    <ul class="grid grid-cols-2 gap-3 sm:grid-cols-3 sm:gap-4 lg:col-span-7">
+      {
+        team.map((m, i) => (
+          <li class:list={['group', i % 3 === 1 && 'sm:translate-y-8']} data-reveal data-reveal-delay={i * 60}>
+            <figure class="overflow-hidden rounded-[1.25rem] border border-line bg-canvas">
+              <img
+                src={m.photo}
+                alt={`${m.name}, ${m.role}`}
+                width="400"
+                height="500"
+                loading="lazy"
+                decoding="async"
+                class="aspect-[4/5] w-full object-cover object-top grayscale contrast-[1.05] transition-[transform,filter] duration-700 ease-[var(--ease-out-expo)] group-hover:scale-[1.03] group-hover:grayscale-0"
+              />
+              <figcaption class="p-3 sm:p-4">
+                <p class="text-[0.95rem] font-semibold leading-tight text-ink">{m.name}</p>
+                <p class="mt-0.5 text-[0.8rem] leading-snug text-ink-3">{m.area}</p>
+              </figcaption>
+            </figure>
+          </li>
+        ))
+      }
+    </ul>
+  </div>
+</section>

@@ -1,0 +1,63 @@
+---
+import BaseLayout from '../layouts/BaseLayout.astro';
+import Icon from '../components/Icon.astro';
+import Contact from '../components/home/Contact.astro';
+import { successCases } from '../data/cases';
+import { pillarById } from '../data/pillars';
+
+const wa = 'Hola IonosHub, vi sus casos de éxito y quiero agendar un diagnóstico gratuito.';
+---
+
+<BaseLayout
+  title="Casos de éxito · Negocios en Ecuador que empezaron por un pilar"
+  description="Casos reales de IonosHub: automatización que pasó de 5 horas a 10 minutos, atención 24/7 con IONIC, presencia digital desde cero y sistemas a medida. Con cifras reales."
+  path="/casos-de-exito"
+  waMessage={wa}
+>
+  <section class="bg-night py-16 text-white lg:py-24">
+    <div class="wrap max-w-3xl" data-reveal>
+      <h1 class="display-tight text-[clamp(2.4rem,5vw,4.2rem)] font-semibold">Casos reales, cifras reales.</h1>
+      <p class="mt-6 text-[clamp(1.1rem,1.5vw,1.3rem)] leading-relaxed text-night-text">
+        Restaurantes, retail, educación, servicios. Cada negocio empezó por el pilar que más le dolía. Estas son sus
+        cifras, tal como las medimos.
+      </p>
+    </div>
+  </section>
+
+  <section class="wrap py-16 lg:py-24">
+    <ol class="flex flex-col divide-y divide-line">
+      {
+        successCases.map((c, i) => {
+          const pillar = pillarById(c.pillar);
+          return (
+            <li class="grid gap-8 py-12 lg:grid-cols-12 lg:gap-12 first:pt-0" data-reveal data-reveal-delay={Math.min(i, 3) * 60}>
+              <div class="lg:col-span-4">
+                <a href={pillar.route} class="chip hover:chip-on"><Icon name={c.pillar} size={14} /> {pillar.short}</a>
+                <p class="display-tight tnum mt-5 text-[clamp(2.2rem,4vw,3.4rem)] font-semibold leading-none text-cobalt">{c.highlight}</p>
+                <h2 class="mt-5 text-[1.4rem] font-semibold leading-tight text-ink">{c.client}</h2>
+                <p class="mt-1 text-[1rem] text-ink-3">{c.industry}</p>
+                {c.logo && <img src={c.logo} alt="" width="140" height="56" loading="lazy" decoding="async" class="mt-5 h-12 w-auto opacity-80" />}
+              </div>
+              <dl class="grid gap-6 sm:grid-cols-3 lg:col-span-8">
+                <div>
+                  <dt class="text-[0.9rem] font-semibold uppercase tracking-wide text-ink-3">Reto</dt>
+                  <dd class="mt-2 text-[1.05rem] leading-relaxed text-ink">{c.challenge}</dd>
+                </div>
+                <div>
+                  <dt class="text-[0.9rem] font-semibold uppercase tracking-wide text-ink-3">Solución</dt>
+                  <dd class="mt-2 text-[1.05rem] leading-relaxed text-ink">{c.solution}</dd>
+                </div>
+                <div>
+                  <dt class="text-[0.9rem] font-semibold uppercase tracking-wide text-ink-3">Resultado</dt>
+                  <dd class="mt-2 text-[1.05rem] leading-relaxed text-ink">{c.result}</dd>
+                </div>
+              </dl>
+            </li>
+          );
+        })
+      }
+    </ol>
+  </section>
+
+  <Contact waMessage={wa} title="Tu negocio puede ser el próximo caso." />
+</BaseLayout>

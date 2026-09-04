@@ -1,0 +1,24 @@
+---
+import Icon from './Icon.astro';
+import { waLink, DEFAULT_WA_MESSAGE } from '../lib/site';
+
+interface Props {
+  message?: string;
+}
+const { message = DEFAULT_WA_MESSAGE } = Astro.props;
+---
+
+<a
+  href={waLink(message)}
+  target="_blank"
+  rel="noopener noreferrer"
+  class="group fixed bottom-5 right-5 z-40 flex items-center gap-0 rounded-full bg-cobalt text-white shadow-phone transition-[gap,padding,transform] duration-500 ease-[var(--ease-out-expo)] hover:-translate-y-1 sm:bottom-6 sm:right-6"
+  aria-label="Escribir por WhatsApp"
+>
+  <span class="flex h-14 w-14 items-center justify-center">
+    <Icon name="whatsapp" size={26} />
+  </span>
+  <span class="max-w-0 overflow-hidden whitespace-nowrap pr-0 text-[0.95rem] font-semibold opacity-0 transition-all duration-500 ease-[var(--ease-out-expo)] group-hover:max-w-[12rem] group-hover:pr-5 group-hover:opacity-100 group-focus-visible:max-w-[12rem] group-focus-visible:pr-5 group-focus-visible:opacity-100">
+    Escríbenos ahora
+  </span>
+</a>

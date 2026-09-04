@@ -1,0 +1,50 @@
+---
+import Icon from '../Icon.astro';
+import { clients, certifications } from '../../data/site-content';
+const loop = [...clients, ...clients];
+---
+
+<section class="border-y border-line-soft py-16 lg:py-20">
+  <div class="wrap">
+    <p class="text-center text-[0.95rem] font-semibold uppercase tracking-wide text-ink-3" data-reveal>Negocios que confían en IonosHub</p>
+    <div class="marquee mt-8 overflow-hidden [mask-image:linear-gradient(to_right,transparent,black_12%,black_88%,transparent)]" data-reveal>
+      <ul class="marquee-track flex w-max items-center gap-14 pr-14">
+        {
+          loop.map((c) => (
+            <li class="shrink-0">
+              <img src={c.src} alt={c.alt} height="80" loading="lazy" decoding="async" class="h-16 w-auto contrast-125 sm:h-20" />
+            </li>
+          ))
+        }
+      </ul>
+    </div>
+
+    <div class="mt-14 grid gap-6 lg:grid-cols-12 lg:items-center lg:gap-12">
+      <div class="lg:col-span-5" data-reveal>
+        <h2 class="text-[1.6rem] font-semibold text-ink">Partners y credenciales que respaldan cada entrega.</h2>
+        <p class="mt-3 text-[1.02rem] leading-relaxed text-ink-2">
+          Trabajamos con conexiones oficiales: Meta Tech Provider, partner de Zapier y partner de Anthropic (Claude), más
+          certificaciones en las principales nubes.
+        </p>
+        <ul class="mt-5 flex flex-wrap gap-2">
+          <li class="inline-flex items-center gap-2 rounded-full bg-cobalt px-4 py-2 text-[0.95rem] font-semibold text-white"><Icon name="shield" size={18} /> Meta Tech Provider</li>
+          <li class="inline-flex items-center gap-2 rounded-full border border-cobalt/30 bg-ice px-4 py-2 text-[0.95rem] font-semibold text-cobalt-ink"><Icon name="automatizaciones" size={18} /> Partner de Zapier</li>
+          <li class="inline-flex items-center gap-2 rounded-full border border-cobalt/30 bg-ice px-4 py-2 text-[0.95rem] font-semibold text-cobalt-ink"><Icon name="ia" size={18} /> Partner de Anthropic · Claude</li>
+        </ul>
+      </div>
+      <ul class="grid grid-cols-3 gap-4 lg:col-span-7">
+        {
+          certifications.map((c, i) => (
+            <li class="flex flex-col items-center gap-3 rounded-[1.25rem] border border-line bg-canvas p-5 text-center" data-reveal data-reveal-delay={i * 70}>
+              <img src={c.img} alt={`Certificación ${c.title}`} height="64" loading="lazy" decoding="async" class="h-14 w-auto object-contain sm:h-16" />
+              <div>
+                <p class="text-[0.95rem] font-semibold text-ink">{c.title}</p>
+                <p class="text-[0.8rem] text-ink-3">{c.subtitle}</p>
+              </div>
+            </li>
+          ))
+        }
+      </ul>
+    </div>
+  </div>
+</section>

@@ -1,0 +1,65 @@
+---
+import Icon from '../Icon.astro';
+import ContactForm from '../islands/ContactForm.tsx';
+import { pillarSelectOptions } from '../../data/pillars';
+import { waLink, WHATSAPP_DISPLAY, SITE, DEFAULT_WA_MESSAGE } from '../../lib/site';
+
+interface Props {
+  defaultInterest?: string;
+  waMessage?: string;
+  title?: string;
+}
+const {
+  defaultInterest = '',
+  waMessage = DEFAULT_WA_MESSAGE,
+  title = 'Agenda tu diagnóstico gratuito.',
+} = Astro.props;
+---
+
+<section id="contacto" class="scroll-mt-20 bg-ice-3 py-20 lg:py-28">
+  <div class="wrap grid gap-12 lg:grid-cols-12 lg:gap-16">
+    <div class="lg:col-span-5" data-reveal>
+      <h2 class="display-tight text-[clamp(2rem,4.2vw,3.25rem)] font-semibold text-ink">{title}</h2>
+      <p class="mt-5 text-[clamp(1.05rem,1.4vw,1.25rem)] leading-relaxed text-ink-2">
+        30 minutos para entender tu operación y proponerte un ecosistema viable. Te decimos por dónde empezar y qué
+        esperar. Sin compromiso de compra.
+      </p>
+
+      <ol class="mt-8 flex flex-col gap-4">
+        {
+          [
+            ['Nos escribes', 'Formulario o WhatsApp, como prefieras.'],
+            ['Agendamos', 'Te proponemos horario en menos de un día hábil.'],
+            ['Conversamos', 'Sales con una propuesta concreta y sin letra pequeña.'],
+          ].map(([t, d]) => (
+            <li class="flex items-start gap-4">
+              <span class="mt-0.5 flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-cobalt text-white">
+                <Icon name="check" size={16} />
+              </span>
+              <div>
+                <p class="text-[1.05rem] font-semibold text-ink">{t}</p>
+                <p class="text-[0.98rem] text-ink-2">{d}</p>
+              </div>
+            </li>
+          ))
+        }
+      </ol>
+
+      <div class="mt-10 flex flex-col gap-3 border-t border-line pt-8">
+        <p class="text-[0.95rem] font-semibold uppercase tracking-wide text-ink-3">¿Prefieres hablar ya?</p>
+        <a href={waLink(waMessage)} target="_blank" rel="noopener noreferrer" class="btn btn-ghost self-start">
+          <Icon name="whatsapp" size={18} />
+          WhatsApp <span class="tnum font-medium text-ink-2">{WHATSAPP_DISPLAY}</span>
+        </a>
+        <a href={`mailto:${SITE.email}`} class="inline-flex items-center gap-2 text-[1rem] text-ink-2 hover:text-cobalt">
+          <Icon name="mail" size={18} />
+          {SITE.email}
+        </a>
+      </div>
+    </div>
+
+    <div class="rounded-[1.75rem] border border-line bg-canvas p-6 shadow-lift sm:p-8 lg:col-span-7 lg:p-10" data-reveal data-reveal-delay="100">
+      <ContactForm client:idle options={pillarSelectOptions} defaultInterest={defaultInterest} />
+    </div>
+  </div>
+</section>

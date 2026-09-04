@@ -1,0 +1,201 @@
+---
+/**
+ * Demostración del pilar Automatizaciones: un flujo de nodos (tipo Zapier / n8n) que lleva
+ * todos los canales a un CRM unificado, y un dashboard de trazabilidad y rentabilidad.
+ * CONTENIDO DEMOSTRATIVO: cifras ficticias.
+ */
+import Icon from '../Icon.astro';
+
+const inputs = [
+  { icon: 'whatsapp', label: 'WhatsApp' },
+  { icon: 'marketing', label: 'Meta Ads' },
+  { icon: 'phone', label: 'Llamada' },
+  { icon: 'globe', label: 'Formulario web' },
+] as const;
+
+const outputs = [
+  { icon: 'bell', label: 'Recordatorio automático' },
+  { icon: 'file', label: 'Reporte · lunes 7:00' },
+  { icon: 'chart', label: 'Dashboard de KPIs' },
+] as const;
+
+const kpis = [
+  { canal: 'WhatsApp', leads: 48, cierre: 31, rent: 78 },
+  { canal: 'Meta Ads', leads: 36, cierre: 22, rent: 64 },
+  { canal: 'Llamadas', leads: 21, cierre: 57, rent: 88 },
+  { canal: 'Web', leads: 12, cierre: 25, rent: 41 },
+];
+---
+
+<div class="overflow-hidden rounded-[1.5rem] border border-line bg-canvas shadow-lift" aria-label="Demostración: flujo de automatización hacia un CRM unificado">
+  <div class="flex items-center justify-between gap-3 bg-cobalt px-4 py-3 text-white">
+    <div class="flex items-center gap-3">
+      <span class="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-white/15"><Icon name="automatizaciones" size={18} /></span>
+      <div class="leading-tight">
+        <p class="text-[0.95rem] font-semibold">Flujo · Todos los leads al CRM unificado</p>
+        <p class="text-xs text-ice">Activo · se ejecuta con cada lead nuevo</p>
+      </div>
+    </div>
+    <span class="shrink-0 rounded-full border border-white/30 px-2.5 py-1 text-[0.7rem] font-semibold uppercase tracking-wide text-ice">Demostración</span>
+  </div>
+
+  <!-- Nodos: vertical en móvil, horizontal desde sm -->
+  <div class="flow px-4 py-5">
+    <ul class="flow-inputs" aria-label="Entradas">
+      {
+        inputs.map((n) => (
+          <li class="node">
+            <span class="node-icon"><Icon name={n.icon} size={13} /></span>
+            <span>{n.label}</span>
+          </li>
+        ))
+      }
+    </ul>
+    <span class="flow-arrow" aria-hidden="true"><span class="flow-line"></span><Icon name="arrow-right" size={14} /></span>
+
+    <div class="flow-core">
+      <div class="rounded-xl bg-cobalt px-3 py-3 text-white shadow-lift">
+        <p class="flex items-center gap-2 text-[0.82rem] font-semibold"><Icon name="ia" size={14} /> IONIC clasifica</p>
+        <p class="mt-1 text-[0.74rem] leading-snug text-ice">Intención, pilar, urgencia y datos del cliente</p>
+      </div>
+      <div class="rounded-xl border-2 border-cobalt bg-ice-3 px-3 py-3">
+        <p class="flex items-center gap-2 text-[0.82rem] font-semibold text-cobalt-ink"><Icon name="database" size={14} /> CRM unificado</p>
+        <p class="mt-1 text-[0.74rem] leading-snug text-ink-2">Etapa, canal de origen, responsable e historial</p>
+      </div>
+    </div>
+
+    <span class="flow-arrow" aria-hidden="true"><span class="flow-line"></span><Icon name="arrow-right" size={14} /></span>
+    <ul class="flow-outputs" aria-label="Salidas">
+      {
+        outputs.map((n) => (
+          <li class="node">
+            <span class="node-icon"><Icon name={n.icon} size={13} /></span>
+            <span>{n.label}</span>
+          </li>
+        ))
+      }
+    </ul>
+  </div>
+
+  <!-- Dashboard -->
+  <div class="border-t border-line-soft bg-ice-3 px-4 pb-4 pt-3">
+    <div class="flex items-center justify-between gap-3">
+      <p class="text-[0.72rem] font-semibold uppercase tracking-wide text-ink-3">Dashboard · Trazabilidad y rentabilidad por canal</p>
+      <p class="shrink-0 text-[0.72rem] text-ink-3">Datos ficticios</p>
+    </div>
+    <table class="tnum mt-2 w-full text-[0.82rem]">
+      <thead>
+        <tr class="text-left text-[0.7rem] uppercase tracking-wide text-ink-3">
+          <th class="py-1 font-semibold">Canal</th>
+          <th class="py-1 font-semibold">Leads</th>
+          <th class="py-1 font-semibold">Cierre</th>
+          <th class="py-1 font-semibold">Rentabilidad</th>
+        </tr>
+      </thead>
+      <tbody>
+        {
+          kpis.map((k) => (
+            <tr class="border-t border-line-soft">
+              <td class="py-1.5 font-semibold text-ink">{k.canal}</td>
+              <td class="py-1.5 text-ink-2">{k.leads}</td>
+              <td class="py-1.5 text-ink-2">{k.cierre} %</td>
+              <td class="py-1.5">
+                <span class="flex items-center gap-2">
+                  <span class="h-2 flex-1 overflow-hidden rounded-full bg-ice-2"><span class="block h-full rounded-full bg-cobalt" style={`width:${k.rent}%`}></span></span>
+                  <span class="w-9 text-right text-ink-2">{k.rent}</span>
+                </span>
+              </td>
+            </tr>
+          ))
+        }
+      </tbody>
+    </table>
+  </div>
+</div>
+
+<style>
+  .flow {
+    display: flex;
+    flex-direction: column;
+    gap: 0.75rem;
+  }
+  .flow-inputs,
+  .flow-outputs {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.5rem;
+  }
+  .node {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.5rem;
+    border: 1px solid var(--color-line);
+    border-radius: 0.75rem;
+    background: var(--color-canvas);
+    padding: 0.45rem 0.65rem;
+    font-size: 0.8rem;
+    font-weight: 600;
+    color: var(--color-ink);
+    line-height: 1.2;
+  }
+  .node-icon {
+    display: flex;
+    width: 1.5rem;
+    height: 1.5rem;
+    flex-shrink: 0;
+    align-items: center;
+    justify-content: center;
+    border-radius: 999px;
+    background: var(--color-ice);
+    color: var(--color-cobalt-ink);
+  }
+  .flow-core {
+    display: grid;
+    gap: 0.5rem;
+  }
+  .flow-arrow {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: var(--color-cobalt);
+    transform: rotate(90deg);
+    height: 1rem;
+  }
+  .flow-line {
+    display: none;
+  }
+  @media (min-width: 640px) {
+    .flow {
+      display: grid;
+      grid-template-columns: minmax(0, 1fr) 1.75rem minmax(0, 1.4fr) 1.75rem minmax(0, 1.15fr);
+      align-items: center;
+      column-gap: 0.25rem;
+    }
+    .flow-inputs,
+    .flow-outputs {
+      flex-direction: column;
+      flex-wrap: nowrap;
+    }
+    .flow-inputs {
+      border-right: 2px solid var(--color-ice-2);
+      padding-right: 0.5rem;
+    }
+    .flow-outputs {
+      border-left: 2px solid var(--color-ice-2);
+      padding-left: 0.5rem;
+    }
+    .node {
+      display: flex;
+    }
+    .flow-arrow {
+      transform: none;
+      height: auto;
+    }
+    .flow-line {
+      display: block;
+      height: 2px;
+      flex: 1;
+      background: var(--color-ice-2);
+    }
+  }
+</style>

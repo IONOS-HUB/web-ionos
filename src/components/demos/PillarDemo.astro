@@ -1,0 +1,17 @@
+---
+import type { PillarId } from '../../data/pillars';
+import IaDemo from './IaDemo.astro';
+import FlowDemo from './FlowDemo.astro';
+import AdsDemo from './AdsDemo.astro';
+import SoftwareDemo from './SoftwareDemo.astro';
+
+interface Props {
+  pillar: PillarId;
+}
+const { pillar } = Astro.props;
+---
+
+{pillar === 'ia' && <IaDemo />}
+{pillar === 'automatizaciones' && <FlowDemo />}
+{pillar === 'marketing' && <AdsDemo />}
+{pillar === 'software' && <SoftwareDemo />}

@@ -1,0 +1,111 @@
+---
+import Icon from './Icon.astro';
+import { SITE, WHATSAPP_DISPLAY, waLink, LEGAL } from '../lib/site';
+import { pillars } from '../data/pillars';
+
+const year = new Date().getFullYear();
+---
+
+<footer class="border-t border-line-soft bg-ice-3">
+  <div class="wrap grid gap-12 py-16 lg:grid-cols-12 lg:py-20">
+    <div class="lg:col-span-4">
+      <a href="/" class="inline-flex" aria-label="IonosHub, inicio">
+        <img src="/imgs/logo.png" alt="IonosHub" width="152" height="40" class="h-10 w-auto" loading="lazy" decoding="async" />
+      </a>
+      <p class="mt-5 max-w-xs text-[1.05rem] leading-relaxed text-ink-2">
+        IA, automatizaciones, marketing y software a medida para pequeñas y medianas empresas en Ecuador. De datos a resultados.
+      </p>
+      <ul class="mt-5 flex flex-wrap gap-2">
+        <li class="inline-flex items-center gap-2 rounded-full border border-line bg-canvas px-3.5 py-1.5 text-sm font-semibold text-cobalt-ink"><Icon name="shield" size={16} /> Meta Tech Provider</li>
+        <li class="inline-flex items-center gap-2 rounded-full border border-line bg-canvas px-3.5 py-1.5 text-sm font-semibold text-cobalt-ink">Partner de Zapier</li>
+        <li class="inline-flex items-center gap-2 rounded-full border border-line bg-canvas px-3.5 py-1.5 text-sm font-semibold text-cobalt-ink">Partner de Anthropic</li>
+      </ul>
+      <ul class="mt-6 flex items-center gap-2">
+        <li>
+          <a href={SITE.social.linkedin} target="_blank" rel="noopener noreferrer" aria-label="LinkedIn" class="flex h-10 w-10 items-center justify-center rounded-full border border-line bg-canvas text-ink-2 transition-colors hover:border-cobalt hover:text-cobalt">
+            <Icon name="linkedin" size={18} />
+          </a>
+        </li>
+        <li>
+          <a href={SITE.social.instagram} target="_blank" rel="noopener noreferrer" aria-label="Instagram" class="flex h-10 w-10 items-center justify-center rounded-full border border-line bg-canvas text-ink-2 transition-colors hover:border-cobalt hover:text-cobalt">
+            <Icon name="instagram" size={18} />
+          </a>
+        </li>
+        <li>
+          <a href={SITE.social.tiktok} target="_blank" rel="noopener noreferrer" aria-label="TikTok" class="flex h-10 w-10 items-center justify-center rounded-full border border-line bg-canvas text-ink-2 transition-colors hover:border-cobalt hover:text-cobalt">
+            <Icon name="tiktok" size={18} />
+          </a>
+        </li>
+        <li>
+          <a href={waLink()} target="_blank" rel="noopener noreferrer" aria-label="WhatsApp" class="flex h-10 w-10 items-center justify-center rounded-full border border-line bg-canvas text-ink-2 transition-colors hover:border-cobalt hover:text-cobalt">
+            <Icon name="whatsapp" size={18} />
+          </a>
+        </li>
+      </ul>
+    </div>
+
+    <div class="grid gap-10 sm:grid-cols-3 lg:col-span-8">
+      <div>
+        <h2 class="text-sm font-semibold uppercase tracking-wide text-ink-3">Pilares</h2>
+        <ul class="mt-4 flex flex-col gap-2.5">
+          {
+            pillars.map((p) => (
+              <li>
+                <a href={p.route} class="text-ink-2 hover:text-cobalt">
+                  {p.title}
+                </a>
+              </li>
+            ))
+          }
+        </ul>
+      </div>
+      <div>
+        <h2 class="text-sm font-semibold uppercase tracking-wide text-ink-3">IonosHub</h2>
+        <ul class="mt-4 flex flex-col gap-2.5">
+          <li><a href="/casos-de-exito" class="text-ink-2 hover:text-cobalt">Casos de éxito</a></li>
+          <li><a href="/equipo" class="text-ink-2 hover:text-cobalt">Equipo</a></li>
+          <li><a href="/blog-recursos" class="text-ink-2 hover:text-cobalt">Blog y recursos</a></li>
+          <li><a href="/#contacto" class="text-ink-2 hover:text-cobalt">Agendar diagnóstico</a></li>
+        </ul>
+      </div>
+      <div>
+        <h2 class="text-sm font-semibold uppercase tracking-wide text-ink-3">Contacto</h2>
+        <ul class="mt-4 flex flex-col gap-3">
+          <li>
+            <a href={waLink()} target="_blank" rel="noopener noreferrer" class="inline-flex items-center gap-2 text-ink-2 hover:text-cobalt">
+              <Icon name="whatsapp" size={18} />
+              <span class="tnum">{WHATSAPP_DISPLAY}</span>
+            </a>
+          </li>
+          <li>
+            <a href={`mailto:${SITE.email}`} class="inline-flex items-center gap-2 text-ink-2 hover:text-cobalt">
+              <Icon name="mail" size={18} />
+              {SITE.email}
+            </a>
+          </li>
+          <li class="inline-flex items-start gap-2 text-ink-2">
+            <Icon name="map-pin" size={18} class="mt-0.5 shrink-0" />
+            {SITE.city}
+          </li>
+        </ul>
+      </div>
+    </div>
+  </div>
+
+  <div class="border-t border-line-soft">
+    <div class="wrap flex flex-col gap-3 py-6 text-sm text-ink-3 sm:flex-row sm:items-center sm:justify-between">
+      <p>© {year} IonosHub. Todos los derechos reservados.</p>
+      <ul class="flex flex-wrap gap-x-6 gap-y-2">
+        {
+          LEGAL.map((l) => (
+            <li>
+              <a href={l.href} class="hover:text-ink">
+                {l.label}
+              </a>
+            </li>
+          ))
+        }
+      </ul>
+    </div>
+  </div>
+</footer>

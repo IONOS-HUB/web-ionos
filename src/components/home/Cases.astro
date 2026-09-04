@@ -1,0 +1,59 @@
+---
+import Icon from '../Icon.astro';
+import { successCases, homeCaseSlugs, getCaseBySlug } from '../../data/cases';
+import { pillarById } from '../../data/pillars';
+
+const featured = homeCaseSlugs.map((s) => getCaseBySlug(s)!).filter(Boolean);
+---
+
+<section class="bg-night py-20 text-white lg:py-28">
+  <div class="wrap">
+    <div class="flex flex-col gap-6 lg:flex-row lg:items-end lg:justify-between" data-reveal>
+      <div class="max-w-2xl">
+        <h2 class="display-tight text-[clamp(2rem,4.2vw,3.25rem)] font-semibold">Resultados reales, con cifras reales.</h2>
+        <p class="mt-5 text-[clamp(1.05rem,1.4vw,1.25rem)] leading-relaxed text-night-text">
+          Negocios de Ecuador que empezaron por un pilar. Estas son sus cifras, tal como las medimos.
+        </p>
+      </div>
+      <a href="/casos-de-exito" class="btn btn-on-dark shrink-0">
+        Ver los {successCases.length} casos
+        <Icon name="arrow-right" size={18} />
+      </a>
+    </div>
+
+    <ul class="mt-14 grid gap-px overflow-hidden rounded-[1.5rem] border border-night-line bg-night-line sm:grid-cols-2 lg:mt-20 lg:grid-cols-4">
+      {
+        featured.map((c, i) => {
+          const pillar = pillarById(c.pillar);
+          const m = c.metric;
+          return (
+            <li class="flex flex-col bg-night p-7 lg:p-8" data-reveal data-reveal-delay={i * 80}>
+              <span class="chip !border-night-line !bg-night-2 !text-night-text self-start">
+                <Icon name={c.pillar} size={14} /> {pillar.short}
+              </span>
+              <div class="mt-8 flex-1">
+                {m ? (
+                  <p class="flex flex-col gap-2">
+                    <span class="tnum inline-flex items-baseline gap-2 text-[1.05rem] font-medium text-night-text">
+                      <span class="text-[0.8rem] uppercase tracking-wide">antes</span>
+                      <span class="line-through decoration-night-text/50">{m.before}</span>
+                    </span>
+                    <span class="display-tight tnum block text-[clamp(2.8rem,4.6vw,3.8rem)] font-semibold leading-none text-white">{m.after}</span>
+                    {m.unit && <span class="text-[1.05rem] font-medium text-night-text">{m.unit}</span>}
+                  </p>
+                ) : (
+                  <p class="display-tight text-[clamp(2rem,3.5vw,2.8rem)] font-semibold leading-none">{c.highlight}</p>
+                )}
+                <p class="mt-5 text-[1rem] leading-relaxed text-night-text">{c.result}</p>
+              </div>
+              <p class="mt-8 border-t border-night-line pt-4 text-[0.92rem]">
+                <span class="font-semibold text-white">{c.client}</span>
+                <span class="text-night-text"> · {c.industry}</span>
+              </p>
+            </li>
+          );
+        })
+      }
+    </ul>
+  </div>
+</section>

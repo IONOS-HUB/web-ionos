@@ -1,0 +1,292 @@
+@import "tailwindcss";
+@import "@fontsource-variable/bricolage-grotesque";
+
+/* ─────────────────────────────────────────────────────────────
+   IonosHub v2 — tokens
+   Mundo: "La Bandeja de IONIC". Blanco aireado, cobalto comprometido
+   en campos enteros, azul hielo para lo entrante, tinta azul-negra.
+   ───────────────────────────────────────────────────────────── */
+@theme {
+  --font-sans: "Bricolage Grotesque Variable", "Bricolage Grotesque", ui-sans-serif, system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
+
+  --color-canvas: #ffffff;
+  --color-ice: #e9f1fc;
+  --color-ice-2: #d7e6fa;
+  --color-ice-3: #f4f8fe;
+
+  --color-cobalt: #0e5fcb;
+  --color-cobalt-deep: #0a47a0;
+  --color-cobalt-ink: #083a7a;
+  --color-cobalt-glow: #3f86e6;
+
+  --color-ink: #0f1722;
+  --color-ink-2: #33415a;
+  --color-ink-3: #5b6b85;
+  --color-line: #d4deed;
+  --color-line-soft: #e6edf7;
+
+  --color-night: #0b1b33;
+  --color-night-2: #102647;
+  --color-night-line: #1f3a63;
+  --color-night-text: #b8cbe8;
+
+  --radius-bubble: 1.125rem;
+  --radius-card: 1.25rem;
+  --radius-pill: 999px;
+
+  --shadow-lift: 0 12px 32px -14px rgb(14 95 203 / 0.28), 0 2px 6px -2px rgb(15 23 34 / 0.08);
+  --shadow-phone: 0 40px 80px -32px rgb(8 58 122 / 0.45), 0 8px 24px -12px rgb(15 23 34 / 0.18);
+
+  --ease-out-expo: cubic-bezier(0.16, 1, 0.3, 1);
+  --ease-out-quint: cubic-bezier(0.22, 1, 0.36, 1);
+}
+
+@layer base {
+  html {
+    scroll-behavior: smooth;
+    -webkit-text-size-adjust: 100%;
+    color-scheme: light;
+  }
+
+  body {
+    @apply bg-canvas text-ink font-sans antialiased;
+    font-optical-sizing: auto;
+    font-variation-settings: "wdth" 100;
+    text-rendering: optimizeLegibility;
+  }
+
+  ::selection {
+    background: var(--color-cobalt);
+    color: #fff;
+  }
+
+  :focus-visible {
+    outline: 3px solid var(--color-cobalt);
+    outline-offset: 3px;
+    border-radius: 6px;
+  }
+
+  input,
+  textarea,
+  select {
+    caret-color: var(--color-cobalt);
+  }
+
+  a {
+    text-underline-offset: 0.18em;
+    text-decoration-thickness: 1.5px;
+  }
+
+  h1, h2, h3, h4 {
+    text-wrap: balance;
+    letter-spacing: -0.025em;
+    font-variation-settings: "opsz" 96, "wdth" 100;
+  }
+
+  p {
+    text-wrap: pretty;
+  }
+
+  /* Scrollbars con la paleta */
+  * {
+    scrollbar-width: thin;
+    scrollbar-color: var(--color-ice-2) transparent;
+  }
+  ::-webkit-scrollbar {
+    width: 10px;
+    height: 10px;
+  }
+  ::-webkit-scrollbar-thumb {
+    background: var(--color-ice-2);
+    border-radius: 999px;
+    border: 3px solid var(--color-canvas);
+  }
+  ::-webkit-scrollbar-thumb:hover {
+    background: var(--color-cobalt-glow);
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    html {
+      scroll-behavior: auto;
+    }
+    *,
+    *::before,
+    *::after {
+      animation-duration: 0.01ms !important;
+      animation-iteration-count: 1 !important;
+      transition-duration: 0.01ms !important;
+    }
+  }
+}
+
+@utility tnum {
+  font-variant-numeric: tabular-nums lining-nums;
+}
+
+@utility display-tight {
+  letter-spacing: -0.035em;
+  line-height: 0.98;
+  font-variation-settings: "opsz" 96, "wdth" 96;
+}
+
+@utility measure {
+  max-width: 68ch;
+}
+
+/* Contenedor de página: ancho máximo y padding lateral fluido */
+@utility wrap {
+  width: 100%;
+  max-width: 78rem;
+  margin-inline: auto;
+  padding-inline: clamp(1.25rem, 4vw, 2.5rem);
+}
+
+/* Botones */
+@utility btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.6rem;
+  min-height: 3.25rem;
+  padding: 0 1.5rem;
+  border-radius: var(--radius-pill);
+  font-weight: 600;
+  font-size: 1rem;
+  letter-spacing: -0.01em;
+  white-space: nowrap;
+  transition: transform 0.35s var(--ease-out-expo), background-color 0.25s var(--ease-out-expo), box-shadow 0.35s var(--ease-out-expo), color 0.25s;
+}
+@utility btn-primary {
+  background: var(--color-cobalt);
+  color: #fff;
+  box-shadow: var(--shadow-lift);
+}
+.btn-primary:hover {
+  background: var(--color-cobalt-deep);
+  transform: translateY(-2px);
+}
+.btn-primary:active {
+  transform: translateY(0);
+}
+@utility btn-ghost {
+  background: transparent;
+  color: var(--color-cobalt-ink);
+  border: 1.5px solid var(--color-line);
+}
+.btn-ghost:hover {
+  border-color: var(--color-cobalt);
+  color: var(--color-cobalt);
+  background: var(--color-ice-3);
+}
+@utility btn-on-dark {
+  background: #fff;
+  color: var(--color-cobalt-ink);
+}
+.btn-on-dark:hover {
+  background: var(--color-ice);
+  transform: translateY(-2px);
+}
+
+/* Chip de pilar: etiqueta de clasificación de IONIC */
+@utility chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.4rem;
+  height: 1.85rem;
+  padding: 0 0.7rem;
+  border-radius: var(--radius-pill);
+  font-size: 0.8rem;
+  font-weight: 600;
+  letter-spacing: 0.005em;
+  background: var(--color-ice);
+  color: var(--color-cobalt-ink);
+  border: 1px solid var(--color-ice-2);
+  transition: background-color 0.3s var(--ease-out-expo), color 0.3s, transform 0.4s var(--ease-out-expo), border-color 0.3s;
+}
+@utility chip-on {
+  background: var(--color-cobalt);
+  color: #fff;
+  border-color: var(--color-cobalt);
+}
+
+/* Burbujas de chat */
+@utility bubble-in {
+  background: var(--color-ice);
+  color: var(--color-ink);
+  border-radius: var(--radius-bubble) var(--radius-bubble) var(--radius-bubble) 0.35rem;
+}
+@utility bubble-out {
+  background: var(--color-cobalt);
+  color: #fff;
+  border-radius: var(--radius-bubble) var(--radius-bubble) 0.35rem var(--radius-bubble);
+}
+
+/* Reveal: estado por defecto VISIBLE; el script sólo lo anima si hay JS y sin reduced-motion */
+[data-reveal] {
+  will-change: transform, opacity;
+}
+html.motion-ready [data-reveal]:not(.is-in) {
+  opacity: 0;
+  transform: translateY(24px);
+  filter: blur(6px);
+}
+html.motion-ready [data-reveal].is-in {
+  opacity: 1;
+  transform: none;
+  filter: blur(0);
+  transition: opacity 0.9s var(--ease-out-expo), transform 0.9s var(--ease-out-expo), filter 0.9s var(--ease-out-expo);
+}
+
+/* Marquee de logos */
+@keyframes marquee {
+  from { transform: translateX(0); }
+  to { transform: translateX(-50%); }
+}
+.marquee-track {
+  animation: marquee 38s linear infinite;
+}
+.marquee:hover .marquee-track {
+  animation-play-state: paused;
+}
+
+/* Indicador "escribiendo" */
+@keyframes typing {
+  0%, 60%, 100% { transform: translateY(0); opacity: 0.45; }
+  30% { transform: translateY(-3px); opacity: 1; }
+}
+.typing-dot {
+  animation: typing 1.2s infinite var(--ease-out-quint);
+}
+.typing-dot:nth-child(2) { animation-delay: 0.15s; }
+.typing-dot:nth-child(3) { animation-delay: 0.3s; }
+
+/* Entrada de mensaje: 12px + fade */
+@keyframes msg-in {
+  from { opacity: 0; transform: translateY(12px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+.msg-in {
+  animation: msg-in 0.55s var(--ease-out-expo) both;
+}
+@keyframes pop {
+  from { transform: scale(0.96); opacity: 0.6; }
+  to { transform: scale(1); opacity: 1; }
+}
+.pop {
+  animation: pop 0.45s var(--ease-out-expo) both;
+}
+
+/* Details/summary FAQ */
+details > summary {
+  list-style: none;
+  cursor: pointer;
+}
+details > summary::-webkit-details-marker {
+  display: none;
+}
+details[open] .faq-icon {
+  transform: rotate(45deg);
+}
+.faq-icon {
+  transition: transform 0.4s var(--ease-out-expo);
+}

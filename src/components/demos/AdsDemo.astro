@@ -1,0 +1,82 @@
+---
+/**
+ * Demostración del pilar Marketing: una campaña en Meta con conjuntos de anuncios
+ * segmentados profesionalmente. CONTENIDO DEMOSTRATIVO: cifras ficticias.
+ */
+import Icon from '../Icon.astro';
+
+const adSets = [
+  {
+    name: 'Vecinos del local',
+    segment: 'Personas 25–45 · a 5 km · interés en comida familiar',
+    budget: 45,
+    leads: 27,
+    cpl: '$1,90',
+    icon: 'map-pin',
+  },
+  {
+    name: 'Clientes anteriores',
+    segment: 'Retargeting · compraron en los últimos 90 días',
+    budget: 30,
+    leads: 19,
+    cpl: '$1,40',
+    icon: 'users',
+  },
+  {
+    name: 'Similares a compradores',
+    segment: 'Audiencia similar 1 % · basada en el CRM unificado',
+    budget: 25,
+    leads: 11,
+    cpl: '$2,60',
+    icon: 'target',
+  },
+] as const;
+---
+
+<div class="overflow-hidden rounded-[1.5rem] border border-line bg-canvas shadow-lift" aria-label="Demostración: campaña con conjuntos de anuncios segmentados">
+  <div class="flex items-center justify-between gap-3 bg-cobalt px-4 py-3 text-white">
+    <div class="flex items-center gap-3">
+      <span class="flex h-9 w-9 items-center justify-center rounded-full bg-white/15"><Icon name="marketing" size={18} /></span>
+      <div class="leading-tight">
+        <p class="text-[0.95rem] font-semibold">Campaña · Combo familiar · Meta</p>
+        <p class="text-xs text-ice">Objetivo: mensajes a WhatsApp · 3 conjuntos de anuncios</p>
+      </div>
+    </div>
+    <span class="rounded-full border border-white/30 px-2.5 py-1 text-[0.7rem] font-semibold uppercase tracking-wide text-ice">Demostración</span>
+  </div>
+
+  <ul class="divide-y divide-line-soft">
+    {
+      adSets.map((s) => (
+        <li class="grid gap-3 px-4 py-3.5 sm:grid-cols-[1fr_9rem] sm:items-center">
+          <div class="flex items-start gap-3">
+            <span class="mt-0.5 flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-ice text-cobalt-ink"><Icon name={s.icon} size={16} /></span>
+            <div class="min-w-0">
+              <p class="text-[0.92rem] font-semibold text-ink">{s.name}</p>
+              <p class="text-[0.8rem] leading-snug text-ink-2">{s.segment}</p>
+              <p class="mt-1.5 flex items-center gap-2 text-[0.75rem] text-ink-3">
+                <span class="h-1.5 w-24 overflow-hidden rounded-full bg-ice-2"><span class="block h-full rounded-full bg-cobalt" style={`width:${s.budget}%`}></span></span>
+                {s.budget} % del presupuesto
+              </p>
+            </div>
+          </div>
+          <dl class="tnum grid grid-cols-2 gap-2 text-right sm:grid-cols-1 sm:gap-0.5">
+            <div>
+              <dt class="text-[0.68rem] uppercase tracking-wide text-ink-3">Leads</dt>
+              <dd class="text-[1.05rem] font-semibold text-ink">{s.leads}</dd>
+            </div>
+            <div>
+              <dt class="text-[0.68rem] uppercase tracking-wide text-ink-3">Costo por lead</dt>
+              <dd class="text-[0.95rem] font-semibold text-cobalt-ink">{s.cpl}</dd>
+            </div>
+          </dl>
+        </li>
+      ))
+    }
+  </ul>
+
+  <div class="flex flex-wrap items-center justify-between gap-2 border-t border-line-soft bg-ice-3 px-4 py-3">
+    <p class="inline-flex items-center gap-2 text-[0.8rem] font-semibold text-cobalt-ink"><Icon name="shield" size={14} /> Meta Tech Provider · conexión oficial por API</p>
+    <p class="inline-flex items-center gap-1.5 text-[0.8rem] text-ink-2"><Icon name="check" size={14} class="text-cobalt" /> Cada lead entra al CRM y lo atiende IONIC</p>
+  </div>
+</div>

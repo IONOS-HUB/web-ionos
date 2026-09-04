@@ -1,0 +1,77 @@
+---
+import LegalLayout from '../layouts/LegalLayout.astro';
+import { SITE, WHATSAPP_DISPLAY } from '../lib/site';
+---
+
+<LegalLayout
+  title="Política de privacidad"
+  description="Cómo IonosHub recopila, usa y protege los datos personales de quienes visitan el sitio, contactan al equipo o usan los agentes de IA desarrollados por IonosHub."
+  path="/politica-de-privacidad"
+  updated="3 de septiembre de 2026"
+>
+  <h2>1. Responsable del tratamiento</h2>
+  <p>
+    IonosHub, con sede en Ibarra, Imbabura, Ecuador. Contacto: <a href={`mailto:${SITE.email}`}>{SITE.email}</a> · WhatsApp {WHATSAPP_DISPLAY}. Horario de atención: lunes a viernes, 9:00 a 18:00 (GMT-5).
+  </p>
+
+  <h2>2. Datos que recopilamos</h2>
+  <h3>2.1. Datos de contacto</h3>
+  <ul>
+    <li>Nombre de la persona o del negocio</li>
+    <li>Correo electrónico y número de teléfono o WhatsApp</li>
+    <li>Pilar de interés y descripción del reto que nos compartes</li>
+    <li>Página desde la que enviaste el formulario y fecha de envío</li>
+  </ul>
+  <h3>2.2. Datos de interacción con agentes de IA</h3>
+  <ul>
+    <li>Mensajes y conversaciones con IONIC u otros agentes desarrollados por IonosHub</li>
+    <li>Consultas, intenciones y citas agendadas</li>
+    <li>Metadatos de la conversación (canal, fecha, hora, duración)</li>
+  </ul>
+  <h3>2.3. Datos técnicos y de navegación</h3>
+  <ul>
+    <li>Tipo de navegador, dispositivo y sistema operativo</li>
+    <li>Páginas visitadas, tiempo de permanencia y fuente de tráfico</li>
+    <li>Cookies y tecnologías similares de medición</li>
+  </ul>
+  <h3>2.4. Datos de proyectos</h3>
+  <ul>
+    <li>Información empresarial y requisitos que nos entregas para desarrollar un proyecto</li>
+    <li>Datos de usuarios finales de los sistemas y agentes que desarrollamos para tu negocio, tratados por encargo tuyo</li>
+    <li>Métricas y reportes de rendimiento</li>
+  </ul>
+
+  <h2>3. Para qué usamos los datos</h2>
+  <ul>
+    <li>Responder tus consultas, agendar el diagnóstico y enviarte propuestas</li>
+    <li>Prestar los servicios contratados: inteligencia artificial, automatizaciones, marketing y software a medida</li>
+    <li>Operar y mejorar los agentes de IA y sistemas que desarrollamos</li>
+    <li>Medir y mejorar el funcionamiento de este sitio</li>
+    <li>Cumplir obligaciones legales y contractuales</li>
+  </ul>
+
+  <h2>4. Base legal y conservación</h2>
+  <p>
+    Tratamos tus datos con base en tu consentimiento (al enviarnos un formulario o escribirnos), en la ejecución de un contrato o en nuestro interés legítimo de operar el negocio, conforme a la Ley Orgánica de Protección de Datos Personales del Ecuador. Conservamos los datos de contacto mientras exista una relación comercial o hasta que solicites su eliminación, y los datos de proyectos durante la vigencia del contrato y los plazos legales aplicables.
+  </p>
+
+  <h2>5. Con quién compartimos datos</h2>
+  <p>
+    No vendemos datos personales. Compartimos datos únicamente con proveedores que necesitamos para operar (hospedaje, correo transaccional, plataformas de mensajería como WhatsApp, Instagram y Facebook de Meta, y herramientas de analítica), bajo acuerdos que exigen confidencialidad, y con autoridades cuando la ley lo requiera.
+  </p>
+
+  <h2>6. Tus derechos</h2>
+  <p>
+    Puedes acceder, rectificar, actualizar, eliminar u oponerte al tratamiento de tus datos, así como retirar tu consentimiento, escribiendo a <a href={`mailto:${SITE.email}`}>{SITE.email}</a>. Respondemos en un plazo máximo de quince días.
+  </p>
+
+  <h2>7. Seguridad</h2>
+  <p>
+    Aplicamos medidas técnicas y organizativas razonables: cifrado en tránsito, control de accesos, credenciales gestionadas como variables de entorno y revisión periódica de proveedores.
+  </p>
+
+  <h2>8. Cambios en esta política</h2>
+  <p>
+    Publicaremos cualquier cambio en esta página con la fecha de actualización. Si el cambio es relevante, te avisaremos por los canales de contacto que nos hayas dado.
+  </p>
+</LegalLayout>

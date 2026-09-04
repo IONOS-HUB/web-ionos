@@ -1,0 +1,31 @@
+---
+import BaseLayout from '../layouts/BaseLayout.astro';
+import Hero from '../components/home/Hero.astro';
+import PainPoints from '../components/home/PainPoints.astro';
+import Pillars from '../components/home/Pillars.astro';
+import Ecosystem from '../components/home/Ecosystem.astro';
+import Cases from '../components/home/Cases.astro';
+import Steps from '../components/home/Steps.astro';
+import Team from '../components/home/Team.astro';
+import Trust from '../components/home/Trust.astro';
+import FAQ from '../components/home/FAQ.astro';
+import Contact from '../components/home/Contact.astro';
+import { faqs } from '../data/site-content';
+---
+
+<BaseLayout
+  title="IonosHub — IA, automatizaciones, marketing y software a medida para PyMEs en Ecuador"
+  description="Agentes de IA que atienden y agendan 24/7, automatizaciones, marketing en Meta y software a medida en 30 días. El ecosistema digital completo para pequeñas y medianas empresas en Ecuador. Agenda un diagnóstico gratuito."
+  path="/"
+>
+  <Hero />
+  <PainPoints />
+  <Pillars />
+  <Ecosystem />
+  <Cases />
+  <Steps />
+  <Team />
+  <Trust />
+  <FAQ items={faqs} />
+  <Contact />
+</BaseLayout>

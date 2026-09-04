@@ -1,0 +1,53 @@
+---
+import BaseLayout from './BaseLayout.astro';
+
+interface Props {
+  title: string;
+  description: string;
+  path: string;
+  updated: string;
+}
+const { title, description, path, updated } = Astro.props;
+---
+
+<BaseLayout title={title} description={description} path={path}>
+  <article class="wrap py-16 lg:py-24">
+    <header class="max-w-3xl" data-reveal>
+      <h1 class="display-tight text-[clamp(2.2rem,4.5vw,3.6rem)] font-semibold text-ink">{title}</h1>
+      <p class="mt-4 text-[0.95rem] text-ink-3">Última actualización: {updated}</p>
+    </header>
+    <div class="legal mt-12 max-w-3xl text-[1.05rem] leading-relaxed text-ink-2">
+      <slot />
+    </div>
+  </article>
+</BaseLayout>
+
+<style is:global>
+  .legal h2 {
+    margin-top: 2.5rem;
+    font-size: 1.5rem;
+    font-weight: 600;
+    color: var(--color-ink);
+  }
+  .legal h3 {
+    margin-top: 1.75rem;
+    font-size: 1.15rem;
+    font-weight: 600;
+    color: var(--color-ink);
+  }
+  .legal p {
+    margin-top: 1rem;
+  }
+  .legal ul {
+    margin-top: 0.75rem;
+    padding-left: 1.25rem;
+    list-style: disc;
+  }
+  .legal li {
+    margin-top: 0.35rem;
+  }
+  .legal a {
+    color: var(--color-cobalt);
+    text-decoration: underline;
+  }
+</style>

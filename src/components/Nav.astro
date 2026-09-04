@@ -1,0 +1,94 @@
+---
+import Icon from './Icon.astro';
+import { NAV } from '../lib/site';
+
+const current = Astro.url.pathname;
+const isActive = (href: string) => current === href || (href !== '/' && current.startsWith(href));
+---
+
+<header class="sticky top-0 z-50 border-b border-line-soft bg-canvas/85 backdrop-blur-md supports-[backdrop-filter]:bg-canvas/75">
+  <nav class="wrap flex h-16 items-center justify-between gap-6 lg:h-[4.5rem]" aria-label="Principal">
+    <a href="/" class="flex shrink-0 items-center gap-2.5" aria-label="IonosHub, inicio">
+      <img src="/imgs/logo.png" alt="IonosHub" width="152" height="40" class="h-9 w-auto lg:h-10" decoding="async" />
+    </a>
+
+    <ul class="hidden items-center gap-1 lg:flex">
+      {
+        NAV.map((item) => (
+          <li>
+            <a
+              href={item.href}
+              aria-current={isActive(item.href) ? 'page' : undefined}
+              class:list={[
+                'rounded-full px-3.5 py-2 text-[0.95rem] font-medium transition-colors duration-300',
+                isActive(item.href) ? 'bg-ice text-cobalt-ink' : 'text-ink-2 hover:bg-ice-3 hover:text-ink',
+              ]}
+            >
+              {item.label}
+            </a>
+          </li>
+        ))
+      }
+    </ul>
+
+    <div class="hidden items-center gap-3 lg:flex">
+      <a href="/#contacto" class="btn btn-primary !min-h-11 !px-5 text-[0.95rem]">
+        Agendar diagnóstico gratis
+        <Icon name="arrow-right" size={18} />
+      </a>
+    </div>
+
+    <details class="relative lg:hidden" id="mobile-menu">
+      <summary
+        class="flex h-11 w-11 cursor-pointer items-center justify-center rounded-full text-ink-2 hover:bg-ice-3 [&::-webkit-details-marker]:hidden"
+        aria-label="Abrir menú"
+      >
+        <Icon name="menu" size={24} class="menu-open" />
+        <Icon name="close" size={24} class="menu-close hidden" />
+      </summary>
+      <div class="absolute right-0 top-[calc(100%+0.75rem)] w-[min(92vw,22rem)] rounded-card border border-line bg-canvas p-3 shadow-lift">
+        <ul class="flex flex-col">
+          {
+            NAV.map((item) => (
+              <li>
+                <a
+                  href={item.href}
+                  class:list={[
+                    'block rounded-xl px-4 py-3 text-base font-medium',
+                    isActive(item.href) ? 'bg-ice text-cobalt-ink' : 'text-ink hover:bg-ice-3',
+                  ]}
+                >
+                  {item.label}
+                </a>
+              </li>
+            ))
+          }
+        </ul>
+        <a href="/#contacto" class="btn btn-primary mt-3 w-full">
+          Agendar diagnóstico gratis
+          <Icon name="arrow-right" size={18} />
+        </a>
+      </div>
+    </details>
+  </nav>
+</header>
+
+<style>
+  details[open] .menu-open {
+    display: none;
+  }
+  details[open] .menu-close {
+    display: block;
+  }
+</style>
+
+<script>
+  // Cierra el menú móvil al navegar o al hacer clic fuera.
+  const menu = document.getElementById('mobile-menu') as HTMLDetailsElement | null;
+  if (menu) {
+    document.addEventListener('click', (e) => {
+      if (menu.open && !menu.contains(e.target as Node)) menu.open = false;
+    });
+    menu.querySelectorAll('a').forEach((a) => a.addEventListener('click', () => (menu.open = false)));
+  }
+</script>

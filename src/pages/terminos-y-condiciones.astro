@@ -1,0 +1,68 @@
+---
+import LegalLayout from '../layouts/LegalLayout.astro';
+import { SITE } from '../lib/site';
+---
+
+<LegalLayout
+  title="Términos y condiciones"
+  description="Condiciones de uso del sitio web de IonosHub y de los servicios de inteligencia artificial, automatizaciones, marketing y software a medida."
+  path="/terminos-y-condiciones"
+  updated="3 de septiembre de 2026"
+>
+  <h2>1. Definiciones</h2>
+  <ul>
+    <li><strong>IonosHub:</strong> agencia ecuatoriana de inteligencia artificial, automatizaciones, marketing y software a medida, con sede en Ibarra.</li>
+    <li><strong>Servicios:</strong> el desarrollo, implementación y mantenimiento de agentes de IA, automatizaciones y CRM, campañas y contenido de marketing, landing pages y sistemas a medida.</li>
+    <li><strong>Usuario o cliente:</strong> persona natural o jurídica que visita este sitio, nos contacta o contrata nuestros servicios.</li>
+    <li><strong>Sitio:</strong> la plataforma digital de IonosHub disponible en {SITE.url}.</li>
+  </ul>
+
+  <h2>2. Alcance de los servicios</h2>
+  <p>
+    La información de este sitio es orientativa. El alcance, los plazos y la inversión de cada proyecto se definen en una propuesta escrita tras el diagnóstico gratuito. El compromiso de entrega de software en 30 días aplica al alcance cerrado en dicha propuesta; las funcionalidades fuera de ese alcance se planifican como fases posteriores.
+  </p>
+
+  <h2>3. Uso del sitio</h2>
+  <h3>3.1. Responsabilidades del usuario</h3>
+  <ul>
+    <li>Proporcionar información veraz, actualizada y completa</li>
+    <li>Utilizar el sitio y los servicios de manera lícita</li>
+    <li>Respetar los derechos de propiedad intelectual de IonosHub y de terceros</li>
+  </ul>
+  <h3>3.2. Usos prohibidos</h3>
+  <ul>
+    <li>Utilizar el sitio o los servicios para actividades ilegales o fraudulentas</li>
+    <li>Intentar acceder sin autorización a nuestros sistemas o a los de nuestros clientes</li>
+    <li>Interferir con el funcionamiento del sitio o enviar contenido malicioso</li>
+  </ul>
+
+  <h2>4. Propiedad intelectual</h2>
+  <p>
+    El contenido de este sitio (textos, marca IonosHub, marca IONIC, logotipos, diseño e imágenes) es propiedad de IonosHub o se usa con autorización. Los entregables de cada proyecto se rigen por lo pactado en la propuesta y el contrato correspondiente.
+  </p>
+
+  <h2>5. Datos personales y agentes de IA</h2>
+  <p>
+    El tratamiento de datos personales se rige por nuestra <a href="/politica-de-privacidad">Política de privacidad</a>. Cuando IonosHub desarrolla agentes de IA o sistemas para un cliente, el cliente es responsable del tratamiento de los datos de sus propios usuarios finales e IonosHub actúa como encargado, conforme al contrato.
+  </p>
+
+  <h2>6. Medición y analítica</h2>
+  <p>
+    Este sitio puede usar herramientas de analítica para medir páginas visitadas, fuente de tráfico, dispositivo y ubicación aproximada, con el fin de mejorar la experiencia. Puedes limitar estas mediciones desde la configuración de tu navegador.
+  </p>
+
+  <h2>7. Limitación de responsabilidad</h2>
+  <p>
+    IonosHub no se hace responsable por interrupciones del sitio ajenas a su control ni por decisiones tomadas únicamente con base en la información orientativa aquí publicada. La responsabilidad en cada proyecto se establece en su contrato.
+  </p>
+
+  <h2>8. Legislación aplicable</h2>
+  <p>
+    Estos términos se rigen por las leyes de la República del Ecuador. Cualquier controversia se resolverá ante los jueces competentes de Ibarra, sin perjuicio de la mediación previa.
+  </p>
+
+  <h2>9. Contacto</h2>
+  <p>
+    Para consultas sobre estos términos escríbenos a <a href={`mailto:${SITE.email}`}>{SITE.email}</a>.
+  </p>
+</LegalLayout>

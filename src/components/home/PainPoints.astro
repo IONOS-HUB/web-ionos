@@ -1,0 +1,40 @@
+---
+import Icon from '../Icon.astro';
+import { painPoints } from '../../data/site-content';
+import { pillarById } from '../../data/pillars';
+---
+
+<section class="wrap py-20 lg:py-28">
+  <div class="grid gap-10 lg:grid-cols-12 lg:gap-16">
+    <div class="lg:col-span-5" data-reveal>
+      <h2 class="display-tight text-[clamp(2rem,4.2vw,3.25rem)] font-semibold text-ink">
+        Si algo de esto te pasa, hablemos.
+      </h2>
+      <p class="mt-5 text-[clamp(1.05rem,1.4vw,1.25rem)] leading-relaxed text-ink-2">
+        Son los cuatro frenos que vemos a diario en negocios de Ecuador. Cada uno tiene un pilar que lo resuelve, y los
+        cuatro se conectan entre sí.
+      </p>
+    </div>
+    <ul class="divide-y divide-line lg:col-span-7">
+      {
+        painPoints.map((p, i) => {
+          const pillar = pillarById(p.pillar);
+          return (
+            <li data-reveal data-reveal-delay={i * 60}>
+              <a href={pillar.route} class="group grid gap-3 py-6 sm:grid-cols-[1fr_auto] sm:items-center sm:gap-8 lg:py-7">
+                <div>
+                  <h3 class="text-[1.35rem] font-semibold text-ink transition-colors group-hover:text-cobalt">{p.title}</h3>
+                  <p class="mt-1.5 text-[1.02rem] leading-relaxed text-ink-2">{p.text}</p>
+                </div>
+                <span class="inline-flex items-center gap-2 text-[0.95rem] font-semibold text-cobalt-ink">
+                  <span class="chip"><Icon name={p.pillar} size={14} /> {pillar.short}</span>
+                  <Icon name="arrow-right" size={18} class="transition-transform duration-500 ease-[var(--ease-out-expo)] group-hover:translate-x-1" />
+                </span>
+              </a>
+            </li>
+          );
+        })
+      }
+    </ul>
+  </div>
+</section>

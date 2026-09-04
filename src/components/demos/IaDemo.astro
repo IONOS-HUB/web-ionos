@@ -1,0 +1,81 @@
+---
+/**
+ * Demostración del pilar IA: la misma IA atiende una llamada (IVR) y clasifica lo que llega
+ * en cualquier formato (audio, imagen, documento, consulta) y actúa sobre sistemas externos.
+ * CONTENIDO DEMOSTRATIVO con negocios ficticios.
+ */
+import Icon from '../Icon.astro';
+
+const call = [
+  { who: 'Paciente', text: 'Buenas noches, quería una cita para limpieza dental esta semana.' },
+  { who: 'IA de voz', text: 'Con gusto. Tengo el jueves a las 10:30 o el viernes a las 16:00. ¿Cuál le conviene?' },
+  { who: 'Paciente', text: 'El jueves a las 10:30.' },
+  { who: 'IA de voz', text: 'Queda agendada. Le envío el recordatorio por WhatsApp el miércoles en la noche.' },
+];
+
+const intake = [
+  { icon: 'mic', kind: 'Audio · 0:42', text: '"Necesito 3 cajas de guantes talla M para el viernes"', action: 'Pedido registrado en el CRM' },
+  { icon: 'image', kind: 'Imagen', text: 'Foto de una receta médica', action: 'Documento detectado · adjuntado a la ficha' },
+  { icon: 'file', kind: 'PDF', text: 'Factura #0452 de un proveedor', action: 'Enviada a contabilidad' },
+  { icon: 'database', kind: 'Consulta', text: '"¿Tienen stock del modelo K-200?"', action: 'Consultó el ERP: 12 unidades' },
+] as const;
+
+const bars = [3, 6, 9, 14, 8, 12, 16, 10, 6, 11, 15, 9, 5, 8, 12, 7, 4, 9, 13, 6, 3, 7, 10, 5];
+---
+
+<div class="overflow-hidden rounded-[1.5rem] border border-line bg-canvas shadow-lift" aria-label="Demostración: IA de voz y clasificador multiformato">
+  <div class="flex items-center justify-between gap-3 bg-cobalt px-4 py-3 text-white">
+    <div class="flex items-center gap-3">
+      <span class="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-white/15"><Icon name="phone" size={18} /></span>
+      <div class="leading-tight">
+        <p class="text-[0.95rem] font-semibold">Llamada · Consultorio Dental Norte</p>
+        <p class="text-xs text-ice">Atendida por la IA de voz · 1:12</p>
+      </div>
+    </div>
+    <span class="shrink-0 rounded-full border border-white/30 px-2.5 py-1 text-[0.7rem] font-semibold uppercase tracking-wide text-ice">Demostración</span>
+  </div>
+
+  <!-- Onda de la llamada -->
+  <div class="flex h-12 items-end gap-[3px] border-b border-line-soft bg-ice-3 px-4 pb-2" aria-hidden="true">
+    {bars.map((h, i) => <span class:list={['w-1 rounded-full', i % 3 === 0 ? 'bg-cobalt' : 'bg-cobalt-glow/60']} style={`height:${h * 2}px`}></span>)}
+    <span class="ml-auto self-center text-[0.72rem] font-medium text-ink-3">Transcripción en vivo</span>
+  </div>
+
+  <ol class="flex flex-col gap-2 px-4 py-4">
+    {
+      call.map((line) => (
+        <li class:list={['flex flex-col gap-0.5', line.who === 'IA de voz' ? 'items-end' : 'items-start']}>
+          <span class="px-1 text-[0.7rem] font-semibold uppercase tracking-wide text-ink-3">{line.who}</span>
+          <p class:list={['max-w-[88%] px-3.5 py-2 text-[0.9rem] leading-snug', line.who === 'IA de voz' ? 'bubble-out' : 'bubble-in']}>{line.text}</p>
+        </li>
+      ))
+    }
+    <li class="mt-1 flex items-center gap-3 self-end rounded-2xl border border-ice-2 bg-ice-3 px-3.5 py-2.5">
+      <span class="flex h-7 w-7 shrink-0 items-center justify-center rounded-full bg-cobalt text-white"><Icon name="calendar" size={14} /></span>
+      <div class="leading-tight">
+        <p class="text-[0.82rem] font-semibold text-cobalt-ink">Cita agendada en la agenda del doctor</p>
+        <p class="text-[0.75rem] text-ink-3">Jueves · 10:30 · Recordatorio WhatsApp programado</p>
+      </div>
+    </li>
+  </ol>
+
+  <div class="border-t border-line-soft">
+    <p class="px-4 pt-3 text-[0.72rem] font-semibold uppercase tracking-wide text-ink-3">Lo mismo por WhatsApp, en cualquier formato</p>
+    <ul class="divide-y divide-line-soft">
+      {
+        intake.map((row) => (
+          <li class="grid grid-cols-[2rem_1fr] gap-x-3 gap-y-1 px-4 py-2.5">
+            <span class="flex h-8 w-8 items-center justify-center rounded-full bg-ice text-cobalt-ink"><Icon name={row.icon} size={16} /></span>
+            <div class="min-w-0 leading-tight">
+              <p class="text-[0.72rem] font-semibold uppercase tracking-wide text-ink-3">{row.kind}</p>
+              <p class="text-[0.88rem] text-ink">{row.text}</p>
+            </div>
+            <p class="col-start-2 inline-flex items-start gap-1.5 text-[0.8rem] font-semibold text-cobalt-ink">
+              <Icon name="check" size={14} class="mt-0.5 shrink-0" /> {row.action}
+            </p>
+          </li>
+        ))
+      }
+    </ul>
+  </div>
+</div>

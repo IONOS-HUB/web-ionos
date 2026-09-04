@@ -1,0 +1,23 @@
+---
+import Icon from '../Icon.astro';
+import { pillarById } from '../../data/pillars';
+const p = pillarById('software');
+---
+
+<div class="relative overflow-hidden rounded-[1.5rem] bg-cobalt p-7 text-white sm:p-9" aria-label="Software a medida entregado en 30 días">
+  <p class="text-[0.95rem] font-medium text-ice">Del diagnóstico a tu sistema funcionando</p>
+  <p class="display-tight tnum mt-2 text-[clamp(4.5rem,9vw,7rem)] font-semibold leading-none">
+    <span data-count="30" data-suffix="">30</span>
+    <span class="ml-2 text-[0.35em] font-medium text-ice">días</span>
+  </p>
+  <ul class="mt-6 grid gap-2 text-[0.98rem] text-ice sm:grid-cols-2">
+    {
+      p.examples.map((ex) => (
+        <li class="flex items-start gap-2">
+          <Icon name="check" size={16} class="mt-1 shrink-0" />
+          {ex}
+        </li>
+      ))
+    }
+  </ul>
+</div>

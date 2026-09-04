@@ -1,0 +1,50 @@
+---
+import Icon from '../Icon.astro';
+
+const chain = [
+  { icon: 'marketing', title: 'La pauta trae la conversación', text: 'Anuncios en Meta y landing pages que llevan al cliente a escribirte.' },
+  { icon: 'ia', title: 'IONIC la atiende', text: 'Por llamada, WhatsApp o redes: responde 24/7, entiende audios y documentos, y agenda.' },
+  { icon: 'automatizaciones', title: 'El CRM unificado la gestiona', text: 'Cada lead entra solo, con canal de origen, etapa, responsable y recordatorios automáticos.' },
+  { icon: 'software', title: 'Tu sistema la convierte', text: 'Facturación, cursos o el sistema que tu negocio necesite, integrado.' },
+] as const;
+---
+
+<section class="relative overflow-hidden bg-cobalt py-20 text-white lg:py-28">
+  <div class="pointer-events-none absolute -right-32 -top-32 h-96 w-96 rounded-full bg-cobalt-glow/30 blur-3xl" aria-hidden="true"></div>
+  <div class="pointer-events-none absolute -bottom-40 -left-24 h-96 w-96 rounded-full bg-cobalt-ink/60 blur-3xl" aria-hidden="true"></div>
+
+  <div class="wrap relative">
+    <div class="max-w-3xl" data-reveal>
+      <h2 class="display-tight text-[clamp(2rem,4.2vw,3.25rem)] font-semibold">Así se conecta todo, de datos a resultados.</h2>
+      <p class="mt-5 text-[clamp(1.05rem,1.4vw,1.25rem)] leading-relaxed text-ice">
+        No vendemos servicios sueltos. El marketing trae leads, IONIC los atiende por voz o mensaje, el CRM unificado los
+        gestiona y el software los convierte. Tú lo ves todo en un dashboard: trazabilidad y rentabilidad por canal.
+      </p>
+    </div>
+
+    <ol class="relative mt-14 grid gap-6 lg:mt-20 lg:grid-cols-4 lg:gap-0">
+      <div class="pointer-events-none absolute left-0 right-0 top-7 hidden h-px bg-white/25 lg:block" aria-hidden="true"></div>
+      {
+        chain.map((step, i) => (
+          <li class="relative lg:pr-10" data-reveal data-reveal-delay={i * 90}>
+            <span class="relative z-10 flex h-14 w-14 items-center justify-center rounded-full border border-white/40 bg-cobalt text-white">
+              <Icon name={step.icon} size={24} />
+            </span>
+            <h3 class="mt-5 text-[1.25rem] font-semibold leading-snug">{step.title}</h3>
+            <p class="mt-2 max-w-xs text-[1rem] leading-relaxed text-ice">{step.text}</p>
+          </li>
+        ))
+      }
+    </ol>
+
+    <div class="mt-14 flex flex-col items-start gap-4 sm:flex-row sm:items-center sm:justify-between" data-reveal>
+      <p class="max-w-xl text-[1.05rem] text-ice">
+        Cada negocio arma su combinación. Sin catálogos de precios públicos: el alcance se define en un diagnóstico gratuito.
+      </p>
+      <a href="#contacto" class="btn btn-on-dark">
+        Armar mi ecosistema
+        <Icon name="arrow-right" size={18} />
+      </a>
+    </div>
+  </div>
+</section>

@@ -1,0 +1,50 @@
+---
+import Icon from '../Icon.astro';
+import SectionHeading from '../SectionHeading.astro';
+import { steps } from '../../data/site-content';
+---
+
+<section class="wrap py-20 lg:py-28">
+  <div class="grid gap-12 lg:grid-cols-12 lg:gap-16">
+    <div class="lg:col-span-5">
+      <SectionHeading
+        title="Empezamos con una conversación de 30 minutos."
+        lead="Sin compromiso de compra. Salimos del diagnóstico con una propuesta concreta: qué activar primero, en qué orden y qué resultado esperar."
+      />
+      <a href="#contacto" class="btn btn-primary mt-8" data-reveal>
+        Agendar diagnóstico gratis
+        <Icon name="arrow-right" size={18} />
+      </a>
+    </div>
+
+    <ol class="relative lg:col-span-7" data-progress-wrap>
+      <div class="absolute bottom-6 left-[1.35rem] top-6 w-px bg-line" aria-hidden="true">
+        <div class="h-full w-full origin-top bg-cobalt" data-progress-line></div>
+      </div>
+      {
+        steps.map((s, i) => (
+          <li class="step relative grid grid-cols-[2.75rem_1fr] gap-5 py-6 sm:gap-7" data-step data-reveal data-reveal-delay={i * 70}>
+            <span class="step-dot relative z-10 flex h-11 w-11 items-center justify-center rounded-full border-2 border-line bg-canvas text-ink-3 transition-colors duration-500">
+              <Icon name="check" size={18} />
+            </span>
+            <div class="pt-1.5">
+              <div class="flex flex-wrap items-baseline gap-x-4 gap-y-1">
+                <h3 class="text-[1.35rem] font-semibold text-ink">{s.title}</h3>
+                <span class="tnum text-[0.9rem] font-medium text-cobalt-ink">{s.duration}</span>
+              </div>
+              <p class="mt-1.5 max-w-lg text-[1.02rem] leading-relaxed text-ink-2">{s.text}</p>
+            </div>
+          </li>
+        ))
+      }
+    </ol>
+  </div>
+</section>
+
+<style>
+  .step.is-active .step-dot {
+    border-color: var(--color-cobalt);
+    background: var(--color-cobalt);
+    color: #fff;
+  }
+</style>
