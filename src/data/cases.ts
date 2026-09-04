@@ -39,6 +39,7 @@ export const successCases: SuccessCase[] = [
     highlight: 'Atención 24/7',
     metric: { before: 'horario', after: '24/7' },
     pillar: 'ia',
+    logo: '/imgs/clientes/pawau.png',
   },
   {
     slug: 'chipotle',
@@ -62,6 +63,7 @@ export const successCases: SuccessCase[] = [
     highlight: 'Operación 100 % digital',
     metric: { before: 'papel', after: '100 %', unit: 'digital' },
     pillar: 'software',
+    logo: '/imgs/clientes/ecu593.png',
   },
   {
     slug: 'la-victoria',

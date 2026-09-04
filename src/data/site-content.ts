@@ -7,6 +7,12 @@ export const clients = [
   { src: '/imgs/clientes/distribuidora.webp', alt: 'Distribuidora Hernández' },
   { src: '/imgs/clientes/mafercano.png', alt: 'Mafercano' },
   { src: '/imgs/clientes/itsi.png', alt: 'ITSI' },
+  { src: '/imgs/clientes/danielavidal.png', alt: 'Daniela Vidal' },
+  { src: '/imgs/clientes/ecu593.png', alt: 'Ecu593 English' },
+  { src: '/imgs/clientes/fondue.png', alt: 'Fondué s Escuela de Chefs' },
+  { src: '/imgs/clientes/aura.png', alt: 'Aura Beauty Studio' },
+  { src: '/imgs/clientes/gecop.png', alt: 'GECOP Expert' },
+  { src: '/imgs/clientes/pawau.png', alt: 'Pawau' },
 ];
 
 /* Certificaciones reales (repo v1, /public/imgs/certificados). */
