@@ -31,10 +31,10 @@ const wa = 'Hola IonosHub, quiero conocer más del equipo y agendar un diagnóst
       return (
         <section class:list={['py-14 lg:py-20', ai % 2 === 1 && 'bg-ice-3']}>
           <div class="wrap grid gap-10 lg:grid-cols-12 lg:gap-16">
-            <div class="lg:col-span-3" data-reveal>
-              <h2 class="display-tight text-[clamp(1.5rem,2.2vw,2rem)] font-semibold text-ink [overflow-wrap:anywhere]">{area}</h2>
+            <div class="lg:col-span-4" data-reveal>
+              <h2 class="display-tight text-[clamp(1.5rem,2.2vw,2rem)] font-semibold text-ink">{area}</h2>
             </div>
-            <ul class="grid gap-6 sm:grid-cols-2 lg:col-span-9">
+            <ul class="grid gap-6 sm:grid-cols-2 lg:col-span-8">
               {members.map((m, i) => (
                 <li class="grid gap-5 rounded-[1.5rem] border border-line bg-canvas p-5 sm:grid-cols-[9rem_1fr] sm:items-start" data-reveal data-reveal-delay={i * 70}>
                   <img src={m.photo} alt={`${m.name}, ${m.role}`} width="360" height="450" loading="lazy" decoding="async" class="aspect-[4/5] w-full rounded-[1rem] object-cover object-top grayscale contrast-[1.05] transition-[filter] duration-700 hover:grayscale-0" />
