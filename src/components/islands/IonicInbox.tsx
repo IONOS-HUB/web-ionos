@@ -204,7 +204,10 @@ export default function IonicInbox({ conversations, pillars }: Props) {
           </ul>
 
           {/* Chat abierto (o transcripción de la llamada) */}
-          <div className="flex min-h-[17rem] min-w-0 flex-col sm:min-h-[26rem]">
+          {/* Altura FIJA, no mínima: el guion recorre conversaciones de distinto largo (y la llamada añade la onda),
+              así que con min-h la bandeja crecía y encogía ~150 px en bucle y empujaba toda la página bajo el hero.
+              El desbordamiento lo absorbe la lista de mensajes, que ya hace autoscroll. */}
+          <div className="flex h-[32rem] min-w-0 flex-col sm:h-[36rem]">
             {/* Nombre a ancho completo; canal y chip de pilar comparten la segunda línea para que el chip no trunque el nombre. */}
             <div className="border-b border-line-soft px-4 py-2.5">
               <p className="truncate text-[0.9rem] font-semibold text-ink">
@@ -251,7 +254,12 @@ export default function IonicInbox({ conversations, pillars }: Props) {
 
             <div ref={chatRef} className="flex flex-1 flex-col gap-2.5 overflow-y-auto px-4 py-4" aria-live="polite">
               {visibleMessages.map((m, i) => (
-                <div key={`${active.id}-${i}`} className={`msg-in flex flex-col ${m.from === 'ionic' ? 'items-end' : 'items-start'}`}>
+                // mt-auto en el primero: con pocos mensajes la conversación se apoya abajo como en un chat real;
+                // al desbordar, el margen automático se resuelve en 0 y el scroll funciona normal.
+                <div
+                  key={`${active.id}-${i}`}
+                  className={`msg-in flex flex-col ${i === 0 ? 'mt-auto' : ''} ${m.from === 'ionic' ? 'items-end' : 'items-start'}`}
+                >
                   {active.speakers && (
                     <span className="mb-0.5 px-1 text-[0.68rem] font-semibold uppercase tracking-wide text-ink-3">
                       {active.speakers[m.from]}
