@@ -1,5 +1,6 @@
 ---
 import BrandMark from '../BrandMark.astro';
+import ClientLogo from '../ClientLogo.astro';
 import { clients, certifications, partners } from '../../data/site-content';
 const loop = [...clients, ...clients];
 
@@ -20,11 +21,11 @@ const markSize = {
   <div class="wrap">
     <p class="text-center text-[0.95rem] font-semibold uppercase tracking-wide text-ink-3" data-reveal>Negocios que confían en IonosHub</p>
     <div class="marquee mt-8 overflow-hidden [mask-image:linear-gradient(to_right,transparent,black_12%,black_88%,transparent)]" data-reveal>
-      <ul class="marquee-track flex w-max items-center gap-14 pr-14">
+      <ul class="marquee-track flex w-max items-center gap-4 pr-4 sm:gap-5 sm:pr-5">
         {
           loop.map((c) => (
             <li class="shrink-0">
-              <img src={c.src} alt={c.alt} height="80" loading="lazy" decoding="async" class="h-16 w-auto contrast-125 sm:h-20" />
+              <ClientLogo src={c.src} alt={c.alt} size="xl" class="!bg-ice-3 !border-line-soft" />
             </li>
           ))
         }

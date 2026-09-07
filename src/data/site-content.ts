@@ -1,18 +1,18 @@
-/* Logos de clientes reales (repo v1, /public/imgs/clientes). */
+/* Logos de clientes reales, recortados al trazo con margen uniforme (public/imgs/clientes/marca). */
 export const clients = [
-  { src: '/imgs/clientes/chipotle.webp', alt: 'El Chipotle' },
-  { src: '/imgs/clientes/zonagamers.png', alt: 'Zona Gamers' },
-  { src: '/imgs/clientes/santalucia.png', alt: 'Santa Lucía' },
-  { src: '/imgs/clientes/mianonna.webp', alt: 'Mia Nonna' },
-  { src: '/imgs/clientes/distribuidora.webp', alt: 'Distribuidora Hernández' },
-  { src: '/imgs/clientes/mafercano.png', alt: 'Mafercano' },
-  { src: '/imgs/clientes/itsi.png', alt: 'ITSI' },
-  { src: '/imgs/clientes/danielavidal.png', alt: 'Daniela Vidal' },
-  { src: '/imgs/clientes/ecu593.png', alt: 'Ecu593 English' },
-  { src: '/imgs/clientes/fondue.png', alt: 'Fondué s Escuela de Chefs' },
-  { src: '/imgs/clientes/aura.png', alt: 'Aura Beauty Studio' },
-  { src: '/imgs/clientes/gecop.png', alt: 'GECOP Expert' },
-  { src: '/imgs/clientes/pawau.png', alt: 'Pawau' },
+  { src: '/imgs/clientes/marca/chipotle.webp', alt: 'El Chipotle' },
+  { src: '/imgs/clientes/marca/zonagamers.webp', alt: 'Zona Gamers' },
+  { src: '/imgs/clientes/marca/danielavidal.webp', alt: 'Daniela Vidal · Asesora de seguros e inversiones' },
+  { src: '/imgs/clientes/marca/santalucia.webp', alt: 'Santa Lucía · Centro oftalmológico' },
+  { src: '/imgs/clientes/marca/aura.webp', alt: 'Aura Beauty Studio' },
+  { src: '/imgs/clientes/marca/mianonna.webp', alt: 'Mia Nonna' },
+  { src: '/imgs/clientes/marca/ecu593.webp', alt: 'Ecu593 English' },
+  { src: '/imgs/clientes/marca/distribuidora.webp', alt: 'Distribuidora Hernández' },
+  { src: '/imgs/clientes/marca/fondue.webp', alt: "Fondue's Escuela de Chefs" },
+  { src: '/imgs/clientes/marca/mafercano.webp', alt: 'Mafer Cano' },
+  { src: '/imgs/clientes/marca/gecop.webp', alt: 'Gecop Expert' },
+  { src: '/imgs/clientes/marca/itsi.webp', alt: 'ITSI' },
+  { src: '/imgs/clientes/marca/pawau.webp', alt: 'Pawau' },
 ];
 
 /* Conexiones oficiales: marcas reales; el sello de programa va en el texto, no se inventa un emblema. */

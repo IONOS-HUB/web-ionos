@@ -1,9 +1,11 @@
 ---
 import Icon from '../Icon.astro';
+import ClientLogo from '../ClientLogo.astro';
 import { successCases, homeCaseSlugs, getCaseBySlug } from '../../data/cases';
 import { pillarById } from '../../data/pillars';
 
-const featured = homeCaseSlugs.map((s) => getCaseBySlug(s)!).filter(Boolean);
+const [lead, ...rest] = homeCaseSlugs.map((s) => getCaseBySlug(s)!).filter(Boolean);
+const leadPillar = pillarById(lead.pillar);
 ---
 
 <section class="bg-night py-20 text-white lg:py-28">
@@ -21,39 +23,78 @@ const featured = homeCaseSlugs.map((s) => getCaseBySlug(s)!).filter(Boolean);
       </a>
     </div>
 
-    <ul class="mt-14 grid gap-px overflow-hidden rounded-[1.5rem] border border-night-line bg-night-line sm:grid-cols-2 lg:mt-20 lg:grid-cols-4">
-      {
-        featured.map((c, i) => {
-          const pillar = pillarById(c.pillar);
-          const m = c.metric;
-          return (
-            <li class="flex flex-col bg-night p-7 lg:p-8" data-reveal data-reveal-delay={i * 80}>
-              <span class="chip !border-night-line !bg-night-2 !text-night-text self-start">
-                <Icon name={c.pillar} size={14} /> {pillar.short}
+    <div class="mt-14 grid gap-6 lg:mt-20 lg:grid-cols-12 lg:gap-8">
+      <!-- Caso destacado: el que mejor se mide -->
+      <article class="flex flex-col rounded-[1.5rem] border border-night-line bg-night-2 p-7 lg:col-span-7 lg:p-10" data-reveal>
+        <div class="flex flex-wrap items-center gap-4">
+          {lead.logo && <ClientLogo src={lead.logo} alt={lead.client} size="lg" />}
+          <div class="min-w-0">
+            <p class="text-[1.15rem] font-semibold">{lead.client}</p>
+            <p class="text-[0.95rem] text-night-text">{lead.industry}</p>
+          </div>
+          <span class="chip !border-night-line !bg-night !text-night-text ml-auto"><Icon name={lead.pillar} size={14} /> {leadPillar.short}</span>
+        </div>
+
+        {
+          lead.metric && (
+            <p class="mt-10 flex flex-wrap items-end gap-x-5 gap-y-2">
+              <span class="tnum inline-flex items-baseline gap-2 pb-2 text-[1.1rem] font-medium text-night-text">
+                <span class="text-[0.8rem] uppercase tracking-wide">antes</span>
+                <span class="line-through decoration-night-text/50">{lead.metric.before}</span>
               </span>
-              <div class="mt-8 flex-1">
-                {m ? (
-                  <p class="flex flex-col gap-2">
-                    <span class="tnum inline-flex items-baseline gap-2 text-[1.05rem] font-medium text-night-text">
-                      <span class="text-[0.8rem] uppercase tracking-wide">antes</span>
-                      <span class="line-through decoration-night-text/50">{m.before}</span>
-                    </span>
-                    <span class="display-tight tnum block text-[clamp(2.8rem,4.6vw,3.8rem)] font-semibold leading-none text-white">{m.after}</span>
-                    {m.unit && <span class="text-[1.05rem] font-medium text-night-text">{m.unit}</span>}
-                  </p>
-                ) : (
-                  <p class="display-tight text-[clamp(2rem,3.5vw,2.8rem)] font-semibold leading-none">{c.highlight}</p>
-                )}
-                <p class="mt-5 text-[1rem] leading-relaxed text-night-text">{c.result}</p>
+              <span class="display-tight tnum text-[clamp(3.4rem,6vw,5.5rem)] font-semibold leading-none">
+                {lead.metric.after}
+                {lead.metric.unit && <span class="ml-2 text-[0.4em] font-medium text-night-text">{lead.metric.unit}</span>}
+              </span>
+            </p>
+          )
+        }
+
+        <dl class="mt-10 grid gap-6 border-t border-night-line pt-8 sm:grid-cols-3">
+          {
+            [
+              ['Reto', lead.challenge],
+              ['Solución', lead.solution],
+              ['Resultado', lead.result],
+            ].map(([t, d]) => (
+              <div>
+                <dt class="text-[0.78rem] font-semibold uppercase tracking-wide text-night-text">{t}</dt>
+                <dd class="mt-2 text-[1rem] leading-relaxed text-white/90">{d}</dd>
               </div>
-              <p class="mt-8 border-t border-night-line pt-4 text-[0.92rem]">
-                <span class="font-semibold text-white">{c.client}</span>
-                <span class="text-night-text"> · {c.industry}</span>
-              </p>
-            </li>
-          );
-        })
-      }
-    </ul>
+            ))
+          }
+        </dl>
+      </article>
+
+      <!-- Los demás, uno por pilar -->
+      <ul class="divide-y divide-night-line overflow-hidden rounded-[1.5rem] border border-night-line bg-night-2 lg:col-span-5">
+        {
+          rest.map((c, i) => {
+            const pillar = pillarById(c.pillar);
+            return (
+              <li data-reveal data-reveal-delay={(i + 1) * 70}>
+                <a href="/casos-de-exito" class="group flex items-center gap-4 px-5 py-5 transition-colors hover:bg-night lg:px-6">
+                  {c.logo ? (
+                    <ClientLogo src={c.logo} alt={c.client} size="md" />
+                  ) : (
+                    <span class="flex h-16 w-28 shrink-0 items-center justify-center rounded-[1rem] border border-night-line text-night-text">
+                      <Icon name={c.pillar} size={22} />
+                    </span>
+                  )}
+                  <div class="min-w-0 flex-1">
+                    <p class="display-tight tnum text-[1.5rem] font-semibold leading-none">{c.highlight}</p>
+                    <p class="mt-2 truncate text-[0.92rem] text-night-text">
+                      <span class="font-semibold text-white">{c.client}</span> · {c.industry}
+                    </p>
+                    <p class="mt-1.5 text-[0.78rem] font-semibold uppercase tracking-wide text-night-text">{pillar.short}</p>
+                  </div>
+                  <Icon name="arrow-right" size={18} class="shrink-0 text-night-text transition-transform duration-500 ease-[var(--ease-out-expo)] group-hover:translate-x-1 group-hover:text-white" />
+                </a>
+              </li>
+            );
+          })
+        }
+      </ul>
+    </div>
   </div>
 </section>

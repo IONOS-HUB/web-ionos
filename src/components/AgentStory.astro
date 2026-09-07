@@ -1,0 +1,104 @@
+---
+/**
+ * Ventanilla que recrea, paso a paso, el flujo real del agente de IA de Daniela Vidal (asesora de seguros):
+ * un lead escribe por WhatsApp de noche → el agente lo califica en dos preguntas → queda registrado en el CRM →
+ * la asesora entra sólo a cerrar. Secuencia CSS de una sola pasada disparada por el reveal (data-reveal → .is-in);
+ * sin motion-ready o con prefers-reduced-motion se muestra el estado final. Conversación recreada con datos ficticios.
+ */
+import Icon from './Icon.astro';
+
+const chat = [
+  { from: 'lead', text: 'Hola, vi su anuncio. Quiero cotizar un seguro para mi auto.', at: 0.3 },
+  { from: 'agent', text: '¡Hola! Con gusto le ayudo. ¿Es un auto particular o de trabajo, y de qué año?', at: 1.6 },
+  { from: 'lead', text: 'Particular, un 2022.', at: 3.1 },
+  { from: 'agent', text: 'Perfecto. ¿Prefiere cobertura total o contra terceros? Le preparo las opciones.', at: 4.3 },
+  { from: 'lead', text: 'Total, por favor.', at: 5.7 },
+] as const;
+---
+
+<div class="story overflow-hidden rounded-[1.5rem] border border-line bg-canvas shadow-lift" data-reveal aria-label="Recreación del flujo del agente de IA de Daniela Vidal">
+  <div class="flex items-center justify-between gap-3 bg-cobalt px-4 py-3 text-white">
+    <div class="flex min-w-0 items-center gap-3">
+      <span class="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-white/15"><Icon name="ia" size={18} /></span>
+      <div class="min-w-0 leading-tight">
+        <p class="truncate text-[0.95rem] font-semibold">Agente de IA · Daniela Vidal Seguros</p>
+        <p class="truncate text-xs text-ice">Filtra, califica y registra leads 24/7</p>
+      </div>
+    </div>
+    <span class="shrink-0 rounded-full border border-white/30 px-2.5 py-1 text-[0.7rem] font-semibold uppercase tracking-wide text-ice">Caso real</span>
+  </div>
+
+  <div class="flex items-center justify-between gap-3 border-b border-line-soft px-4 py-2.5">
+    <p class="min-w-0 truncate text-[0.9rem] font-semibold text-ink">
+      Carlos M. <span class="font-normal text-ink-3">· nuevo lead</span>
+    </p>
+    <p class="tnum shrink-0 text-xs text-ink-3">WhatsApp · 22:41</p>
+  </div>
+
+  <ol class="flex flex-col gap-2.5 px-4 py-4">
+    {
+      chat.map((m) => (
+        <li class:list={['step flex flex-col', m.from === 'agent' ? 'items-end' : 'items-start']} style={`--d:${m.at}s`}>
+          <span class="mb-0.5 px-1 text-[0.68rem] font-semibold uppercase tracking-wide text-ink-3">{m.from === 'agent' ? 'Agente de IA' : 'Lead'}</span>
+          <p class:list={['max-w-[85%] px-3.5 py-2.5 text-[0.92rem] leading-snug', m.from === 'agent' ? 'bubble-out' : 'bubble-in']}>{m.text}</p>
+        </li>
+      ))
+    }
+
+    <li class="step mt-1 flex flex-wrap items-center gap-2" style="--d:6.8s">
+      <span class="chip chip-on"><Icon name="check" size={14} /> Lead calificado</span>
+      <span class="chip">Seguro de auto · cobertura total</span>
+    </li>
+
+    <li class="step flex items-center gap-3 rounded-2xl border border-ice-2 bg-ice-3 px-3.5 py-2.5" style="--d:7.7s">
+      <span class="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-cobalt text-white"><Icon name="database" size={16} /></span>
+      <span class="leading-tight">
+        <span class="block text-[0.85rem] font-semibold text-cobalt-ink">Registrado en el CRM unificado</span>
+        <span class="block text-[0.78rem] text-ink-3">Etapa: cotización · Origen: WhatsApp · Asignado a Daniela</span>
+      </span>
+    </li>
+
+    <li class="step flex items-center gap-3 rounded-2xl border border-ice-2 bg-ice-3 px-3.5 py-2.5" style="--d:8.7s">
+      <span class="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-cobalt text-white"><Icon name="users" size={16} /></span>
+      <span class="leading-tight">
+        <span class="block text-[0.85rem] font-semibold text-cobalt-ink">Daniela entra sólo a cerrar y cobrar</span>
+        <span class="block text-[0.78rem] text-ink-3">Sin equipo de atención: el agente y ella</span>
+      </span>
+    </li>
+  </ol>
+
+  <div class="flex items-center justify-between gap-3 border-t border-line-soft bg-ice-3 px-4 py-3">
+    <p class="text-[0.72rem] font-semibold uppercase tracking-wide text-ink-3">Flujo real · conversación recreada</p>
+    <p class="shrink-0 text-[0.78rem] text-ink-2">Datos ficticios</p>
+  </div>
+</div>
+
+<style>
+  /* La ventanilla no se oculta con el reveal genérico: sus pasos entran uno a uno cuando llega .is-in. */
+  :global(html.motion-ready) .story[data-reveal]:not(.is-in) {
+    opacity: 1;
+    transform: none;
+    filter: none;
+  }
+  :global(html.motion-ready) .story[data-reveal] .step {
+    opacity: 0;
+  }
+  /* Longhands a propósito: el minificador vacía el atajo `animation` cuando mezcla var() con un animation-delay aparte. */
+  :global(html.motion-ready) .story[data-reveal].is-in .step {
+    animation-name: story-in;
+    animation-duration: 0.6s;
+    animation-timing-function: var(--ease-out-expo);
+    animation-fill-mode: both;
+    animation-delay: var(--d);
+  }
+  @keyframes story-in {
+    from {
+      opacity: 0;
+      transform: translateY(12px);
+    }
+    to {
+      opacity: 1;
+      transform: none;
+    }
+  }
+</style>

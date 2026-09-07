@@ -48,7 +48,7 @@ export const pillars: Pillar[] = [
     ],
     proof:
       'IONIC es nuestro agente propio: atiende llamadas, WhatsApp y redes 24/7, clasifica lo que recibe (voz, audio, imagen, documento) y agenda. Ideal para consultorios y clínicas.',
-    caseSlugs: ['pawau'],
+    caseSlugs: ['pawau', 'daniela-vidal'],
     faqs: [
       {
         q: '¿La IA también atiende llamadas?',
@@ -95,7 +95,7 @@ export const pillars: Pillar[] = [
       'Un dashboard muestra qué canal trae los clientes más rentables, cada lunes a las 7:00',
     ],
     proof: 'Somos partner de Zapier: conectamos tus herramientas con flujos oficiales y mantenidos.',
-    caseSlugs: ['zona-gamers'],
+    caseSlugs: ['daniela-vidal', 'zona-gamers'],
     faqs: [
       {
         q: '¿Qué es el CRM unificado?',

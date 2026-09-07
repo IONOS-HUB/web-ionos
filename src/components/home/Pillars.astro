@@ -2,7 +2,15 @@
 import Icon from '../Icon.astro';
 import SectionHeading from '../SectionHeading.astro';
 import PillarDemo from '../demos/PillarDemo.astro';
+import MediaGallery from '../MediaGallery.astro';
 import { pillars } from '../../data/pillars';
+import { coverageGallery, systemsGallery } from '../../data/photos';
+
+/* Tira compacta de trabajo real bajo la fila del pilar (fotos de cobertura, capturas de sistemas). */
+const strips = {
+  marketing: { gallery: coverageGallery, variant: 'photo', caption: 'Cobertura de eventos · fotos reales de un evento cubierto por IonosHub' },
+  software: { gallery: systemsGallery, variant: 'screen', caption: 'Sistemas entregados · capturas reales de sistemas de clientes' },
+} as const;
 import { getCaseBySlug } from '../../data/cases';
 ---
 
@@ -52,6 +60,14 @@ import { getCaseBySlug } from '../../data/cases';
               <div class:list={['lg:col-span-6', flip && 'lg:order-1']}>
                 <PillarDemo pillar={p.id} />
               </div>
+              {p.id in strips && (
+                <div class="min-w-0 lg:order-3 lg:col-span-12">
+                  <p class="mb-3 text-[0.9rem] font-semibold uppercase tracking-wide text-ink-3" data-reveal>
+                    {strips[p.id as keyof typeof strips].caption}
+                  </p>
+                  <MediaGallery gallery={strips[p.id as keyof typeof strips].gallery} variant={strips[p.id as keyof typeof strips].variant} compact />
+                </div>
+              )}
             </article>
           );
         })

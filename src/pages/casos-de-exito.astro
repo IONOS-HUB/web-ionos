@@ -2,6 +2,7 @@
 import BaseLayout from '../layouts/BaseLayout.astro';
 import Icon from '../components/Icon.astro';
 import Contact from '../components/home/Contact.astro';
+import ClientLogo from '../components/ClientLogo.astro';
 import { successCases } from '../data/cases';
 import { pillarById } from '../data/pillars';
 
@@ -34,9 +35,13 @@ const wa = 'Hola IonosHub, vi sus casos de éxito y quiero agendar un diagnósti
               <div class="lg:col-span-4">
                 <a href={pillar.route} class="chip hover:chip-on"><Icon name={c.pillar} size={14} /> {pillar.short}</a>
                 <p class="display-tight tnum mt-5 text-[clamp(2.2rem,4vw,3.4rem)] font-semibold leading-none text-cobalt">{c.highlight}</p>
-                <h2 class="mt-5 text-[1.4rem] font-semibold leading-tight text-ink">{c.client}</h2>
-                <p class="mt-1 text-[1rem] text-ink-3">{c.industry}</p>
-                {c.logo && <img src={c.logo} alt="" width="140" height="56" loading="lazy" decoding="async" class="mt-5 h-12 w-auto opacity-80" />}
+                <div class="mt-6 flex items-center gap-4">
+                  {c.logo && <ClientLogo src={c.logo} alt="" size="lg" />}
+                  <div class="min-w-0">
+                    <h2 class="text-[1.4rem] font-semibold leading-tight text-ink">{c.client}</h2>
+                    <p class="mt-1 text-[1rem] text-ink-3">{c.industry}</p>
+                  </div>
+                </div>
               </div>
               <dl class="grid gap-6 sm:grid-cols-3 lg:col-span-8">
                 <div>

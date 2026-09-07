@@ -1,0 +1,24 @@
+---
+/**
+ * Placa de logo de cliente: caja blanca de proporción fija donde la marca (recortada al trazo)
+ * se ajusta al máximo. Así todas las marcas pesan igual, también sobre el campo noche.
+ */
+interface Props {
+  src: string;
+  alt: string;
+  size?: 'sm' | 'md' | 'lg' | 'xl';
+  class?: string;
+}
+const { src, alt, size = 'md', class: className = '' } = Astro.props;
+
+const box = {
+  sm: 'h-12 w-[5.5rem] p-1.5 rounded-[0.75rem]',
+  md: 'h-16 w-28 p-2 rounded-[1rem]',
+  lg: 'h-20 w-36 p-2.5 rounded-[1rem]',
+  xl: 'h-24 w-44 p-3 rounded-[1.25rem]',
+}[size];
+---
+
+<span class:list={['flex shrink-0 items-center justify-center border border-line bg-canvas', box, className]}>
+  <img src={src} alt={alt} height="120" loading="lazy" decoding="async" class="h-full w-full object-contain" />
+</span>

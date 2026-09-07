@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useRef, useState } from 'react';
-import type { InboxConversation } from '../../data/inbox';
+import type { InboxConversation, InboxMessage } from '../../data/inbox';
 import type { PillarId } from '../../data/pillars';
 
 interface Props {
@@ -17,6 +17,45 @@ const CHANNEL_LABEL: Record<InboxConversation['channel'], string> = {
 };
 
 const WAVE = [6, 12, 18, 28, 16, 24, 32, 20, 12, 22, 30, 18, 10, 16, 24, 14, 8, 18, 26, 12, 6, 14, 20, 10];
+
+/**
+ * Ritmo del guion. Cada mensaje se queda en pantalla el tiempo que cuesta leerlo
+ * (antes era un intervalo fijo y las respuestas largas se iban a medio leer).
+ * Para tantear otro ritmo sin tocar código: `?speed=1.4` más lento, `?speed=0.7` más rápido.
+ */
+const PACE = {
+  /** Tiempo base de lectura, antes de contar caracteres */
+  base: 850,
+  /** Por carácter: ~26 caracteres por segundo, equivale a unas 230 palabras por minuto */
+  perChar: 38,
+  /** Techo, para que un mensaje muy largo no detenga el guion */
+  max: 6400,
+  /** Extra cuando el mensaje trae tarjeta de acción (cita agendada, lead registrado…) */
+  card: 1000,
+  /** Antes del primer mensaje de cada conversación */
+  leadIn: 700,
+  /** Indicador de "escribiendo", proporcional a lo que va a responder */
+  typingBase: 500,
+  typingPerChar: 9,
+  typingMax: 1700,
+  /** Respiro sobre el último mensaje antes de saltar a la siguiente conversación */
+  handoff: 1400,
+};
+
+const readMs = (m: InboxMessage) =>
+  Math.min(PACE.max, PACE.base + m.text.length * PACE.perChar) + (m.card ? PACE.card : 0);
+
+const typeMs = (m: InboxMessage) => Math.min(PACE.typingMax, PACE.typingBase + m.text.length * PACE.typingPerChar);
+
+/** Multiplicador de ritmo por querystring, sólo para tantear velocidades (`?speed=1.4`). */
+function useSpeed() {
+  const [speed, setSpeed] = useState(1);
+  useEffect(() => {
+    const raw = Number(new URLSearchParams(window.location.search).get('speed'));
+    if (Number.isFinite(raw) && raw > 0) setSpeed(Math.min(4, Math.max(0.25, raw)));
+  }, []);
+  return speed;
+}
 
 function usePrefersReducedMotion() {
   const [reduced, setReduced] = useState(false);
@@ -42,6 +81,7 @@ function PhoneIcon({ size = 12 }: { size?: number }) {
 
 export default function IonicInbox({ conversations, pillars }: Props) {
   const reduced = usePrefersReducedMotion();
+  const speed = useSpeed();
   const [phase, setPhase] = useState<Phase>({ conv: 0, shown: 0, typing: false });
   const [tagged, setTagged] = useState<Set<PillarId>>(new Set());
   const [done, setDone] = useState<Set<string>>(new Set());
@@ -66,14 +106,16 @@ export default function IonicInbox({ conversations, pillars }: Props) {
       timers.current = [];
     };
     const later = (fn: () => void, ms: number) => {
-      timers.current.push(window.setTimeout(fn, ms));
+      timers.current.push(window.setTimeout(fn, ms * speed));
     };
 
     const conv = conversations[phase.conv];
     const next = conv.messages[phase.shown];
+    const prev = conv.messages[phase.shown - 1];
 
     if (!next) {
       // Conversación completa: etiqueta el pilar, marca hecha, espera y pasa a la siguiente.
+      // El último mensaje (casi siempre el que cierra con tarjeta) se queda su lectura más un respiro.
       setTagged((s) => new Set(s).add(conv.pillar));
       setDone((s) => new Set(s).add(conv.id));
       later(() => {
@@ -83,21 +125,24 @@ export default function IonicInbox({ conversations, pillars }: Props) {
           setDone(new Set());
         }
         setPhase({ conv: nextConv, shown: 0, typing: false });
-      }, 2600);
+      }, readMs(conv.messages[conv.messages.length - 1]) + PACE.handoff);
       return clear;
     }
 
-    if (next.from === 'ionic') {
-      if (!phase.typing) {
-        later(() => setPhase((p) => ({ ...p, typing: true })), 500);
-      } else {
-        later(() => setPhase((p) => ({ ...p, shown: p.shown + 1, typing: false })), 1100);
-      }
+    if (next.from === 'ionic' && phase.typing) {
+      // El indicador ya está a la vista: dura en proporción a lo que va a responder.
+      later(() => setPhase((p) => ({ ...p, shown: p.shown + 1, typing: false })), typeMs(next));
     } else {
-      later(() => setPhase((p) => ({ ...p, shown: p.shown + 1 })), phase.shown === 0 ? 900 : 1300);
+      // Deja leer el mensaje anterior; después entra el siguiente (o el "escribiendo", si responde IONIC).
+      later(
+        next.from === 'ionic'
+          ? () => setPhase((p) => ({ ...p, typing: true }))
+          : () => setPhase((p) => ({ ...p, shown: p.shown + 1 })),
+        prev ? readMs(prev) : PACE.leadIn,
+      );
     }
     return clear;
-  }, [phase, reduced, conversations]);
+  }, [phase, reduced, conversations, speed]);
 
   // Autoscroll del chat
   useEffect(() => {
