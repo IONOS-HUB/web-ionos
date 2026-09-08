@@ -27,6 +27,7 @@ export const NAV = [
   { href: '/servicios/marketing', label: 'Marketing' },
   { href: '/servicios/software-a-medida', label: 'Software en 30 días', short: 'Software' },
   { href: '/casos-de-exito', label: 'Casos' },
+  { href: '/blog-recursos', label: 'Blog' },
   { href: '/equipo', label: 'Equipo' },
 ] as const;
 

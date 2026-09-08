@@ -12,6 +12,7 @@ interface Props {
   /** Ruta canónica (sin dominio). Por defecto la actual. */
   path?: string;
   ogImage?: string;
+  ogType?: 'website' | 'article';
   waMessage?: string;
   noindex?: boolean;
 }
@@ -21,6 +22,7 @@ const {
   description,
   path = Astro.url.pathname,
   ogImage = '/imgs/og.png',
+  ogType = 'website',
   waMessage = DEFAULT_WA_MESSAGE,
   noindex = false,
 } = Astro.props;
@@ -70,7 +72,7 @@ const orgJsonLd = {
     {googleVerification && <meta name="google-site-verification" content={googleVerification} />}
     {bingVerification && <meta name="msvalidate.01" content={bingVerification} />}
 
-    <meta property="og:type" content="website" />
+    <meta property="og:type" content={ogType} />
     <meta property="og:site_name" content="IonosHub" />
     <meta property="og:locale" content="es_EC" />
     <meta property="og:title" content={fullTitle} />

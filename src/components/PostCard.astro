@@ -1,0 +1,42 @@
+---
+import Icon from './Icon.astro';
+import { CATEGORY_LABEL, formatDate, postUrl, readingMinutes, resolveAuthor, type Post } from '../lib/blog';
+
+interface Props {
+  post: Post;
+  featured?: boolean;
+}
+const { post, featured = false } = Astro.props;
+const author = resolveAuthor(post.data.author);
+const minutes = readingMinutes(post.body);
+---
+
+<article class:list={['group flex h-full flex-col rounded-[1.5rem] border border-line bg-canvas transition-colors hover:border-cobalt', featured ? 'p-7 lg:p-10' : 'p-6']}>
+  <div class="flex flex-wrap items-center gap-2">
+    <span class="chip">{CATEGORY_LABEL[post.data.category]}</span>
+    {post.data.source && <span class="text-[0.8rem] text-ink-3">Con {post.data.source.name}</span>}
+  </div>
+  <h3 class:list={['mt-4 font-semibold leading-tight text-ink [text-wrap:balance] group-hover:text-cobalt', featured ? 'display-tight text-[clamp(1.75rem,3vw,2.5rem)]' : 'text-[1.3rem]']}>
+    <a href={postUrl(post)} class="after:absolute after:inset-0">{post.data.title}</a>
+  </h3>
+  <p class:list={['mt-3 leading-relaxed text-ink-2', featured ? 'text-[1.1rem]' : 'text-[0.98rem]']}>{post.data.description}</p>
+  <div class="mt-auto flex items-center gap-3 pt-6 text-[0.85rem] text-ink-3">
+    {
+      author.photo ? (
+        <img src={author.photo} alt="" width="36" height="36" loading="lazy" decoding="async" class="h-9 w-9 rounded-full object-cover object-top" />
+      ) : (
+        <span class="flex h-9 w-9 items-center justify-center rounded-full bg-ice text-cobalt-ink"><Icon name="users" size={16} /></span>
+      )}
+    <span class="min-w-0">
+      <span class="block truncate font-semibold text-ink">{author.name}</span>
+      <span class="tnum block">{formatDate(post.data.date)} · {minutes} min de lectura</span>
+    </span>
+    <Icon name="arrow-right" size={18} class="ml-auto shrink-0 text-cobalt transition-transform duration-500 ease-[var(--ease-out-expo)] group-hover:translate-x-1" />
+  </div>
+</article>
+
+<style>
+  article {
+    position: relative;
+  }
+</style>

@@ -1,5 +1,36 @@
+# IonosHub · https://ionoshub.net
+# Todo el sitio es público salvo el endpoint del formulario.
+
 User-agent: *
 Allow: /
 Disallow: /api/
+
+# Rastreadores de buscadores por IA: bienvenidos (respuestas con cita a la fuente).
+User-agent: GPTBot
+Allow: /
+
+User-agent: OAI-SearchBot
+Allow: /
+
+User-agent: ChatGPT-User
+Allow: /
+
+User-agent: PerplexityBot
+Allow: /
+
+User-agent: ClaudeBot
+Allow: /
+
+User-agent: Claude-SearchBot
+Allow: /
+
+User-agent: Google-Extended
+Allow: /
+
+User-agent: Bingbot
+Allow: /
+
+# Resumen del sitio pensado para modelos de lenguaje
+# https://ionoshub.net/llms.txt
 
 Sitemap: https://ionoshub.net/sitemap-index.xml
