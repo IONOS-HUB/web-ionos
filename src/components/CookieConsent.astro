@@ -154,9 +154,17 @@ const { gaId } = Astro.props;
       if (analytics) loadGa();
     };
     const root = document.documentElement;
-    const lift = () => root.style.setProperty('--cc-lift', `${box.offsetHeight + 44}px`);
-    // La fuente puede llegar después y cambiar el alto del aviso: se recalcula.
-    if (document.fonts && document.fonts.ready) document.fonts.ready.then(() => { if (!box.hidden) lift(); });
+    // El alto del aviso llega por ResizeObserver (sin forzar layout desde JS); cubre fuente tardía y resize.
+    const setLift = (h) => root.style.setProperty('--cc-lift', `${Math.round(h) + 44}px`);
+    if ('ResizeObserver' in window) {
+      new ResizeObserver((entries) => {
+        const h = entries[0].borderBoxSize?.[0]?.blockSize ?? entries[0].contentRect.height;
+        if (!box.hidden && h) setLift(h);
+      }).observe(box);
+    }
+    const lift = () => {
+      if (!('ResizeObserver' in window)) requestAnimationFrame(() => setLift(box.offsetHeight));
+    };
 
     const save = (analytics) => {
       try {
@@ -167,7 +175,9 @@ const { gaId } = Astro.props;
       root.classList.remove('cc-open');
     };
 
-    const open = () => {
+    // `focus` sólo cuando lo abre la persona desde el pie: en la primera visita no se roba el foco
+    // (y se evita un reflow forzado en plena carga).
+    const open = (focus) => {
       const saved = read();
       analyticsInput.checked = !!(saved && saved.analytics);
       prefs.hidden = true;
@@ -176,7 +186,7 @@ const { gaId } = Astro.props;
       box.hidden = false;
       root.classList.add('cc-open');
       lift();
-      box.querySelector('[data-cc-accept]').focus({ preventScroll: true });
+      if (focus) box.querySelector('[data-cc-accept]').focus({ preventScroll: true });
     };
 
     box.querySelector('[data-cc-accept]').addEventListener('click', () => save(true));
@@ -188,17 +198,19 @@ const { gaId } = Astro.props;
       lift();
       analyticsInput.focus({ preventScroll: true });
     });
-    window.addEventListener('resize', () => {
-      if (!box.hidden) lift();
-    });
     saveBtn.addEventListener('click', () => save(analyticsInput.checked));
 
     // Reapertura desde el pie ("Preferencias de cookies")
-    document.querySelectorAll('[data-cookie-prefs]').forEach((b) => b.addEventListener('click', open));
+    document.querySelectorAll('[data-cookie-prefs]').forEach((b) => b.addEventListener('click', () => open(true)));
 
     const saved = read();
     if (saved) apply(!!saved.analytics);
-    else open();
+    else {
+      // Primera visita: el aviso aparece cuando el hilo principal queda libre, fuera de la ruta crítica.
+      const show = () => open(false);
+      if ('requestIdleCallback' in window) requestIdleCallback(show, { timeout: 1500 });
+      else setTimeout(show, 400);
+    }
 
     // Clics a WhatsApp como evento de contacto (sólo llega a GA si hay consentimiento)
     document.addEventListener('click', (e) => {

@@ -11,6 +11,7 @@
  * `compact`: una sola fila sin ventanilla (home).
  */
 import Icon from './Icon.astro';
+import { srcsetFor } from '../lib/images';
 import type { Gallery } from '../data/photos';
 
 interface Props {
@@ -58,7 +59,7 @@ const tileShape = (i: number) => {
                 </span>
               )}
               <span class="media">
-                <img src={p.src} alt={p.alt} width={p.width} height={p.height} loading="lazy" decoding="async" />
+                <img src={p.src} srcset={srcsetFor(p.src, p.width)} sizes="(min-width: 640px) 18vw, 30vw" alt={p.alt} width={p.width} height={p.height} loading="lazy" decoding="async" />
               </span>
             </button>
           </li>
@@ -94,7 +95,16 @@ const tileShape = (i: number) => {
                   </span>
                 )}
                 <span class="media">
-                  <img src={p.src} alt={p.alt} width={p.width} height={p.height} loading={i === 0 ? 'eager' : 'lazy'} decoding="async" />
+                  <img
+                    src={p.src}
+                    srcset={srcsetFor(p.src, p.width)}
+                    sizes={lead && i === 0 ? '(min-width: 1024px) 44vw, 92vw' : '(min-width: 1024px) 22vw, (min-width: 640px) 45vw, 92vw'}
+                    alt={p.alt}
+                    width={p.width}
+                    height={p.height}
+                    loading={i === 0 ? 'eager' : 'lazy'}
+                    decoding="async"
+                  />
                 </span>
                 {i === 0 && gallery.delivery && (
                   <span class="delivery pointer-events-none absolute bottom-3 left-3 flex items-center gap-3 rounded-2xl border border-ice-2 bg-ice-3/95 px-3.5 py-2.5 text-left backdrop-blur" data-reveal data-reveal-delay="900">

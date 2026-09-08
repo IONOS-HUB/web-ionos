@@ -5,6 +5,7 @@
  */
 import Icon from './Icon.astro';
 import { photos, type PhotoId } from '../data/photos';
+import { srcsetFor } from '../lib/images';
 
 interface Props {
   id: PhotoId;
@@ -25,6 +26,8 @@ const gradId = `photo-wave-${id}`;
     p.src ? (
       <img
         src={p.src}
+        srcset={srcsetFor(p.src, p.width)}
+        sizes="(min-width: 1024px) 40vw, 92vw"
         alt={p.alt}
         width={p.width}
         height={p.height}

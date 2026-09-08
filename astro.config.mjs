@@ -29,6 +29,7 @@ export default defineConfig({
   adapter: vercel(),
   integrations: [react(), sitemap({ filter: (page) => !page.includes('/api/') })],
   redirects: legacyRedirects,
+  build: { inlineStylesheets: 'always' },
   vite: {
     plugins: [tailwindcss()],
   },

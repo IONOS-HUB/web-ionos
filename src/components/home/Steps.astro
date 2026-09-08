@@ -44,6 +44,10 @@ import { steps } from '../../data/site-content';
 </section>
 
 <style>
+  /* Con motion activa la línea arranca vacía; GSAP (carga diferida) la dibuja con el scroll. */
+  :global(html.motion-ready) [data-progress-line] {
+    transform: scaleY(0);
+  }
   .step.is-active .step-dot {
     border-color: var(--color-cobalt);
     background: var(--color-cobalt);
