@@ -63,6 +63,11 @@ export default function ContactForm({ options, defaultInterest = '' }: Props) {
       });
       if (!res.ok) throw new Error(`HTTP ${res.status}`);
       setStatus('success');
+      // Conversión principal del sitio para GA4 (evento recomendado `generate_lead`); sólo si GA está cargado.
+      (window as unknown as { gtag?: (...args: unknown[]) => void }).gtag?.('event', 'generate_lead', {
+        interest: data.servicio_interes,
+        page_path: window.location.pathname,
+      });
       setData({ ...initial, servicio_interes: defaultInterest });
     } catch (err) {
       console.error('Error enviando el formulario:', err);
@@ -96,7 +101,7 @@ export default function ContactForm({ options, defaultInterest = '' }: Props) {
   }
 
   return (
-    <form onSubmit={onSubmit} noValidate className="flex flex-col gap-4" aria-describedby="form-help">
+    <form id="diagnostico" name="diagnostico" onSubmit={onSubmit} noValidate className="flex flex-col gap-4" aria-describedby="form-help">
       <div className="hidden" aria-hidden="true">
         <label htmlFor="website">Sitio web</label>
         <input id="website" name="website" type="text" tabIndex={-1} autoComplete="off" value={data.website} onChange={(e) => set('website', e.target.value)} />

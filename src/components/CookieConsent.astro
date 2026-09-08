@@ -1,0 +1,209 @@
+---
+/**
+ * Consentimiento de cookies con Google Consent Mode v2.
+ * - Sin elección: sólo cookies necesarias; GA4 no se carga.
+ * - "Aceptar todo" o analítica activada en "Personalizar": se actualiza el consentimiento y se carga gtag.js.
+ * - La elección se guarda en localStorage (`ionoshub-consent`) y se puede cambiar desde "Preferencias de cookies" en el pie.
+ */
+import Icon from './Icon.astro';
+
+interface Props {
+  gaId: string;
+}
+const { gaId } = Astro.props;
+---
+
+<div
+  class="cc fixed inset-x-4 bottom-4 z-[90] mx-auto max-w-lg rounded-[1.5rem] border border-line bg-canvas p-5 shadow-phone sm:left-6 sm:right-auto sm:bottom-6 sm:mx-0 sm:p-6"
+  role="dialog"
+  aria-labelledby="cc-title"
+  aria-describedby="cc-text"
+  hidden
+  data-cookie-consent
+>
+  <div class="flex items-start gap-3">
+    <span class="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-ice text-cobalt-ink"><Icon name="shield" size={18} /></span>
+    <div class="min-w-0">
+      <p id="cc-title" class="text-[1.05rem] font-semibold leading-tight text-ink">Tu privacidad, tu decisión.</p>
+      <p id="cc-text" class="mt-1.5 text-[0.92rem] leading-relaxed text-ink-2">
+        Usamos cookies necesarias para que el sitio funcione y, sólo si lo permites, Google Analytics para saber qué
+        páginas ayudan más y qué acciones se completan. Nunca vendemos tus datos.
+        <a href="/politica-de-privacidad" class="font-semibold text-cobalt-ink underline">Política de privacidad</a>
+      </p>
+    </div>
+  </div>
+
+  <div class="cc-prefs mt-4 divide-y divide-line-soft rounded-[1rem] border border-line" hidden>
+    <label class="flex items-center justify-between gap-4 px-4 py-3">
+      <span>
+        <span class="block text-[0.95rem] font-semibold text-ink">Necesarias</span>
+        <span class="block text-[0.82rem] text-ink-3">Formulario, seguridad y tus preferencias. Siempre activas.</span>
+      </span>
+      <input type="checkbox" checked disabled class="cc-switch" aria-label="Cookies necesarias, siempre activas" />
+    </label>
+    <label class="flex items-center justify-between gap-4 px-4 py-3">
+      <span>
+        <span class="block text-[0.95rem] font-semibold text-ink">Analítica · Google Analytics 4</span>
+        <span class="block text-[0.82rem] text-ink-3">Páginas vistas, hasta dónde bajas, clics a WhatsApp y redes, y si envías el formulario. Agregado y con IP anonimizada; nunca lo que escribes.</span>
+      </span>
+      <input type="checkbox" class="cc-switch" data-cc-analytics aria-label="Permitir Google Analytics" />
+    </label>
+  </div>
+
+  <div class="mt-4 flex flex-wrap gap-2">
+    <button type="button" class="btn btn-primary !min-h-11 !px-5 text-[0.95rem]" data-cc-accept>Aceptar todo</button>
+    <button type="button" class="btn btn-ghost !min-h-11 !px-5 text-[0.95rem]" data-cc-necessary>Sólo necesarias</button>
+    <button type="button" class="btn btn-ghost !min-h-11 !px-5 text-[0.95rem]" data-cc-customize>Personalizar</button>
+    <button type="button" class="btn btn-primary !min-h-11 !px-5 text-[0.95rem]" data-cc-save hidden>Guardar preferencias</button>
+  </div>
+</div>
+
+<style>
+  .cc-switch {
+    appearance: none;
+    width: 2.75rem;
+    height: 1.6rem;
+    flex-shrink: 0;
+    border-radius: 999px;
+    background: var(--color-ice-2);
+    position: relative;
+    cursor: pointer;
+    transition: background-color 0.25s;
+  }
+  .cc-switch::after {
+    content: '';
+    position: absolute;
+    top: 0.2rem;
+    left: 0.2rem;
+    width: 1.2rem;
+    height: 1.2rem;
+    border-radius: 999px;
+    background: var(--color-canvas);
+    box-shadow: 0 1px 3px rgb(15 23 34 / 0.2);
+    transition: transform 0.3s var(--ease-out-expo);
+  }
+  .cc-switch:checked {
+    background: var(--color-cobalt);
+  }
+  .cc-switch:checked::after {
+    transform: translateX(1.15rem);
+  }
+  .cc-switch:disabled {
+    cursor: default;
+    opacity: 0.6;
+  }
+  .cc-switch:focus-visible {
+    outline: 3px solid var(--color-cobalt);
+    outline-offset: 3px;
+  }
+  .cc:not([hidden]) {
+    animation: msg-in 0.55s var(--ease-out-expo) both;
+  }
+  /* En móvil el aviso ocupa todo el ancho: el flotante de WhatsApp sube para no quedar tapado. */
+  @media (max-width: 639px) {
+    /* Valor final en px calculado en JS (alto del aviso + márgenes): el minificador aplana calc() con var(). */
+    :global(html.cc-open [data-wa-float]) {
+      bottom: var(--cc-lift, 1.25rem);
+      transition: bottom 0.5s var(--ease-out-expo);
+    }
+  }
+</style>
+
+<script is:inline define:vars={{ gaId }}>
+  (() => {
+    const KEY = 'ionoshub-consent';
+    const box = document.querySelector('[data-cookie-consent]');
+    if (!box) return;
+    const prefs = box.querySelector('.cc-prefs');
+    const analyticsInput = box.querySelector('[data-cc-analytics]');
+    const saveBtn = box.querySelector('[data-cc-save]');
+    const customizeBtn = box.querySelector('[data-cc-customize]');
+
+    // Consent Mode v2: todo denegado por defecto; gtag.js sólo se carga si la analítica se permite.
+    window.dataLayer = window.dataLayer || [];
+    window.gtag = window.gtag || function () { dataLayer.push(arguments); };
+    gtag('consent', 'default', {
+      ad_storage: 'denied',
+      ad_user_data: 'denied',
+      ad_personalization: 'denied',
+      analytics_storage: 'denied',
+      wait_for_update: 500,
+    });
+
+    let gaLoaded = false;
+    const loadGa = () => {
+      if (gaLoaded || !gaId) return;
+      gaLoaded = true;
+      const s = document.createElement('script');
+      s.async = true;
+      s.src = `https://www.googletagmanager.com/gtag/js?id=${gaId}`;
+      document.head.appendChild(s);
+      gtag('js', new Date());
+      gtag('config', gaId, { anonymize_ip: true });
+    };
+
+    const read = () => {
+      try {
+        return JSON.parse(localStorage.getItem(KEY) || 'null');
+      } catch {
+        return null;
+      }
+    };
+    const apply = (analytics) => {
+      gtag('consent', 'update', { analytics_storage: analytics ? 'granted' : 'denied' });
+      if (analytics) loadGa();
+    };
+    const root = document.documentElement;
+    const lift = () => root.style.setProperty('--cc-lift', `${box.offsetHeight + 44}px`);
+    // La fuente puede llegar después y cambiar el alto del aviso: se recalcula.
+    if (document.fonts && document.fonts.ready) document.fonts.ready.then(() => { if (!box.hidden) lift(); });
+
+    const save = (analytics) => {
+      try {
+        localStorage.setItem(KEY, JSON.stringify({ necessary: true, analytics, at: new Date().toISOString(), v: 1 }));
+      } catch {}
+      apply(analytics);
+      box.hidden = true;
+      root.classList.remove('cc-open');
+    };
+
+    const open = () => {
+      const saved = read();
+      analyticsInput.checked = !!(saved && saved.analytics);
+      prefs.hidden = true;
+      saveBtn.hidden = true;
+      customizeBtn.hidden = false;
+      box.hidden = false;
+      root.classList.add('cc-open');
+      lift();
+      box.querySelector('[data-cc-accept]').focus({ preventScroll: true });
+    };
+
+    box.querySelector('[data-cc-accept]').addEventListener('click', () => save(true));
+    box.querySelector('[data-cc-necessary]').addEventListener('click', () => save(false));
+    customizeBtn.addEventListener('click', () => {
+      prefs.hidden = false;
+      saveBtn.hidden = false;
+      customizeBtn.hidden = true;
+      lift();
+      analyticsInput.focus({ preventScroll: true });
+    });
+    window.addEventListener('resize', () => {
+      if (!box.hidden) lift();
+    });
+    saveBtn.addEventListener('click', () => save(analyticsInput.checked));
+
+    // Reapertura desde el pie ("Preferencias de cookies")
+    document.querySelectorAll('[data-cookie-prefs]').forEach((b) => b.addEventListener('click', open));
+
+    const saved = read();
+    if (saved) apply(!!saved.analytics);
+    else open();
+
+    // Clics a WhatsApp como evento de contacto (sólo llega a GA si hay consentimiento)
+    document.addEventListener('click', (e) => {
+      const a = e.target instanceof Element ? e.target.closest('a[href*="wa.me"]') : null;
+      if (a) gtag('event', 'contact_whatsapp', { link_text: a.textContent.trim().slice(0, 60), page_path: location.pathname });
+    });
+  })();
+</script>
