@@ -1,9 +1,10 @@
 ---
 import Icon from './Icon.astro';
-import { NAV } from '../lib/site';
+import { NAV, NAV_SERVICES } from '../lib/site';
 
 const current = Astro.url.pathname;
 const isActive = (href: string) => current === href || (href !== '/' && current.startsWith(href));
+const servicesActive = current.startsWith('/servicios/');
 ---
 
 <header class="sticky top-0 z-50 border-b border-line-soft bg-canvas/85 backdrop-blur-md supports-[backdrop-filter]:bg-canvas/75">
@@ -12,8 +13,48 @@ const isActive = (href: string) => current === href || (href !== '/' && current.
       <img src="/imgs/logo.png" alt="IonosHub" width="152" height="40" class="h-9 w-auto lg:h-10" decoding="async" />
     </a>
 
-    <!-- lg (1024–1279): enlaces comprimidos y etiquetas cortas para que quepan seis enlaces + CTA sin desbordar; xl: tamaño completo. -->
-    <ul class="hidden items-center gap-0.5 lg:flex xl:gap-1">
+    <ul class="hidden items-center gap-1 lg:flex">
+      <!-- Servicios: desplegable con los cuatro pilares. Abre con hover, foco de teclado o clic (táctil). -->
+      <li class="menu relative" data-menu>
+        <button
+          type="button"
+          class:list={[
+            'flex items-center gap-1.5 whitespace-nowrap rounded-full px-3.5 py-2 text-[0.95rem] font-medium transition-colors duration-300',
+            servicesActive ? 'bg-ice text-cobalt-ink' : 'text-ink-2 hover:bg-ice-3 hover:text-ink',
+          ]}
+          aria-expanded="false"
+          aria-controls="menu-servicios"
+          aria-haspopup="true"
+        >
+          Servicios
+          <Icon name="plus" size={14} class="menu-caret transition-transform duration-400 ease-[var(--ease-out-expo)]" />
+        </button>
+        <div id="menu-servicios" class="menu-panel absolute left-0 top-[calc(100%+0.75rem)] w-[22rem] rounded-[1.5rem] border border-line bg-canvas p-2 shadow-lift">
+          <ul>
+            {
+              NAV_SERVICES.map((s) => (
+                <li>
+                  <a
+                    href={s.href}
+                    class:list={['group flex items-center gap-3.5 rounded-[1rem] px-3 py-3 transition-colors', isActive(s.href) ? 'bg-ice' : 'hover:bg-ice-3']}
+                    aria-current={isActive(s.href) ? 'page' : undefined}
+                  >
+                    <span class="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-ice text-cobalt-ink transition-colors group-hover:bg-cobalt group-hover:text-white"><Icon name={s.icon} size={18} /></span>
+                    <span class="min-w-0 leading-tight">
+                      <span class="block text-[0.95rem] font-semibold text-ink">{s.label}</span>
+                      <span class="block truncate text-[0.82rem] text-ink-3">{s.hint}</span>
+                    </span>
+                  </a>
+                </li>
+              ))
+            }
+          </ul>
+          <a href="/#ecosistema" class="mt-1 flex items-center justify-between gap-3 rounded-[1rem] border-t border-line-soft px-3 py-3 text-[0.9rem] font-semibold text-cobalt-ink hover:text-cobalt">
+            Ver cómo se conectan los cuatro pilares
+            <Icon name="arrow-right" size={16} />
+          </a>
+        </div>
+      </li>
       {
         NAV.map((item) => (
           <li>
@@ -21,18 +62,11 @@ const isActive = (href: string) => current === href || (href !== '/' && current.
               href={item.href}
               aria-current={isActive(item.href) ? 'page' : undefined}
               class:list={[
-                'block whitespace-nowrap rounded-full px-2.5 py-2 text-[0.9rem] font-medium transition-colors duration-300 xl:px-3.5 xl:text-[0.95rem]',
+                'block whitespace-nowrap rounded-full px-3.5 py-2 text-[0.95rem] font-medium transition-colors duration-300',
                 isActive(item.href) ? 'bg-ice text-cobalt-ink' : 'text-ink-2 hover:bg-ice-3 hover:text-ink',
               ]}
             >
-              {'short' in item ? (
-                <>
-                  <span class="xl:hidden">{item.short}</span>
-                  <span class="hidden xl:inline">{item.label}</span>
-                </>
-              ) : (
-                item.label
-              )}
+              {item.label}
             </a>
           </li>
         ))
@@ -40,8 +74,8 @@ const isActive = (href: string) => current === href || (href !== '/' && current.
     </ul>
 
     <div class="hidden items-center gap-3 lg:flex">
-      <a href="/#contacto" class="btn btn-primary !min-h-11 !px-4 text-[0.9rem] xl:!px-5 xl:text-[0.95rem]">
-        Agendar diagnóstico<span class="hidden xl:inline">&nbsp;gratis</span>
+      <a href="/#contacto" class="btn btn-primary !min-h-11 !px-5 text-[0.95rem]">
+        Agendar diagnóstico gratis
         <Icon name="arrow-right" size={18} />
       </a>
     </div>
@@ -55,7 +89,26 @@ const isActive = (href: string) => current === href || (href !== '/' && current.
         <Icon name="close" size={24} class="menu-close hidden" />
       </summary>
       <div class="absolute right-0 top-[calc(100%+0.75rem)] w-[min(92vw,22rem)] rounded-card border border-line bg-canvas p-3 shadow-lift">
+        <p class="px-4 pb-1 pt-2 text-[0.78rem] font-semibold uppercase tracking-wide text-ink-3">Servicios</p>
         <ul class="flex flex-col">
+          {
+            NAV_SERVICES.map((s) => (
+              <li>
+                <a
+                  href={s.href}
+                  class:list={[
+                    'flex items-center gap-3 rounded-xl px-4 py-2.5 text-base font-medium',
+                    isActive(s.href) ? 'bg-ice text-cobalt-ink' : 'text-ink hover:bg-ice-3',
+                  ]}
+                >
+                  <Icon name={s.icon} size={18} class="shrink-0 text-cobalt-ink" />
+                  {s.label}
+                </a>
+              </li>
+            ))
+          }
+        </ul>
+        <ul class="mt-2 flex flex-col border-t border-line-soft pt-2">
           {
             NAV.map((item) => (
               <li>
@@ -88,10 +141,47 @@ const isActive = (href: string) => current === href || (href !== '/' && current.
   details[open] .menu-close {
     display: block;
   }
+
+  /* Desplegable: cerrado por defecto; abre con hover/foco (CSS) o con clic (aria-expanded, JS). */
+  .menu-panel {
+    opacity: 0;
+    transform: translateY(-6px);
+    pointer-events: none;
+    transition: opacity 0.25s var(--ease-out-expo), transform 0.35s var(--ease-out-expo);
+  }
+  @media (hover: hover) {
+    .menu:hover .menu-panel,
+    .menu:focus-within .menu-panel {
+      opacity: 1;
+      transform: none;
+      pointer-events: auto;
+    }
+    .menu:hover .menu-caret,
+    .menu:focus-within .menu-caret {
+      transform: rotate(45deg);
+    }
+  }
+  .menu[data-open] .menu-panel {
+    opacity: 1;
+    transform: none;
+    pointer-events: auto;
+  }
+  .menu[data-open] .menu-caret {
+    transform: rotate(45deg);
+  }
+  /* Puente invisible entre el botón y el panel para que el hover no se corte en el hueco. */
+  .menu-panel::before {
+    content: '';
+    position: absolute;
+    left: 0;
+    right: 0;
+    top: -0.75rem;
+    height: 0.75rem;
+  }
 </style>
 
 <script>
-  // Cierra el menú móvil al navegar o al hacer clic fuera.
+  // Menú móvil: se cierra al navegar o al hacer clic fuera.
   const menu = document.getElementById('mobile-menu') as HTMLDetailsElement | null;
   if (menu) {
     document.addEventListener('click', (e) => {
@@ -99,4 +189,23 @@ const isActive = (href: string) => current === href || (href !== '/' && current.
     });
     menu.querySelectorAll('a').forEach((a) => a.addEventListener('click', () => (menu.open = false)));
   }
+
+  // Desplegable de servicios: clic para táctil y teclado; Escape y clic fuera lo cierran.
+  document.querySelectorAll<HTMLElement>('[data-menu]').forEach((wrap) => {
+    const btn = wrap.querySelector<HTMLButtonElement>('button')!;
+    const set = (open: boolean) => {
+      wrap.toggleAttribute('data-open', open);
+      btn.setAttribute('aria-expanded', String(open));
+    };
+    btn.addEventListener('click', () => set(!wrap.hasAttribute('data-open')));
+    document.addEventListener('click', (e) => {
+      if (!wrap.contains(e.target as Node)) set(false);
+    });
+    wrap.addEventListener('keydown', (e) => {
+      if (e.key === 'Escape') {
+        set(false);
+        btn.focus();
+      }
+    });
+  });
 </script>

@@ -3,7 +3,7 @@ import Icon from '../Icon.astro';
 import ContactForm from '../islands/ContactForm.tsx';
 import { pillarSelectOptions } from '../../data/pillars';
 import { team } from '../../data/team';
-import { waLink, WHATSAPP_DISPLAY, SITE, DEFAULT_WA_MESSAGE } from '../../lib/site';
+import { waLink, WHATSAPP_DISPLAY, SITE, DEFAULT_WA_MESSAGE, CALENDAR_URL, CALENDAR_EMBED_URL } from '../../lib/site';
 
 const founders = team.filter((m) => m.area === 'Dirección');
 
@@ -78,8 +78,106 @@ const {
       </div>
     </div>
 
-    <div class="min-w-0 rounded-[1.75rem] border border-line bg-canvas p-6 shadow-lift sm:p-8 lg:col-span-7 lg:p-10" data-reveal data-reveal-delay="100">
-      <ContactForm client:idle options={pillarSelectOptions} defaultInterest={defaultInterest} />
+    <!-- Ventanilla con dos pestañas: el formulario (captura el lead) y el calendario (elige hora al instante). -->
+    <div id="agenda" class="min-w-0 scroll-mt-24 overflow-hidden rounded-[1.75rem] border border-line bg-canvas shadow-lift lg:col-span-7" data-reveal data-reveal-delay="100" data-contact-tabs>
+      <div class="flex gap-1 border-b border-line-soft bg-ice-3 p-2" role="tablist" aria-label="Cómo prefieres agendar">
+        <button type="button" role="tab" id="tab-form" aria-controls="panel-form" aria-selected="true" class="ctab">
+          <Icon name="mail" size={16} />
+          Escríbenos
+        </button>
+        <button type="button" role="tab" id="tab-cal" aria-controls="panel-cal" aria-selected="false" class="ctab">
+          <Icon name="calendar" size={16} />
+          Elegir horario
+        </button>
+      </div>
+
+      <div id="panel-form" role="tabpanel" aria-labelledby="tab-form" class="p-6 sm:p-8 lg:p-10">
+        <ContactForm client:idle options={pillarSelectOptions} defaultInterest={defaultInterest} />
+      </div>
+
+      <div id="panel-cal" role="tabpanel" aria-labelledby="tab-cal" class="p-6 sm:p-8 lg:p-10" hidden>
+        <p class="text-[1.15rem] font-semibold text-ink">Elige el día y la hora que te vengan bien.</p>
+        <p class="mt-2 text-[0.98rem] text-ink-2">
+          30 minutos por videollamada con un cofundador. Al reservar recibes la invitación y el enlace en tu correo.
+        </p>
+        <div class="mt-5 overflow-hidden rounded-[1.25rem] border border-line bg-ice-3" style="min-height: 34rem">
+          <iframe
+            data-src={CALENDAR_EMBED_URL}
+            title="Agenda de diagnósticos gratuitos de IonosHub en Google Calendar"
+            class="block h-[34rem] w-full sm:h-[38rem]"
+            loading="lazy"
+            referrerpolicy="no-referrer-when-downgrade"
+          ></iframe>
+        </div>
+        <p class="mt-4 text-[0.9rem] text-ink-3">
+          ¿No carga? <a href={CALENDAR_URL} target="_blank" rel="noopener noreferrer" class="font-semibold text-cobalt-ink underline">Abre la agenda en Google Calendar</a>.
+          El calendario lo presta Google y se carga sólo cuando abres esta pestaña.
+        </p>
+      </div>
     </div>
   </div>
 </section>
+
+<style>
+  .ctab {
+    display: inline-flex;
+    flex: 1;
+    align-items: center;
+    justify-content: center;
+    gap: 0.5rem;
+    min-height: 2.75rem;
+    padding: 0 1rem;
+    border-radius: 999px;
+    font-size: 0.95rem;
+    font-weight: 600;
+    color: var(--color-ink-2);
+    transition: background-color 0.25s, color 0.25s, box-shadow 0.35s var(--ease-out-expo);
+  }
+  .ctab:hover {
+    color: var(--color-ink);
+  }
+  .ctab[aria-selected='true'] {
+    background: var(--color-canvas);
+    color: var(--color-cobalt-ink);
+    box-shadow: 0 1px 0 0 var(--color-line);
+  }
+</style>
+
+<script>
+  // Pestañas formulario / calendario. El iframe de Google se carga la primera vez que se abre el calendario.
+  document.querySelectorAll<HTMLElement>('[data-contact-tabs]').forEach((root) => {
+    const tabs = Array.from(root.querySelectorAll<HTMLButtonElement>('[role="tab"]'));
+    const select = (tab: HTMLButtonElement) => {
+      tabs.forEach((t) => {
+        const on = t === tab;
+        t.setAttribute('aria-selected', String(on));
+        const panel = document.getElementById(t.getAttribute('aria-controls')!);
+        if (panel) panel.hidden = !on;
+      });
+      if (tab.id === 'tab-cal') {
+        const frame = root.querySelector<HTMLIFrameElement>('iframe[data-src]');
+        if (frame) {
+          frame.src = frame.dataset.src!;
+          frame.removeAttribute('data-src');
+          (window as unknown as { gtag?: (...a: unknown[]) => void }).gtag?.('event', 'open_calendar', { page_path: location.pathname });
+        }
+      }
+    };
+    tabs.forEach((t) => t.addEventListener('click', () => select(t)));
+    root.addEventListener('keydown', (e) => {
+      if (!(e.target instanceof HTMLElement) || e.target.getAttribute('role') !== 'tab') return;
+      const i = tabs.indexOf(e.target as HTMLButtonElement);
+      if (e.key === 'ArrowRight' || e.key === 'ArrowLeft') {
+        const next = tabs[(i + (e.key === 'ArrowRight' ? 1 : tabs.length - 1)) % tabs.length];
+        next.focus();
+        select(next);
+      }
+    });
+    // El hash #agenda abre directamente el calendario (enlaces "Elegir horario" y navegación en la misma página).
+    const openFromHash = () => {
+      if (location.hash === '#agenda') select(tabs[1]);
+    };
+    openFromHash();
+    window.addEventListener('hashchange', openFromHash);
+  });
+</script>

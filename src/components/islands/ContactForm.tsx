@@ -1,4 +1,5 @@
 import { useState, type FormEvent } from 'react';
+import { CALENDAR_URL } from '../../lib/site';
 
 interface Option {
   value: string;
@@ -93,9 +94,14 @@ export default function ContactForm({ options, defaultInterest = '' }: Props) {
             Te escribimos en menos de un día hábil para agendar tu diagnóstico gratuito. Si prefieres, adelántanos por WhatsApp.
           </p>
         </div>
-        <button type="button" onClick={() => setStatus('idle')} className="btn btn-ghost">
-          Enviar otra solicitud
-        </button>
+        <div className="flex flex-col gap-3 sm:flex-row">
+          <a href={CALENDAR_URL} target="_blank" rel="noopener noreferrer" className="btn btn-primary" onClick={() => (window as unknown as { gtag?: (...a: unknown[]) => void }).gtag?.('event', 'open_calendar', { page_path: window.location.pathname, from: 'form_success' })}>
+            Elegir horario ahora
+          </a>
+          <button type="button" onClick={() => setStatus('idle')} className="btn btn-ghost">
+            Enviar otra solicitud
+          </button>
+        </div>
       </div>
     );
   }

@@ -21,11 +21,20 @@ export function waLink(message: string = DEFAULT_WA_MESSAGE): string {
   return `https://wa.me/${WHATSAPP_NUMBER}?text=${encodeURIComponent(message)}`;
 }
 
+/** Agenda de diagnósticos (Google Calendar). El corto abre en una pestaña; el largo se incrusta. */
+export const CALENDAR_URL = 'https://calendar.app.google/LSjLcpH2TpMAasgN6';
+export const CALENDAR_EMBED_URL =
+  'https://calendar.google.com/calendar/appointments/schedules/AcZssZ2fkQPDl0FF5Em6-T_xqHSd5jGjlM4nrgd5a7htOGIVQSf3tIFviKK7k7ru8ZeTq96U1yxsbpn1?gv=true';
+
+/** Navegación: los pilares agrupados en "Servicios"; el resto suelto. */
+export const NAV_SERVICES = [
+  { href: '/servicios/inteligencia-artificial', label: 'Inteligencia artificial', hint: 'IA de voz, agentes en WhatsApp y redes', icon: 'ia' },
+  { href: '/servicios/automatizaciones', label: 'Automatizaciones', hint: 'CRM unificado, flujos y dashboards', icon: 'automatizaciones' },
+  { href: '/servicios/marketing', label: 'Marketing', hint: 'Pauta en Meta, contenido y landing pages', icon: 'marketing' },
+  { href: '/servicios/software-a-medida', label: 'Software a medida', hint: 'Tu sistema funcionando en 30 días', icon: 'software' },
+] as const;
+
 export const NAV = [
-  { href: '/servicios/inteligencia-artificial', label: 'IA' },
-  { href: '/servicios/automatizaciones', label: 'Automatizaciones' },
-  { href: '/servicios/marketing', label: 'Marketing' },
-  { href: '/servicios/software-a-medida', label: 'Software en 30 días', short: 'Software' },
   { href: '/casos-de-exito', label: 'Casos' },
   { href: '/blog-recursos', label: 'Blog' },
   { href: '/equipo', label: 'Equipo' },
