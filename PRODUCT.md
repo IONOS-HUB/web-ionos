@@ -8,7 +8,7 @@ web
 
 ## Stack
 
-Astro (última estable, `output: 'static'`) + islas React (`@astrojs/react`) solo para piezas interactivas + Tailwind CSS + GSAP/ScrollTrigger. Deploy en Vercel. Confirmado por el usuario el 2026-09-03 sobre la base de PRDv2.md. El proyecto v2 vive en `ionoshub-v2/` (hermano del repo v1 `ionos-hub-connect-main/`); el switch de dominio ocurre solo al alcanzar paridad de rutas y redirects.
+Astro (última estable, `output: 'static'`) + islas React (`@astrojs/react`) solo para piezas interactivas + Tailwind CSS. Motion con CSS + IntersectionObserver y un listener de scroll pasivo (sin GSAP: se retiró por coste de layout en móvil). Deploy en Vercel. Confirmado por el usuario el 2026-09-03 sobre la base de PRDv2.md. El proyecto v2 vive en `ionoshub-v2/` (hermano del repo v1 `ionos-hub-connect-main/`); el switch de dominio ocurre solo al alcanzar paridad de rutas y redirects.
 
 ## Users
 

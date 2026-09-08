@@ -1,5 +1,15 @@
 @import "tailwindcss";
-@import "@fontsource-variable/bricolage-grotesque";
+
+/* Bricolage Grotesque (variable, subconjunto latino) autoalojada en /public/fonts y precargada desde BaseLayout:
+   así el navegador la pide con el HTML, sin esperar al CSS, y maqueta una sola vez. */
+@font-face {
+  font-family: 'Bricolage Grotesque Variable';
+  font-style: normal;
+  font-display: swap;
+  font-weight: 200 800;
+  src: url('/fonts/bricolage-grotesque-latin.woff2') format('woff2-variations');
+  unicode-range: U+0000-00FF, U+0131, U+0152-0153, U+02BB-02BC, U+02C6, U+02DA, U+02DC, U+0304, U+0308, U+0329, U+2000-206F, U+20AC, U+2122, U+2191, U+2193, U+2212, U+2215, U+FEFF, U+FFFD;
+}
 
 /* ─────────────────────────────────────────────────────────────
    IonosHub v2 — tokens
@@ -222,9 +232,6 @@
 }
 
 /* Reveal: estado por defecto VISIBLE; el script sólo lo anima si hay JS y sin reduced-motion */
-[data-reveal] {
-  will-change: transform, opacity;
-}
 html.motion-ready [data-reveal]:not(.is-in) {
   opacity: 0;
   transform: translateY(24px);
@@ -320,4 +327,11 @@ details[open] .faq-icon {
 }
 .faq-icon {
   transition: transform 0.4s var(--ease-out-expo);
+}
+
+/* Secciones bajo el pliegue: el navegador no calcula estilo ni layout hasta que se acercan al viewport.
+   El tamaño estimado evita saltos en la barra de scroll; el contenido real lo sustituye al llegar. */
+.cv-auto {
+  content-visibility: auto;
+  contain-intrinsic-size: auto 900px;
 }

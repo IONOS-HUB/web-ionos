@@ -1,6 +1,6 @@
 # IonosHub v2
 
-Sitio comercial de IonosHub reconstruido desde cero con **Astro 7** (salida estática), **islas React** solo donde hay interactividad, **Tailwind CSS v4** y **GSAP** para el movimiento. Desplegado en **Vercel**.
+Sitio comercial de IonosHub reconstruido desde cero con **Astro 7** (salida estática), **islas React** solo donde hay interactividad, **Tailwind CSS v4**; el movimiento es CSS + IntersectionObserver sin librerías. Desplegado en **Vercel**.
 
 La verdad de producto vive en [`PRODUCT.md`](./PRODUCT.md); el sistema visual, en [`DESIGN.md`](./DESIGN.md).
 

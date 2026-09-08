@@ -1,69 +1,86 @@
 /**
- * Parte de la motion que depende del scroll (GSAP + ScrollTrigger). Se importa de forma diferida
- * desde `motion.ts` una vez que la página ya pintó, así el bundle de GSAP no entra en la ruta crítica.
+ * Parte de la motion que depende del scroll. Se importa de forma diferida desde `motion.ts`.
+ * Sin GSAP: IntersectionObserver para disparar, y un único listener de scroll pasivo + rAF para
+ * lo que se guía con el desplazamiento (línea de progreso y parallax del hero). Una sola lectura
+ * de geometría por frame y sólo mientras se hace scroll: nada de refrescos globales.
  */
-import { gsap } from 'gsap';
-import { ScrollTrigger } from 'gsap/ScrollTrigger';
 
-gsap.registerPlugin(ScrollTrigger);
+const easeOutExpo = (t: number) => (t >= 1 ? 1 : 1 - Math.pow(2, -10 * t));
+const clamp01 = (v: number) => Math.min(1, Math.max(0, v));
 
-/* Contadores */
-document.querySelectorAll<HTMLElement>('[data-count]').forEach((el) => {
-  const target = Number(el.dataset.count);
-  if (Number.isNaN(target)) return;
-  const suffix = el.dataset.suffix ?? '';
-  const obj = { v: 0 };
-  ScrollTrigger.create({
-    trigger: el,
-    start: 'top 85%',
-    once: true,
-    onEnter: () => {
-      gsap.to(obj, {
-        v: target,
-        duration: 1.6,
-        ease: 'expo.out',
-        onUpdate: () => {
-          el.textContent = `${Math.round(obj.v)}${suffix}`;
-        },
-      });
+/* Contadores: ruedan desde 0 al entrar en pantalla */
+const counters = document.querySelectorAll<HTMLElement>('[data-count]');
+if (counters.length) {
+  const io = new IntersectionObserver(
+    (entries) => {
+      for (const e of entries) {
+        if (!e.isIntersecting) continue;
+        const el = e.target as HTMLElement;
+        io.unobserve(el);
+        const target = Number(el.dataset.count);
+        if (Number.isNaN(target)) continue;
+        const suffix = el.dataset.suffix ?? '';
+        const t0 = performance.now();
+        const tick = (now: number) => {
+          const p = easeOutExpo(clamp01((now - t0) / 1600));
+          el.textContent = `${Math.round(target * p)}${suffix}`;
+          if (p < 1) requestAnimationFrame(tick);
+        };
+        requestAnimationFrame(tick);
+      }
     },
-  });
-});
-
-/* Línea de progreso del proceso */
-const line = document.querySelector<HTMLElement>('[data-progress-line]');
-const lineWrap = document.querySelector<HTMLElement>('[data-progress-wrap]');
-if (line && lineWrap) {
-  gsap.fromTo(
-    line,
-    { scaleY: 0 },
-    {
-      scaleY: 1,
-      ease: 'none',
-      scrollTrigger: {
-        trigger: lineWrap,
-        start: 'top 65%',
-        end: 'bottom 60%',
-        scrub: 0.6,
-      },
-    },
+    { rootMargin: '0px 0px -15% 0px' },
   );
-  document.querySelectorAll<HTMLElement>('[data-step]').forEach((step) => {
-    ScrollTrigger.create({
-      trigger: step,
-      start: 'top 62%',
-      onEnter: () => step.classList.add('is-active'),
-      onLeaveBack: () => step.classList.remove('is-active'),
-    });
-  });
+  counters.forEach((el) => io.observe(el));
 }
 
-/* Parallax suave del teléfono del hero */
-const phone = document.querySelector<HTMLElement>('[data-hero-phone]');
-if (phone && window.matchMedia('(min-width: 1024px)').matches) {
-  gsap.to(phone, {
-    y: -48,
-    ease: 'none',
-    scrollTrigger: { trigger: phone, start: 'top 20%', end: 'bottom top', scrub: 0.8 },
-  });
+/* Pasos del proceso: activos cuando su borde superior pasa el 62 % del alto de la ventana */
+const steps = document.querySelectorAll<HTMLElement>('[data-step]');
+if (steps.length) {
+  const io = new IntersectionObserver(
+    (entries) => {
+      for (const e of entries) {
+        // Entra por abajo → activo; vuelve a salir por abajo → inactivo. Salir por arriba lo deja activo.
+        if (e.isIntersecting) e.target.classList.add('is-active');
+        else if (e.boundingClientRect.top > 0) e.target.classList.remove('is-active');
+      }
+    },
+    { rootMargin: '0px 0px -38% 0px', threshold: 0 },
+  );
+  steps.forEach((s) => io.observe(s));
+}
+
+/* Guiados por scroll: línea de progreso y parallax del teléfono (sólo escritorio) */
+const line = document.querySelector<HTMLElement>('[data-progress-line]');
+const lineWrap = document.querySelector<HTMLElement>('[data-progress-wrap]');
+const phone = window.matchMedia('(min-width: 1024px)').matches ? document.querySelector<HTMLElement>('[data-hero-phone]') : null;
+
+if ((line && lineWrap) || phone) {
+  let ticking = false;
+  const update = () => {
+    ticking = false;
+    const vh = window.innerHeight;
+    if (line && lineWrap) {
+      const r = lineWrap.getBoundingClientRect();
+      // Se dibuja entre "top al 65 %" y "bottom al 60 %" de la ventana.
+      const start = vh * 0.65;
+      const end = vh * 0.6;
+      const p = clamp01((start - r.top) / (r.height + start - end));
+      line.style.transform = `scaleY(${p.toFixed(4)})`;
+    }
+    if (phone) {
+      const r = phone.getBoundingClientRect();
+      // De "top al 20 %" hasta que el bloque sale por arriba: hasta -48 px.
+      const p = clamp01((vh * 0.2 - r.top) / (r.height + vh * 0.2));
+      phone.style.transform = `translate3d(0, ${(-48 * p).toFixed(1)}px, 0)`;
+    }
+  };
+  const onScroll = () => {
+    if (ticking) return;
+    ticking = true;
+    requestAnimationFrame(update);
+  };
+  window.addEventListener('scroll', onScroll, { passive: true });
+  window.addEventListener('resize', onScroll, { passive: true });
+  update();
 }

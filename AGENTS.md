@@ -1,6 +1,6 @@
 # CLAUDE.md
 
-Sitio comercial de IonosHub (Astro 7 estático + islas React + Tailwind v4 + GSAP, deploy en Vercel).
+Sitio comercial de IonosHub (Astro 7 estático + islas React + Tailwind v4, deploy en Vercel; motion propia sin librerías: `src/scripts/motion.ts` + `motion-scroll.ts`).
 
 - La verdad de producto vive en `PRODUCT.md`; el sistema visual, en `DESIGN.md`. Léelos antes de tocar UI o copy.
 - Contenido editable: `src/data/` (pilares, casos, equipo, clientes, FAQ, conversaciones de demostración).
