@@ -4,6 +4,7 @@ import react from '@astrojs/react';
 import vercel from '@astrojs/vercel';
 import tailwindcss from '@tailwindcss/vite';
 import sitemap from '@astrojs/sitemap';
+import { FontaineTransform } from 'fontaine';
 
 // Mapa ruta legacy → pilar. Las 6 rutas de servicio de v1 y los 7 redirects
 // históricos responden 301 hacia la página de pilar correspondiente.
@@ -31,6 +32,10 @@ export default defineConfig({
   redirects: legacyRedirects,
   build: { inlineStylesheets: 'always' },
   vite: {
-    plugins: [tailwindcss()],
+    plugins: [
+      tailwindcss(),
+      // Fallback con métricas ajustadas (size-adjust, ascent/descent) para que el cambio de fuente no mueva nada.
+      FontaineTransform.vite({ fallbacks: ['Arial', 'Helvetica Neue', 'Segoe UI'], resolvePath: (id) => new URL('./public' + id, import.meta.url) }),
+    ],
   },
 });

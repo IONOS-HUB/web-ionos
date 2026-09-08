@@ -17,7 +17,7 @@
    en campos enteros, azul hielo para lo entrante, tinta azul-negra.
    ───────────────────────────────────────────────────────────── */
 @theme {
-  --font-sans: "Bricolage Grotesque Variable", "Bricolage Grotesque", ui-sans-serif, system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
+  --font-sans: "Bricolage Grotesque Variable", "Bricolage fallback", ui-sans-serif, system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
 
   --color-canvas: #ffffff;
   --color-ice: #e9f1fc;
@@ -334,4 +334,23 @@ details[open] .faq-icon {
 .cv-auto {
   content-visibility: auto;
   contain-intrinsic-size: auto 900px;
+}
+
+/* Entrada del hero sin esperar al JS (el titular es el LCP: debe pintarse en cuanto llega el HTML).
+   Longhands a propósito: el minificador vacía el shorthand `animation` cuando lleva var(). */
+@media (prefers-reduced-motion: no-preference) {
+  .hero-in {
+    animation-name: hero-in;
+    animation-duration: 0.9s;
+    animation-timing-function: var(--ease-out-expo);
+    animation-fill-mode: both;
+    animation-delay: var(--d, 0ms);
+  }
+  @keyframes hero-in {
+    from {
+      opacity: 0;
+      transform: translateY(24px);
+      filter: blur(6px);
+    }
+  }
 }

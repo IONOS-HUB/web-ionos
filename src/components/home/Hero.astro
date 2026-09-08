@@ -21,31 +21,30 @@ const chipPillars = pillars.map((p) => ({ id: p.id, short: p.short }));
   -->
   <div class="wrap relative flex flex-col gap-8 py-10 lg:grid lg:grid-cols-12 lg:grid-rows-[auto_1fr] lg:items-start lg:gap-x-8 lg:gap-y-6 lg:py-20">
     <h1
-      class="display-tight order-1 text-[clamp(2.35rem,4.1vw,3.6rem)] font-semibold text-ink [text-wrap:pretty] lg:col-span-6 lg:col-start-1 lg:row-start-1 lg:pr-6"
-      data-reveal
+      class="hero-in display-tight order-1 text-[clamp(2.35rem,4.1vw,3.6rem)] font-semibold text-ink [text-wrap:pretty] lg:col-span-6 lg:col-start-1 lg:row-start-1 lg:pr-6"
     >
       Cada mensaje respondido.<br />
       <span class="text-cobalt">Cada lead, una cita.</span>
     </h1>
 
-    <div class="order-2 lg:col-span-6 lg:col-start-7 lg:row-span-2 lg:row-start-1 lg:self-center lg:pl-4" data-reveal data-reveal-delay="120">
+    <div class="hero-in order-2 lg:col-span-6 lg:col-start-7 lg:row-span-2 lg:row-start-1 lg:self-center lg:pl-4" style="--d: 120ms">
       <div data-hero-phone>
         <IonicInbox client:load conversations={conversations} pillars={chipPillars} />
       </div>
     </div>
 
     <div class="order-3 lg:col-span-6 lg:col-start-1 lg:row-start-2 lg:pr-6">
-      <p class="max-w-xl text-[1.1rem] leading-relaxed text-ink-2 sm:hidden" data-reveal>
+      <p class="hero-in max-w-xl text-[1.1rem] leading-relaxed text-ink-2 sm:hidden">
         IA que atiende llamadas y mensajes 24/7, CRM unificado, marketing segmentado en Meta y software a medida en 30
         días. Todo el ecosistema de tu PyME, a un precio pensado para ti.
       </p>
-      <p class="hidden max-w-xl text-[clamp(1.1rem,1.5vw,1.3rem)] leading-relaxed text-ink-2 sm:block" data-reveal data-reveal-delay="80">
+      <p class="hero-in hidden max-w-xl text-[clamp(1.1rem,1.5vw,1.3rem)] leading-relaxed text-ink-2 sm:block" style="--d: 80ms">
         IonosHub arma el ecosistema digital completo de tu PyME: una IA que atiende llamadas y mensajes 24/7, un CRM
         unificado con todos tus leads, marketing segmentado en Meta y software a medida en 30 días. A un precio pensado
         para empresas como la tuya.
       </p>
 
-      <div class="mt-7 flex flex-col gap-3 sm:flex-row sm:items-center" data-reveal data-reveal-delay="160">
+      <div class="hero-in mt-7 flex flex-col gap-3 sm:flex-row sm:items-center" style="--d: 160ms">
         <a href="#contacto" class="btn btn-primary">
           Agendar diagnóstico gratis
           <Icon name="arrow-right" size={18} />
@@ -55,12 +54,12 @@ const chipPillars = pillars.map((p) => ({ id: p.id, short: p.short }));
           Escribir por WhatsApp
         </a>
       </div>
-      <a href="#agenda" class="mt-4 inline-flex items-center gap-2 text-[0.95rem] font-semibold text-cobalt-ink hover:text-cobalt" data-reveal data-reveal-delay="200">
+      <a href="#agenda" class="hero-in mt-4 inline-flex items-center gap-2 text-[0.95rem] font-semibold text-cobalt-ink hover:text-cobalt" style="--d: 200ms">
         <Icon name="calendar" size={16} />
         ¿Ya lo tienes claro? Elige día y hora en la agenda
       </a>
 
-      <ul class="mt-7 flex flex-wrap gap-x-6 gap-y-2 text-[0.92rem] text-ink-2" data-reveal data-reveal-delay="240">
+      <ul class="hero-in mt-7 flex flex-wrap gap-x-6 gap-y-2 text-[0.92rem] text-ink-2" style="--d: 240ms">
         <li class="inline-flex items-center gap-2"><Icon name="check" size={16} class="text-cobalt" /> Meta Tech Provider</li>
         <li class="inline-flex items-center gap-2"><Icon name="check" size={16} class="text-cobalt" /> Casos reales con cifras</li>
         <li class="inline-flex items-center gap-2"><Icon name="check" size={16} class="text-cobalt" /> Sede en Ibarra, Ecuador</li>
