@@ -31,7 +31,7 @@ const wa = 'Hola IonosHub, vi sus casos de éxito y quiero agendar un diagnósti
         successCases.map((c, i) => {
           const pillar = pillarById(c.pillar);
           return (
-            <li class="grid gap-8 py-12 lg:grid-cols-12 lg:gap-12 first:pt-0" data-reveal data-reveal-delay={Math.min(i, 3) * 60}>
+            <li id={c.slug} class="grid scroll-mt-24 gap-8 py-12 lg:grid-cols-12 lg:gap-12 first:pt-0" data-reveal data-reveal-delay={Math.min(i, 3) * 60}>
               <div class="lg:col-span-4">
                 <a href={pillar.route} class="chip hover:chip-on"><Icon name={c.pillar} size={14} /> {pillar.short}</a>
                 <p class="display-tight tnum mt-5 text-[clamp(2.2rem,4vw,3.4rem)] font-semibold leading-none text-cobalt">{c.highlight}</p>

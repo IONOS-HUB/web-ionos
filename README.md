@@ -22,7 +22,7 @@ src/
     servicios/[slug].astro      # 4 páginas de pilar (IA, automatizaciones, marketing, software a medida)
     equipo.astro · casos-de-exito.astro · blog-recursos.astro
     politica-de-privacidad.astro · terminos-y-condiciones.astro · 404.astro
-    api/lead.ts                 # Endpoint del formulario (Resend y/o webhook, por variables de entorno)
+    api/lead.ts                 # Endpoint del formulario: reenvía el lead al webhook de n8n (LEAD_WEBHOOK_URL)
   components/
     home/*.astro                # Secciones de la home (cero JS)
     islands/IonicInbox.tsx      # Bandeja animada del hero (client:load)

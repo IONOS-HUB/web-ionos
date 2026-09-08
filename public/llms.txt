@@ -1,44 +1,44 @@
 # IonosHub
 
-> Agencia ecuatoriana, con sede en Ibarra (Imbabura), que arma el ecosistema digital completo de pequeñas y medianas empresas en cuatro pilares: inteligencia artificial, automatizaciones, marketing y software a medida en 30 días. Tagline: "De datos a resultados". El agente de IA propio se llama IONIC.
+> Agencia ecuatoriana con sede en Ibarra (Imbabura) que arma el ecosistema digital completo de pequeñas y medianas empresas en cuatro pilares: inteligencia artificial, automatizaciones, marketing y software a medida en 30 días. Tagline: "De datos a resultados". Su agente de IA propio se llama IONIC. Idioma del sitio: español (Ecuador).
 
-Sitio: https://ionoshub.net · Contacto: info@ionoshub.net · WhatsApp: +593 99 224 9152 · Idioma: español (Ecuador).
+Contacto: [info@ionoshub.net](mailto:info@ionoshub.net) · [WhatsApp +593 99 224 9152](https://wa.me/593992249152) · [Agenda de diagnósticos](https://calendar.app.google/LSjLcpH2TpMAasgN6).
 
-## Qué hace IonosHub
+Cómo se contrata: no hay paquetes ni precios públicos. Todo empieza con un [diagnóstico gratuito de 30 minutos](https://ionoshub.net/#contacto), del que sale una propuesta en 48 horas con qué pilares activar y en qué orden. Se puede empezar por un solo pilar.
 
-- **Inteligencia artificial** (https://ionoshub.net/servicios/inteligencia-artificial): IA de voz (IVR) que responde llamadas 24/7, agenda citas, toma pedidos y envía recordatorios; agentes en WhatsApp, Instagram y Facebook; clasificador que entiende audios, imágenes y documentos y los registra donde corresponde; conexión a inventarios, agendas y sistemas externos; LLMs avanzados (incluido Claude de Anthropic) por API. Ideal para consultorios y clínicas.
-- **Automatizaciones** (https://ionoshub.net/servicios/automatizaciones): CRM unificado que centraliza los leads de WhatsApp, redes, llamadas y web; CRM simplificado para consultorios; flujos tipo Zapier/n8n; rutinas que reemplazan trabajo manual; dashboards de trazabilidad y rentabilidad con KPIs.
-- **Marketing** (https://ionoshub.net/servicios/marketing): campañas en Meta con conjuntos de anuncios segmentados (ubicación, intereses, clientes anteriores, audiencias similares), contenido para redes, cobertura de eventos con fotografía y video profesional, landing pages a medida conectadas al CRM y a IONIC.
-- **Software a medida en 30 días** (https://ionoshub.net/servicios/software-a-medida): sistemas de facturación, calificaciones, cursos en línea, tiendas en línea, sistemas web y apps móviles; alcance cerrado en el diagnóstico y entrega en 30 días; infraestructura cloud y correo profesional.
+Credenciales: Meta Tech Provider (conexiones oficiales por API), partner de Zapier, partner de Anthropic (Claude); certificaciones en Microsoft Azure, Google Cloud y Oracle Cloud.
 
-## Cómo se contrata
+## Servicios
 
-No hay paquetes ni precios públicos. Todo empieza con un diagnóstico gratuito de 30 minutos (formulario en https://ionoshub.net/#contacto o WhatsApp), del que sale una propuesta en 48 horas con qué pilares activar y en qué orden. Se puede empezar por un solo pilar.
+- [Inteligencia artificial](https://ionoshub.net/servicios/inteligencia-artificial): IA de voz (IVR) que responde llamadas 24/7, agenda citas, toma pedidos y envía recordatorios; agentes en WhatsApp, Instagram y Facebook; clasificador que entiende audios, imágenes y documentos; conexión a inventarios, agendas y sistemas externos; LLMs avanzados (incluido Claude de Anthropic) por API. Ideal para consultorios y clínicas.
+- [Automatizaciones](https://ionoshub.net/servicios/automatizaciones): CRM unificado que centraliza los leads de WhatsApp, redes, llamadas y web; CRM simplificado para consultorios; flujos tipo Zapier/n8n; rutinas que reemplazan trabajo manual; dashboards de trazabilidad y rentabilidad con KPIs.
+- [Marketing](https://ionoshub.net/servicios/marketing): campañas en Meta con conjuntos de anuncios segmentados (ubicación, intereses, clientes anteriores, audiencias similares), contenido para redes, cobertura de eventos con fotografía y video profesional, landing pages a medida conectadas al CRM y a IONIC.
+- [Software a medida en 30 días](https://ionoshub.net/servicios/software-a-medida): sistemas de facturación, calificaciones, cursos en línea, tiendas en línea, sistemas web y apps móviles; alcance cerrado en el diagnóstico y entrega en 30 días; infraestructura cloud y correo profesional.
 
-## Credenciales
+## Casos reales
 
-Meta Tech Provider (conexiones oficiales por API), partner de Zapier, partner de Anthropic (Claude); certificaciones en Microsoft Azure, Google Cloud y Oracle Cloud.
+- [Casos de éxito](https://ionoshub.net/casos-de-exito): todos los casos con cifras reales.
+- [Zona Gamers](https://ionoshub.net/casos-de-exito#zona-gamers): retail digital; automatización de la clasificación de archivos y juegos, de 5 horas a 10 minutos.
+- [Daniela Vidal](https://ionoshub.net/casos-de-exito#daniela-vidal): asesoría de seguros; agente de IA que filtra y califica leads 24/7 por WhatsApp y los registra en el CRM, la asesora entra sólo a cerrar.
+- [Pawau](https://ionoshub.net/casos-de-exito#pawau): spa canino; agente IONIC que atiende 24/7 por WhatsApp y registra citas.
+- [El Chipotle](https://ionoshub.net/casos-de-exito#chipotle): restaurante; presencia digital desde cero conectada a WhatsApp, de 0 a leads activos.
+- [Ecu593 English](https://ionoshub.net/casos-de-exito#ecu593): educación; sistema propio por roles con reportería en línea, operación 100 % digital.
 
-## Casos reales (https://ionoshub.net/casos-de-exito)
+## Blog
 
-- Zona Gamers (retail digital): automatización de la clasificación de archivos y juegos; de 5 horas a 10 minutos.
-- Daniela Vidal (asesoría de seguros): agente de IA que filtra y califica leads 24/7 por WhatsApp y los registra en el CRM; la asesora entra sólo a cerrar.
-- Pawau (spa canino): agente IONIC que atiende 24/7 por WhatsApp y registra citas.
-- El Chipotle (restaurante): presencia digital desde cero conectada a WhatsApp; de 0 a leads activos.
-- Ecu593 English (educación): sistema propio por roles con reportería en línea; operación 100 % digital.
+- [Blog y recursos](https://ionoshub.net/blog-recursos): artículos y guías sobre adopción de IA, automatización y seguridad de datos para pymes en Ecuador.
+- [IA sin control: la fuga de datos que nadie audita](https://ionoshub.net/blog-recursos/ia-sin-control-fuga-de-datos): por qué la adopción acelerada de IA sin gobernanza expone información confidencial y qué hacer al respecto.
+- [¿Puede una IA atender las llamadas de un consultorio 24/7?](https://ionoshub.net/blog-recursos/ia-de-voz-consultorios-llamadas-24-7): qué hace una IA de voz fuera de horario y en qué se diferencia de un contestador.
+- [Qué es un CRM unificado](https://ionoshub.net/blog-recursos/que-es-un-crm-unificado): por qué el WhatsApp de una persona no es un CRM y qué resuelve centralizar los leads.
 
-## Equipo (https://ionoshub.net/equipo)
+## Empresa
 
-Orlidan Montesdeoca (Director Ejecutivo, cofundador; DevOps e IA), Cristhian Recalde (Director Financiero y Operaciones, cofundador), Alan Rodríguez (PMO), David Villarreal (automatizaciones y desarrollo web), Camila Navarrete (CMO), Domenica Alvarez (representante de marca).
+- [Inicio](https://ionoshub.net/): visión general de los cuatro pilares y cómo se conectan.
+- [Equipo](https://ionoshub.net/equipo): Orlidan Montesdeoca (Director Ejecutivo, cofundador; DevOps e IA), Cristhian Recalde (Director Financiero y Operaciones, cofundador), Alan Rodríguez (PMO), David Villarreal (automatizaciones y desarrollo web), Camila Navarrete (CMO), Domenica Alvarez (representante de marca).
+- [Política de privacidad](https://ionoshub.net/politica-de-privacidad): tratamiento de datos, cookies y analítica.
+- [Términos y condiciones](https://ionoshub.net/terminos-y-condiciones): condiciones de uso del sitio.
 
-## Blog (https://ionoshub.net/blog-recursos)
+## Optional
 
-Artículos y guías sobre adopción de IA, automatización y seguridad de datos para pymes en Ecuador.
-
-## Páginas
-
-- https://ionoshub.net/ — inicio
-- https://ionoshub.net/casos-de-exito — casos con cifras reales
-- https://ionoshub.net/equipo — equipo
-- https://ionoshub.net/blog-recursos — blog y recursos
-- https://ionoshub.net/politica-de-privacidad — política de privacidad
+- [Sitemap](https://ionoshub.net/sitemap-index.xml): índice de todas las páginas.
+- [robots.txt](https://ionoshub.net/robots.txt): rastreadores de IA permitidos.
