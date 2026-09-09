@@ -10,7 +10,7 @@ import {
   validateLead,
   extractContact,
 } from '../../lib/chat/limits';
-import { allowMessage, clientIp } from '../../lib/chat/ratelimit';
+import { allowMessage, clientIp, redisStatus, IP_LIMITS } from '../../lib/chat/ratelimit';
 import {
   fingerprint,
   newSession,
@@ -158,6 +158,7 @@ export const GET: APIRoute = async ({ request, url }) => {
   if (!apiKey) return json({ error: 'sin_clave' }, 503);
   const modelo = readEnv('GEMINI_MODEL') ?? 'gemini-2.5-flash-lite';
 
+  if (url.searchParams.get('diag') === 'redis') return json({ limites: IP_LIMITS, redis: await redisStatus() });
   if (url.searchParams.get('diag') !== 'models') return json({ modelo });
   const res = await fetch('https://generativelanguage.googleapis.com/v1beta/models', {
     headers: { 'x-goog-api-key': apiKey },

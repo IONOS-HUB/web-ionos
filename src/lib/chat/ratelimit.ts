@@ -58,9 +58,11 @@ async function redisIncrement(key: string): Promise<number | null> {
       method: 'POST',
       headers: { Authorization: `Bearer ${token}`, 'Content-Type': 'application/json' },
       signal: controller.signal,
+      // Sin la variante NX de EXPIRE, que no todas las versiones aceptan. La clave ya lleva la hora
+      // dentro, así que refrescar su caducidad en cada golpe no alarga la ventana de conteo.
       body: JSON.stringify([
         ['INCR', key],
-        ['EXPIRE', key, String(HOUR_SECONDS), 'NX'],
+        ['EXPIRE', key, String(HOUR_SECONDS)],
       ]),
     });
     if (!res.ok) {
@@ -79,6 +81,17 @@ async function redisIncrement(key: string): Promise<number | null> {
 }
 
 /* ── API ────────────────────────────────────────────────────────────────── */
+
+/**
+ * Comprobación de operación: dice si el contador compartido está configurado y responde.
+ * La usa el diagnóstico protegido de `/api/chat`; no toca las claves reales de nadie.
+ */
+export async function redisStatus(): Promise<{ configurado: boolean; responde: boolean; valor: number | null }> {
+  const configurado = Boolean(readEnv('UPSTASH_REDIS_REST_URL') && readEnv('UPSTASH_REDIS_REST_TOKEN'));
+  if (!configurado) return { configurado: false, responde: false, valor: null };
+  const valor = await redisIncrement('chat:diag');
+  return { configurado: true, responde: valor !== null, valor };
+}
 
 /** IP del visitante detrás del proxy de Vercel. */
 export function clientIp(request: Request): string {
