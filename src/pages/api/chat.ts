@@ -148,9 +148,44 @@ async function askGemini(
 export const GET: APIRoute = async ({ request, url }) => {
   const secret = readEnv('CHAT_SECRET');
   if (!secret || request.headers.get('x-chat-debug') !== secret) return new Response('Not found', { status: 404 });
-  if (url.searchParams.get('diag') !== 'models') return json({ modelo: readEnv('GEMINI_MODEL') ?? 'gemini-2.5-flash-lite' });
   const apiKey = readEnv('GEMINI_API_KEY');
   if (!apiKey) return json({ error: 'sin_clave' }, 503);
+  const modelo = readEnv('GEMINI_MODEL') ?? 'gemini-2.5-flash-lite';
+
+  // Prueba qué campos de la petición admite el modelo configurado, para aislar un 400.
+  if (url.searchParams.get('diag') === 'probe') {
+    const contents = [{ role: 'user', parts: [{ text: 'Di la palabra ok' }] }];
+    const variantes: [string, Record<string, unknown>][] = [
+      ['completo', { temperature: 0.4, topP: 0.9, maxOutputTokens: 400, responseMimeType: 'application/json', responseSchema: RESPONSE_SCHEMA, thinkingConfig: { thinkingBudget: 0 } }],
+      ['sin-thinking', { temperature: 0.4, topP: 0.9, maxOutputTokens: 400, responseMimeType: 'application/json', responseSchema: RESPONSE_SCHEMA }],
+      ['sin-sampling', { maxOutputTokens: 400, responseMimeType: 'application/json', responseSchema: RESPONSE_SCHEMA }],
+      ['sin-schema', { temperature: 0.4, topP: 0.9, maxOutputTokens: 400 }],
+      ['minimo', { maxOutputTokens: 400 }],
+    ];
+    const resultados: Record<string, string> = {};
+    for (const [nombre, generationConfig] of variantes) {
+      const r = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/${modelo}:generateContent`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json', 'x-goog-api-key': apiKey },
+        body: JSON.stringify({ contents, generationConfig }),
+      });
+      resultados[nombre] = r.ok ? 'OK' : `${r.status}: ${(await r.text()).replace(/\s+/g, ' ').slice(0, 120)}`;
+    }
+    // Y una con safetySettings para ver si son ellos.
+    const rSafety = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/${modelo}:generateContent`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json', 'x-goog-api-key': apiKey },
+      body: JSON.stringify({
+        contents,
+        generationConfig: { maxOutputTokens: 400 },
+        safetySettings: ['HARM_CATEGORY_HARASSMENT'].map((category) => ({ category, threshold: 'BLOCK_MEDIUM_AND_ABOVE' })),
+      }),
+    });
+    resultados['solo-safety'] = rSafety.ok ? 'OK' : `${rSafety.status}: ${(await rSafety.text()).replace(/\s+/g, ' ').slice(0, 120)}`;
+    return json({ modelo, resultados });
+  }
+
+  if (url.searchParams.get('diag') !== 'models') return json({ modelo });
   const res = await fetch('https://generativelanguage.googleapis.com/v1beta/models', {
     headers: { 'x-goog-api-key': apiKey },
   });
