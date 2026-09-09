@@ -99,10 +99,10 @@ const { gaId } = Astro.props;
   .cc:not([hidden]) {
     animation: msg-in 0.55s var(--ease-out-expo) both;
   }
-  /* En móvil el aviso ocupa todo el ancho: el flotante de WhatsApp sube para no quedar tapado. */
+  /* En móvil el aviso ocupa todo el ancho: la columna de botones flotantes sube para no quedar tapada. */
   @media (max-width: 639px) {
     /* Desplazamiento en px calculado en JS (alto del aviso + 20 px): el minificador aplana calc() con var(). */
-    :global(html.cc-open [data-wa-float]) {
+    :global(html.cc-open [data-float-stack]) {
       translate: 0 var(--cc-shift, 0px);
       transition: translate 0.5s var(--ease-out-expo);
     }

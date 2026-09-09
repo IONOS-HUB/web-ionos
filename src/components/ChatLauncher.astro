@@ -1,0 +1,25 @@
+---
+/**
+ * Botón que abre el chat de IONIC. Vive dentro de [data-float-stack], encima del flotante de WhatsApp.
+ * El panel es un elemento aparte (ChatWidget.astro): no puede colgar de esta columna porque en móvil
+ * se desplaza con `translate` y eso la convertiría en el contenedor de un hijo `position: fixed`.
+ */
+---
+
+<button
+  type="button"
+  class="group flex items-center rounded-full border border-line bg-canvas text-cobalt-ink shadow-lift transition-transform duration-500 ease-[var(--ease-out-expo)] hover:-translate-y-1"
+  aria-expanded="false"
+  aria-controls="cw-panel"
+  data-chat-open
+>
+  <span class="relative flex h-14 w-14 shrink-0 items-center justify-center">
+    <span class="display-tight text-[1.05rem] font-semibold tracking-tight">IO</span>
+    <span class="absolute right-2.5 top-2.5 h-2.5 w-2.5 rounded-full border-2 border-canvas bg-emerald-500" aria-hidden="true"></span>
+  </span>
+  <span
+    class="max-w-0 overflow-hidden whitespace-nowrap pr-0 text-[0.95rem] font-semibold opacity-0 transition-all duration-500 ease-[var(--ease-out-expo)] group-hover:max-w-[12rem] group-hover:pr-5 group-hover:opacity-100 group-focus-visible:max-w-[12rem] group-focus-visible:pr-5 group-focus-visible:opacity-100"
+  >
+    Habla con IONIC
+  </span>
+</button>

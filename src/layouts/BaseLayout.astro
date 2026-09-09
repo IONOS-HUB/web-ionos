@@ -4,6 +4,8 @@ import Nav from '../components/Nav.astro';
 import Footer from '../components/Footer.astro';
 import WhatsAppFloat from '../components/WhatsAppFloat.astro';
 import CookieConsent from '../components/CookieConsent.astro';
+import ChatWidget from '../components/ChatWidget.astro';
+import ChatLauncher from '../components/ChatLauncher.astro';
 import { SITE, DEFAULT_WA_MESSAGE, WHATSAPP_NUMBER } from '../lib/site';
 
 interface Props {
@@ -35,6 +37,10 @@ const ogImageAbs = new URL(ogImage, SITE.url).href;
 const gaId = (import.meta.env.PUBLIC_GA_MEASUREMENT_ID as string | undefined) || 'G-0Q8D7W836K';
 const googleVerification = import.meta.env.PUBLIC_GOOGLE_SITE_VERIFICATION as string | undefined;
 const bingVerification = import.meta.env.PUBLIC_BING_SITE_VERIFICATION as string | undefined;
+
+// El chat sólo se dibuja donde PUBLIC_CHAT_UI valga 1. Así el widget puede viajar a producción
+// sin mostrarse hasta que la entrega del lead esté conectada y probada.
+const chatUi = import.meta.env.PUBLIC_CHAT_UI === '1';
 
 const orgJsonLd = {
   '@context': 'https://schema.org',
@@ -102,7 +108,12 @@ const orgJsonLd = {
       <slot />
     </main>
     <Footer />
-    <WhatsAppFloat message={waMessage} />
+    <!-- Columna de acciones flotantes: el chat encima, WhatsApp abajo. El aviso de cookies la sube en móvil. -->
+    <div class="fixed bottom-5 right-5 z-40 flex flex-col items-end gap-3 sm:bottom-6 sm:right-6" data-float-stack>
+      {chatUi && <ChatLauncher />}
+      <WhatsAppFloat message={waMessage} />
+    </div>
+    {chatUi && <ChatWidget />}
     <CookieConsent gaId={gaId} />
     <script src="../scripts/motion.ts"></script>
   </body>
