@@ -121,24 +121,27 @@ export const pillars: Pillar[] = [
     route: '/servicios/marketing',
     short: 'Marketing',
     title: 'Marketing',
-    tagline: 'Segmentación profesional en Meta, contenido y eventos que traen clientes, no likes.',
+    tagline: 'Que te encuentren en Google, que la IA te nombre y que la pauta traiga clientes, no likes.',
     problem:
-      'Invertir en anuncios sin estructura quema presupuesto: un solo anuncio para todo el mundo, sin conjuntos, sin segmentos, sin saber qué funcionó.',
+      'Invertir en anuncios sin estructura quema presupuesto: un solo anuncio para todo el mundo, sin conjuntos, sin segmentos, sin saber qué funcionó. Y mientras tanto, nadie te encuentra buscando.',
     includes: [
-      'Estructura profesional de campañas: conjuntos de anuncios por segmento, objetivo y presupuesto',
+      'Estructura profesional de campañas en Meta: conjuntos de anuncios por segmento, objetivo y presupuesto',
+      'SEO: que tu negocio aparezca en Google cuando alguien busca lo que vendes',
+      'AEO: que ChatGPT, Gemini, Perplexity y Claude te nombren al responder sobre tu servicio',
+      'Landing pages a medida conectadas al CRM y a IONIC',
+      'Cobertura de eventos con fotografía y video profesional',
       'Segmentación por ubicación, intereses, clientes anteriores y audiencias similares',
       'Optimización continua de campañas en todo el entorno Meta',
       'Creación de contenido digital para redes',
-      'Cobertura de eventos con fotografía y video profesional',
-      'Landing pages a medida conectadas al CRM y a IONIC',
     ],
     examples: [
       'Una campaña con tres conjuntos: vecinos a 5 km, clientes anteriores y audiencias similares, cada uno con su presupuesto',
+      'Tu sitio preparado para buscadores y para asistentes de IA: datos estructurados, contenido citable y permisos claros para sus rastreadores',
       'Una landing page por campaña, conectada al CRM unificado y atendida por IONIC',
       'Cobertura de tu evento lista para publicar el mismo día',
     ],
     proof:
-      'Somos Meta Tech Provider: conexiones oficiales por API y certificaciones que avalan nuestro trabajo dentro del entorno Meta.',
+      'Somos Meta Tech Provider: conexiones oficiales por API y certificaciones que avalan nuestro trabajo dentro del entorno Meta. El SEO y el AEO los aplicamos primero en nuestro propio sitio, y puedes verlo: datos estructurados, resumen legible para modelos en /llms.txt y acceso declarado para los rastreadores de IA.',
     caseSlugs: ['chipotle', 'la-victoria', 'comunidad-ia'],
     faqs: [
       {
@@ -153,10 +156,18 @@ export const pillars: Pillar[] = [
         q: '¿Qué significa ser Meta Tech Provider?',
         a: 'Que trabajamos con conexiones oficiales de Meta por API y con las certificaciones que Meta exige a sus proveedores tecnológicos. No dependemos de atajos ni herramientas no autorizadas.',
       },
+      {
+        q: '¿Qué es el AEO y en qué se diferencia del SEO?',
+        a: 'El SEO trabaja para que tu negocio salga en los resultados de Google. El AEO, optimización para motores de respuesta, trabaja para que asistentes como ChatGPT, Gemini, Perplexity o Claude te nombren cuando alguien les pregunta por tu servicio. Las señales cambian: contenido que se puede citar, datos estructurados, un resumen del negocio legible para modelos y permisos claros para sus rastreadores. Hoy mucha gente pregunta antes de buscar, y quien no aparece en esa respuesta no existe para ese cliente.',
+      },
+      {
+        q: '¿Cómo sé que saben hacer SEO y AEO?',
+        a: 'Porque lo aplicamos primero en nuestro propio sitio y es verificable: ionoshub.net publica datos estructurados, un resumen para modelos en /llms.txt, un sitemap indexado en Google Search Console y permisos explícitos para los rastreadores de IA. En tu proyecto medimos lo mismo: qué consultas te traen gente y en qué respuestas apareces.',
+      },
     ],
-    metaTitle: 'Pauta segmentada en Meta, contenido y landing pages | IonosHub · Meta Tech Provider',
+    metaTitle: 'Marketing, SEO y AEO en Ecuador | IonosHub · Meta Tech Provider',
     metaDescription:
-      'Campañas con conjuntos de anuncios segmentados profesionalmente, contenido, cobertura de eventos y landing pages a medida. Somos Meta Tech Provider. Marketing para empresas en Ecuador.',
+      'Campañas segmentadas en Meta, SEO para aparecer en Google y AEO para que ChatGPT, Gemini y Perplexity te nombren. Contenido, cobertura de eventos y landing pages conectadas al CRM. Somos Meta Tech Provider.',
     waMessage: 'Hola IonosHub, me interesa pauta segmentada y marketing digital. Quiero agendar un diagnóstico gratuito.',
   },
   {

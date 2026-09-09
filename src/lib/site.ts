@@ -30,7 +30,7 @@ export const CALENDAR_EMBED_URL =
 export const NAV_SERVICES = [
   { href: '/servicios/inteligencia-artificial', label: 'Inteligencia artificial', hint: 'IA de voz, agentes en WhatsApp y redes', icon: 'ia' },
   { href: '/servicios/automatizaciones', label: 'Automatizaciones', hint: 'CRM unificado, flujos y dashboards', icon: 'automatizaciones' },
-  { href: '/servicios/marketing', label: 'Marketing', hint: 'Pauta en Meta, contenido y landing pages', icon: 'marketing' },
+  { href: '/servicios/marketing', label: 'Marketing', hint: 'Pauta en Meta, SEO, AEO y landing pages', icon: 'marketing' },
   { href: '/servicios/software-a-medida', label: 'Software a medida', hint: 'Tu sistema funcionando en 30 días', icon: 'software' },
 ] as const;
 

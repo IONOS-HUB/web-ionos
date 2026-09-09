@@ -55,7 +55,7 @@ export const painPoints = [
   },
   {
     title: 'Pauta que no convierte',
-    text: 'Anuncios sin estructura, contenido sin plan y una web que no lleva a nada.',
+    text: 'Anuncios sin estructura, contenido sin plan y una web que nadie encuentra en Google ni cita la IA.',
     pillar: 'marketing' as const,
   },
   {
@@ -114,6 +114,10 @@ export const faqs = [
   {
     q: '¿Realmente entregan software en 30 días?',
     a: 'Sí, con alcance cerrado en el diagnóstico. Lo que no cabe en 30 días se planifica como segunda fase, sin sorpresas.',
+  },
+  {
+    q: '¿Hacen SEO y AEO?',
+    a: 'Sí, dentro del pilar de marketing. El SEO trabaja para que Google te muestre cuando buscan lo que vendes; el AEO, para que asistentes como ChatGPT, Gemini, Perplexity o Claude te nombren cuando alguien les pregunta. Lo aplicamos primero en nuestro propio sitio: datos estructurados, resumen para modelos en /llms.txt y permisos declarados para sus rastreadores.',
   },
   {
     q: '¿Trabajan solo en Ecuador?',
