@@ -1,37 +1,84 @@
 /**
- * Freno por IP en memoria. Corta ráfagas y bots simples sin depender de ningún servicio externo.
+ * Freno por IP.
  *
- * Aviso honesto: Vercel puede levantar varias instancias de la función, y cada una lleva su propia
- * cuenta, así que el tope real es "por instancia". Sirve para lo habitual, no contra un ataque
- * distribuido; para eso hace falta un contador compartido (Redis). El interruptor `CHAT_ENABLED=0`
- * sigue siendo la parada de emergencia.
+ * Con `UPSTASH_REDIS_REST_URL` y `UPSTASH_REDIS_REST_TOKEN` configurados, la cuenta es compartida
+ * entre todas las instancias de la función (Redis por HTTPS, sin conexiones TCP ni servidor propio).
+ * Sin esas variables, cae en un contador en memoria que sólo cubre la instancia en curso.
+ *
+ * Si Redis falla o tarda, se deja pasar: preferimos atender a una persona real antes que bloquearla
+ * por un problema de infraestructura. El corte de emergencia sigue siendo `CHAT_ENABLED=0`.
  */
 
-const HOUR = 60 * 60 * 1000;
+const HOUR_SECONDS = 60 * 60;
 
-/** Sesiones nuevas y mensajes totales que admitimos de una misma IP por hora. */
-export const IP_LIMITS = { sessions: 6, messages: 60 } as const;
+/** Conversaciones nuevas y mensajes que admitimos de una misma IP por hora. */
+export const IP_LIMITS = { sessions: 12, messages: 120 } as const;
+
+const readEnv = (name: string): string | undefined =>
+  (import.meta.env as Record<string, string | undefined>)[name] ?? process.env[name];
+
+/* ── Contador en memoria (respaldo) ─────────────────────────────────────── */
 
 interface Bucket {
   sessions: number;
   messages: number;
   resetAt: number;
 }
-
 const buckets = new Map<string, Bucket>();
 
-function bucketFor(ip: string): Bucket {
+function memoryCount(ip: string, isNewSession: boolean): boolean {
   const now = Date.now();
-  const found = buckets.get(ip);
-  if (found && found.resetAt > now) return found;
-  // Limpieza perezosa: al rotar una IP se tiran las caducadas para que el mapa no crezca.
-  if (buckets.size > 500) {
-    for (const [key, value] of buckets) if (value.resetAt <= now) buckets.delete(key);
+  let bucket = buckets.get(ip);
+  if (!bucket || bucket.resetAt <= now) {
+    if (buckets.size > 500) for (const [k, v] of buckets) if (v.resetAt <= now) buckets.delete(k);
+    bucket = { sessions: 0, messages: 0, resetAt: now + HOUR_SECONDS * 1000 };
+    buckets.set(ip, bucket);
   }
-  const fresh: Bucket = { sessions: 0, messages: 0, resetAt: now + HOUR };
-  buckets.set(ip, fresh);
-  return fresh;
+  if (isNewSession && bucket.sessions >= IP_LIMITS.sessions) return false;
+  if (bucket.messages >= IP_LIMITS.messages) return false;
+  bucket.messages += 1;
+  if (isNewSession) bucket.sessions += 1;
+  return true;
 }
+
+/* ── Contador compartido (Upstash Redis por REST) ───────────────────────── */
+
+/**
+ * Incrementa la clave y le pone caducidad de una hora en una sola llamada.
+ * Devuelve el valor tras incrementar, o null si no hay Redis o falló.
+ */
+async function redisIncrement(key: string): Promise<number | null> {
+  const url = readEnv('UPSTASH_REDIS_REST_URL');
+  const token = readEnv('UPSTASH_REDIS_REST_TOKEN');
+  if (!url || !token) return null;
+  const controller = new AbortController();
+  const timer = setTimeout(() => controller.abort(), 1500);
+  try {
+    const res = await fetch(`${url.replace(/\/$/, '')}/pipeline`, {
+      method: 'POST',
+      headers: { Authorization: `Bearer ${token}`, 'Content-Type': 'application/json' },
+      signal: controller.signal,
+      body: JSON.stringify([
+        ['INCR', key],
+        ['EXPIRE', key, String(HOUR_SECONDS), 'NX'],
+      ]),
+    });
+    if (!res.ok) {
+      console.error('[ratelimit] Redis respondió', res.status);
+      return null;
+    }
+    const data = (await res.json()) as { result?: number }[];
+    const valor = data?.[0]?.result;
+    return typeof valor === 'number' ? valor : null;
+  } catch (e) {
+    console.error('[ratelimit] Redis no disponible:', e instanceof Error ? e.message : e);
+    return null;
+  } finally {
+    clearTimeout(timer);
+  }
+}
+
+/* ── API ────────────────────────────────────────────────────────────────── */
 
 /** IP del visitante detrás del proxy de Vercel. */
 export function clientIp(request: Request): string {
@@ -44,11 +91,13 @@ export function clientIp(request: Request): string {
  * Apunta un mensaje. `isNewSession` cuenta además una conversación nueva.
  * Devuelve false cuando la IP se pasó de la raya.
  */
-export function allowMessage(ip: string, isNewSession: boolean): boolean {
-  const bucket = bucketFor(ip);
-  if (isNewSession && bucket.sessions >= IP_LIMITS.sessions) return false;
-  if (bucket.messages >= IP_LIMITS.messages) return false;
-  bucket.messages += 1;
-  if (isNewSession) bucket.sessions += 1;
-  return true;
+export async function allowMessage(ip: string, isNewSession: boolean): Promise<boolean> {
+  // La ventana va por hora natural: la clave caduca sola y no hay que limpiar nada.
+  const ventana = Math.floor(Date.now() / (HOUR_SECONDS * 1000));
+  const mensajes = await redisIncrement(`chat:m:${ip}:${ventana}`);
+  if (mensajes === null) return memoryCount(ip, isNewSession);
+  if (mensajes > IP_LIMITS.messages) return false;
+  if (!isNewSession) return true;
+  const sesiones = await redisIncrement(`chat:s:${ip}:${ventana}`);
+  return sesiones === null ? true : sesiones <= IP_LIMITS.sessions;
 }

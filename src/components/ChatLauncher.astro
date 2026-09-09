@@ -3,23 +3,66 @@
  * Botón que abre el chat de IONIC. Vive dentro de [data-float-stack], encima del flotante de WhatsApp.
  * El panel es un elemento aparte (ChatWidget.astro): no puede colgar de esta columna porque en móvil
  * se desplaza con `translate` y eso la convertiría en el contenedor de un hijo `position: fixed`.
+ *
+ * Lleva el robot, no un globo de chat: desde el primer vistazo debe quedar claro que responde una IA.
  */
+import Icon from './Icon.astro';
 ---
 
 <button
   type="button"
-  class="group flex items-center rounded-full border border-line bg-canvas text-cobalt-ink shadow-lift transition-transform duration-500 ease-[var(--ease-out-expo)] hover:-translate-y-1"
+  class="cw-launch group flex items-center rounded-full text-white transition-transform duration-500 ease-[var(--ease-out-expo)] hover:-translate-y-1"
   aria-expanded="false"
   aria-controls="cw-panel"
   data-chat-open
 >
   <span class="relative flex h-14 w-14 shrink-0 items-center justify-center">
-    <span class="display-tight text-[1.05rem] font-semibold tracking-tight">IO</span>
-    <span class="absolute right-2.5 top-2.5 h-2.5 w-2.5 rounded-full border-2 border-canvas bg-emerald-500" aria-hidden="true"></span>
+    <Icon name="robot" size={26} />
+    <span class="cw-pulse" aria-hidden="true"></span>
   </span>
   <span
-    class="max-w-0 overflow-hidden whitespace-nowrap pr-0 text-[0.95rem] font-semibold opacity-0 transition-all duration-500 ease-[var(--ease-out-expo)] group-hover:max-w-[12rem] group-hover:pr-5 group-hover:opacity-100 group-focus-visible:max-w-[12rem] group-focus-visible:pr-5 group-focus-visible:opacity-100"
+    class="max-w-0 overflow-hidden whitespace-nowrap pr-0 text-[0.95rem] font-semibold opacity-0 transition-all duration-500 ease-[var(--ease-out-expo)] group-hover:max-w-[14rem] group-hover:pr-5 group-hover:opacity-100 group-focus-visible:max-w-[14rem] group-focus-visible:pr-5 group-focus-visible:opacity-100"
   >
-    Habla con IONIC
+    Pregúntale a la IA
   </span>
 </button>
+
+<style>
+  .cw-launch {
+    background: linear-gradient(140deg, var(--color-cobalt-glow), var(--color-cobalt) 55%, var(--color-cobalt-deep));
+    box-shadow: var(--shadow-phone);
+  }
+
+  /* Punto vivo: señal de que hay alguien (algo) al otro lado, sin ruido visual. */
+  .cw-pulse {
+    position: absolute;
+    top: 0.6rem;
+    right: 0.65rem;
+    width: 0.6rem;
+    height: 0.6rem;
+    border-radius: 999px;
+    background: #34d399;
+    box-shadow: 0 0 0 2px var(--color-cobalt-deep);
+  }
+  @media (prefers-reduced-motion: no-preference) {
+    .cw-pulse::after {
+      content: '';
+      position: absolute;
+      inset: -2px;
+      border-radius: 999px;
+      border: 2px solid #34d399;
+      animation: cw-ping 2.4s var(--ease-out-expo) infinite;
+    }
+    @keyframes cw-ping {
+      0% {
+        transform: scale(0.9);
+        opacity: 0.8;
+      }
+      70%,
+      100% {
+        transform: scale(2.1);
+        opacity: 0;
+      }
+    }
+  }
+</style>

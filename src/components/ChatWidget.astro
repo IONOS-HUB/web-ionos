@@ -4,32 +4,43 @@
  * así el chat no obliga a cargar el runtime en páginas que hoy no lo usan (blog, casos, equipo).
  *
  * El lanzador va dentro de [data-float-stack] (encima del flotante de WhatsApp) y el panel es fijo,
- * así que queda fuera del flujo de esa columna. Toda la lógica delicada vive en /api/chat.
+ * fuera de esa columna. Toda la lógica delicada vive en /api/chat.
+ *
+ * Diseño: cada respuesta lleva el robot al lado y las burbujas tienen forma de nube con punta, para
+ * que se vea de un golpe quién habla y que quien responde es una IA, no una persona del equipo.
  */
 import Icon from './Icon.astro';
 import { GREETING } from '../lib/chat/copy';
 import { waLink, CALENDAR_URL } from '../lib/site';
+
+const sugerencias = ['¿Qué hacen exactamente?', '¿Cómo atiende llamadas la IA?', 'Quiero agendar'];
 ---
 
 <div
   id="cw-panel"
-  class="cw-panel flex-col overflow-hidden rounded-[1.5rem] border border-line bg-canvas shadow-phone"
+  class="cw-panel flex-col overflow-hidden"
   role="dialog"
   aria-labelledby="cw-title"
   hidden
   data-chat-panel
 >
-  <header class="flex shrink-0 items-center gap-3 bg-cobalt px-4 py-3 text-white">
-    <span class="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-white/15" aria-hidden="true">
-      <span class="display-tight text-[0.9rem] font-semibold">IO</span>
+  <header class="cw-head">
+    <span class="cw-head-avatar" aria-hidden="true">
+      <Icon name="robot" size={24} />
     </span>
     <span class="min-w-0 leading-tight">
-      <span id="cw-title" class="block text-[0.98rem] font-semibold">IONIC · Asistente</span>
-      <span class="block text-[0.8rem] text-white/75">Resuelve dudas y agenda tu diagnóstico</span>
+      <span class="flex items-center gap-2">
+        <span id="cw-title" class="text-[1rem] font-semibold text-white">IONIC</span>
+        <span class="cw-badge"><Icon name="sparkle" size={11} /> IA</span>
+      </span>
+      <span class="mt-0.5 flex items-center gap-1.5 text-[0.78rem] text-white/70">
+        <span class="cw-dot" aria-hidden="true"></span>
+        Responde al instante
+      </span>
     </span>
     <button
       type="button"
-      class="ml-auto flex h-9 w-9 shrink-0 items-center justify-center rounded-full text-white/80 transition-colors hover:bg-white/15 hover:text-white"
+      class="ml-auto flex h-9 w-9 shrink-0 items-center justify-center rounded-full text-white/75 transition-colors hover:bg-white/15 hover:text-white"
       aria-label="Cerrar el chat"
       data-chat-close
     >
@@ -37,13 +48,28 @@ import { waLink, CALENDAR_URL } from '../lib/site';
     </button>
   </header>
 
+  <p class="cw-disclaimer">
+    Hablas con un asistente automático. Si prefieres una persona, escríbenos por WhatsApp.
+  </p>
+
   <div class="cw-log" role="log" aria-live="polite" aria-label="Conversación con IONIC" data-chat-log>
-    <p class="cw-msg cw-model">{GREETING}</p>
+    <div class="cw-row cw-row-model">
+      <span class="cw-ava" aria-hidden="true"><Icon name="robot" size={17} /></span>
+      <p class="cw-msg cw-model">{GREETING}</p>
+    </div>
+  </div>
+
+  <!-- Atajos: quitan la hoja en blanco y llevan la conversación donde queremos. -->
+  <div class="cw-chips" data-chat-chips>
+    {sugerencias.map((texto) => <button type="button" class="cw-chip" data-chat-chip>{texto}</button>)}
   </div>
 
   <!-- Confirmación explícita antes de mover un dato personal: los valores los pone el servidor. -->
   <div class="cw-confirm" data-chat-confirm hidden>
-    <p class="text-[0.85rem] font-semibold text-ink">Revisa tus datos antes de enviarlos</p>
+    <p class="flex items-center gap-2 text-[0.85rem] font-semibold text-ink">
+      <Icon name="shield" size={15} class="text-cobalt" />
+      Revisa tus datos antes de enviarlos
+    </p>
     <dl class="mt-2 grid grid-cols-[auto_1fr] gap-x-3 gap-y-1 text-[0.85rem]">
       <dt class="text-ink-3">Negocio</dt>
       <dd class="min-w-0 truncate font-medium text-ink" data-cw-nombre></dd>
@@ -68,7 +94,7 @@ import { waLink, CALENDAR_URL } from '../lib/site';
 
   <p class="cw-hint" data-chat-hint hidden></p>
 
-  <form class="flex shrink-0 items-end gap-2 border-t border-line-soft bg-canvas p-3" data-chat-form>
+  <form class="cw-form" data-chat-form>
     <label class="sr-only" for="cw-input">Escribe tu mensaje para IONIC</label>
     <input
       id="cw-input"
@@ -78,29 +104,29 @@ import { waLink, CALENDAR_URL } from '../lib/site';
       autocomplete="off"
       enterkeyhint="send"
       placeholder="Escribe tu mensaje…"
-      class="min-w-0 flex-1 rounded-full border border-line bg-ice-3 px-4 py-2.5 text-[0.98rem] text-ink placeholder:text-ink-3/70 transition-[border-color,box-shadow] duration-300 focus:border-cobalt focus:bg-canvas focus:outline-none focus:ring-4 focus:ring-cobalt/15"
+      class="cw-input"
       data-chat-input
     />
-    <button
-      type="submit"
-      class="flex h-11 w-11 shrink-0 items-center justify-center rounded-full bg-cobalt text-white transition-colors duration-300 hover:bg-cobalt-deep disabled:opacity-45"
-      aria-label="Enviar mensaje"
-      data-chat-send
-    >
+    <button type="submit" class="cw-send" aria-label="Enviar mensaje" data-chat-send>
       <Icon name="send" size={18} />
     </button>
   </form>
 
-  <div class="flex shrink-0 flex-wrap items-center gap-x-4 gap-y-1 border-t border-line-soft bg-ice-3 px-4 py-2.5 text-[0.78rem] text-ink-3">
-    <a href={waLink()} target="_blank" rel="noopener noreferrer" class="inline-flex items-center gap-1.5 font-semibold text-cobalt-ink hover:text-cobalt">
+  <div class="cw-foot">
+    <a href={waLink()} target="_blank" rel="noopener noreferrer" class="cw-foot-link">
       <Icon name="whatsapp" size={14} /> WhatsApp
     </a>
-    <a href={CALENDAR_URL} target="_blank" rel="noopener noreferrer" class="inline-flex items-center gap-1.5 font-semibold text-cobalt-ink hover:text-cobalt" data-chat-calendar>
+    <a href={CALENDAR_URL} target="_blank" rel="noopener noreferrer" class="cw-foot-link" data-chat-calendar>
       <Icon name="calendar" size={14} /> Elegir horario
     </a>
     <a href="/politica-de-privacidad" class="ml-auto hover:text-ink-2">Privacidad</a>
   </div>
 </div>
+
+<!-- Molde del avatar: el script lo clona en cada respuesta en vez de inyectar SVG desde JavaScript. -->
+<template data-cw-ava-template>
+  <span class="cw-ava" aria-hidden="true"><Icon name="robot" size={17} /></span>
+</template>
 
 <style>
   .cw-panel {
@@ -109,12 +135,22 @@ import { waLink, CALENDAR_URL } from '../lib/site';
     right: 1.25rem;
     bottom: 5.75rem;
     left: auto;
-    width: min(23rem, calc(100vw - 2.5rem));
-    max-height: min(32rem, calc(100dvh - 9rem));
+    width: min(23.5rem, calc(100vw - 2.5rem));
+    max-height: min(33rem, calc(100dvh - 9rem));
+    border-radius: 1.75rem;
+    border: 1px solid var(--color-line);
+    background: var(--color-canvas);
+    box-shadow: var(--shadow-phone);
   }
   .cw-panel:not([hidden]) {
     display: flex;
-    animation: pop 0.4s var(--ease-out-expo) both;
+    animation: cw-in 0.45s var(--ease-out-expo) both;
+  }
+  @keyframes cw-in {
+    from {
+      opacity: 0;
+      transform: translateY(14px) scale(0.97);
+    }
   }
   /*
    * Con el chat abierto el lanzador estorba: el panel ya tiene su botón de cerrar y así puede
@@ -123,16 +159,11 @@ import { waLink, CALENDAR_URL } from '../lib/site';
   :global(html.cw-open [data-chat-open]) {
     display: none;
   }
-  @media (max-width: 639px) {
-    :global(html.cw-open [data-float-stack]) {
-      display: none;
-    }
-  }
   @media (min-width: 640px) {
     .cw-panel {
       right: 1.5rem;
       bottom: 6.25rem;
-      max-height: min(34rem, calc(100dvh - 10rem));
+      max-height: min(35rem, calc(100dvh - 10rem));
     }
   }
   /*
@@ -148,67 +179,184 @@ import { waLink, CALENDAR_URL } from '../lib/site';
       width: auto;
       max-height: none;
     }
+    :global(html.cw-open [data-float-stack]) {
+      display: none;
+    }
     /* Con el aviso de cookies abierto, el panel se apoya encima de él. */
     :global(html.cc-open) .cw-panel {
       bottom: var(--cc-lift, 0.75rem);
     }
   }
 
+  /* ── Cabecera ─────────────────────────────────────────────────────────── */
+
+  .cw-head {
+    display: flex;
+    flex-shrink: 0;
+    align-items: center;
+    gap: 0.75rem;
+    padding: 0.85rem 1rem;
+    background: linear-gradient(135deg, var(--color-cobalt-glow), var(--color-cobalt) 45%, var(--color-cobalt-deep));
+    color: #fff;
+  }
+  .cw-head-avatar {
+    display: flex;
+    flex-shrink: 0;
+    align-items: center;
+    justify-content: center;
+    width: 2.5rem;
+    height: 2.5rem;
+    border-radius: 999px;
+    background: rgb(255 255 255 / 0.16);
+    box-shadow: inset 0 0 0 1px rgb(255 255 255 / 0.25);
+  }
+  .cw-badge {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.2rem;
+    padding: 0.08rem 0.45rem 0.12rem;
+    border-radius: 999px;
+    background: rgb(255 255 255 / 0.18);
+    font-size: 0.68rem;
+    font-weight: 700;
+    letter-spacing: 0.04em;
+    text-transform: uppercase;
+  }
+  .cw-dot {
+    width: 0.42rem;
+    height: 0.42rem;
+    border-radius: 999px;
+    background: #34d399;
+  }
+
+  .cw-disclaimer {
+    flex-shrink: 0;
+    margin: 0;
+    padding: 0.5rem 1rem;
+    background: var(--color-ice);
+    border-bottom: 1px solid var(--color-line-soft);
+    color: var(--color-cobalt-ink);
+    font-size: 0.76rem;
+    line-height: 1.35;
+  }
+
+  /* ── Conversación ─────────────────────────────────────────────────────── */
+
   .cw-log {
     display: flex;
     flex-direction: column;
-    gap: 0.5rem;
+    gap: 0.6rem;
     flex: 1 1 auto;
-    min-height: 8rem;
+    min-height: 7rem;
     overflow-y: auto;
     overscroll-behavior: contain;
-    padding: 1rem;
-    background: var(--color-ice-3);
+    padding: 1rem 0.9rem;
+    background:
+      radial-gradient(120% 60% at 100% 0%, rgb(63 134 230 / 0.07), transparent 60%),
+      var(--color-ice-3);
   }
 
-  .cw-msg {
-    max-width: 85%;
-    padding: 0.625rem 0.9rem;
-    border-radius: var(--radius-bubble);
-    font-size: 0.96rem;
+  :global(.cw-row) {
+    display: flex;
+    align-items: flex-end;
+    gap: 0.5rem;
+    animation: msg-in 0.5s var(--ease-out-expo) both;
+  }
+  :global(.cw-row-user) {
+    justify-content: flex-end;
+  }
+  :global(.cw-ava) {
+    display: flex;
+    flex-shrink: 0;
+    align-items: center;
+    justify-content: center;
+    width: 1.85rem;
+    height: 1.85rem;
+    margin-bottom: 0.1rem;
+    border-radius: 999px;
+    background: var(--color-canvas);
+    color: var(--color-cobalt);
+    box-shadow: 0 1px 3px rgb(8 58 122 / 0.14), inset 0 0 0 1px var(--color-ice-2);
+  }
+  /* En una ráfaga de respuestas seguidas sólo la primera lleva cara. */
+  :global(.cw-ava-ghost) {
+    visibility: hidden;
+  }
+
+  :global(.cw-msg) {
+    position: relative;
+    max-width: 78%;
+    padding: 0.6rem 0.9rem;
+    font-size: 0.95rem;
     line-height: 1.5;
     white-space: pre-wrap;
     overflow-wrap: anywhere;
   }
-  .cw-model {
-    align-self: flex-start;
-    border: 1px solid var(--color-line);
-    border-bottom-left-radius: 0.35rem;
+  /* Nubes: esquinas muy redondeadas y una punta hacia quien habla. */
+  :global(.cw-model) {
+    border-radius: 1.15rem 1.15rem 1.15rem 0.3rem;
     background: var(--color-canvas);
     color: var(--color-ink);
+    box-shadow: 0 1px 2px rgb(15 23 34 / 0.06), inset 0 0 0 1px var(--color-line-soft);
   }
-  .cw-user {
-    align-self: flex-end;
-    border-bottom-right-radius: 0.35rem;
-    background: var(--color-cobalt);
+  :global(.cw-user) {
+    border-radius: 1.15rem 1.15rem 0.3rem 1.15rem;
+    background: linear-gradient(140deg, var(--color-cobalt), var(--color-cobalt-deep));
     color: #fff;
+    box-shadow: 0 2px 8px -3px rgb(8 58 122 / 0.5);
   }
-  .cw-error {
-    align-self: center;
+  :global(.cw-error) {
     max-width: 100%;
-    border: 1px solid var(--color-ice-2);
+    border-radius: 1rem;
     background: var(--color-canvas);
     color: var(--color-ink-3);
-    font-size: 0.88rem;
+    box-shadow: inset 0 0 0 1px var(--color-ice-2);
+    font-size: 0.86rem;
     text-align: center;
   }
+  :global(.cw-row-error) {
+    justify-content: center;
+  }
 
-  .cw-typing {
+  :global(.cw-typing) {
     display: inline-flex;
     gap: 0.28rem;
     align-items: center;
-    padding: 0.85rem 0.9rem;
+    padding: 0.8rem 0.9rem;
   }
-  .cw-typing span {
-    width: 0.4rem;
-    height: 0.4rem;
+  :global(.cw-typing span) {
+    width: 0.38rem;
+    height: 0.38rem;
     border-radius: 999px;
-    background: var(--color-ink-3);
+    background: var(--color-cobalt-glow);
+  }
+
+  /* ── Atajos, confirmación y pie ───────────────────────────────────────── */
+
+  /* `:not([hidden])` para que el atributo siga mandando: un `display` a secas lo anularía. */
+  .cw-chips:not([hidden]) {
+    display: flex;
+  }
+  .cw-chips {
+    flex-shrink: 0;
+    flex-wrap: wrap;
+    gap: 0.4rem;
+    padding: 0 0.9rem 0.75rem;
+    background: var(--color-ice-3);
+  }
+  .cw-chip {
+    border-radius: 999px;
+    padding: 0.35rem 0.75rem;
+    background: var(--color-canvas);
+    box-shadow: inset 0 0 0 1px var(--color-ice-2);
+    color: var(--color-cobalt-ink);
+    font-size: 0.82rem;
+    font-weight: 500;
+    transition: background-color 0.25s, box-shadow 0.25s, transform 0.35s var(--ease-out-expo);
+  }
+  .cw-chip:hover {
+    background: var(--color-ice);
+    transform: translateY(-1px);
   }
 
   .cw-confirm {
@@ -230,8 +378,81 @@ import { waLink, CALENDAR_URL } from '../lib/site';
     text-align: center;
   }
 
+  .cw-form {
+    display: flex;
+    flex-shrink: 0;
+    align-items: center;
+    gap: 0.5rem;
+    padding: 0.7rem;
+    border-top: 1px solid var(--color-line-soft);
+    background: var(--color-canvas);
+  }
+  .cw-input {
+    min-width: 0;
+    flex: 1 1 auto;
+    border-radius: 999px;
+    padding: 0.7rem 1rem;
+    background: var(--color-ice-3);
+    box-shadow: inset 0 0 0 1px var(--color-line);
+    color: var(--color-ink);
+    font-size: 0.96rem;
+    transition: box-shadow 0.3s, background-color 0.3s;
+  }
+  .cw-input::placeholder {
+    color: var(--color-ink-3);
+    opacity: 0.75;
+  }
+  .cw-input:focus {
+    outline: none;
+    background: var(--color-canvas);
+    box-shadow: inset 0 0 0 1.5px var(--color-cobalt), 0 0 0 4px rgb(14 95 203 / 0.14);
+  }
+  .cw-send {
+    display: flex;
+    flex-shrink: 0;
+    align-items: center;
+    justify-content: center;
+    width: 2.75rem;
+    height: 2.75rem;
+    border-radius: 999px;
+    background: linear-gradient(140deg, var(--color-cobalt), var(--color-cobalt-deep));
+    color: #fff;
+    transition: transform 0.35s var(--ease-out-expo), opacity 0.25s;
+  }
+  .cw-send:hover:not(:disabled) {
+    transform: scale(1.06);
+  }
+  .cw-send:disabled {
+    opacity: 0.45;
+  }
+
+  .cw-foot {
+    display: flex;
+    flex-shrink: 0;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 0.25rem 1rem;
+    padding: 0.6rem 1rem;
+    border-top: 1px solid var(--color-line-soft);
+    background: var(--color-ice-3);
+    color: var(--color-ink-3);
+    font-size: 0.78rem;
+  }
+  .cw-foot-link {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.35rem;
+    font-weight: 600;
+    color: var(--color-cobalt-ink);
+  }
+  .cw-foot-link:hover {
+    color: var(--color-cobalt);
+  }
+
   @media (prefers-reduced-motion: reduce) {
-    .cw-panel:not([hidden]) {
+    .cw-panel:not([hidden]),
+    :global(.cw-row),
+    .cw-confirm {
       animation: none;
     }
   }
@@ -251,8 +472,10 @@ import { waLink, CALENDAR_URL } from '../lib/site';
   const confirmBox = document.querySelector<HTMLElement>('[data-chat-confirm]');
   const confirmSend = document.querySelector<HTMLButtonElement>('[data-chat-confirm-send]');
   const confirmEdit = document.querySelector<HTMLButtonElement>('[data-chat-confirm-edit]');
+  const chips = document.querySelector<HTMLElement>('[data-chat-chips]');
+  const avaTemplate = document.querySelector<HTMLTemplateElement>('[data-cw-ava-template]');
 
-  if (launcher && panel && log && form && input && sendBtn && hint && closeBtn && confirmBox && confirmSend && confirmEdit) {
+  if (launcher && panel && log && form && input && sendBtn && hint && closeBtn && confirmBox && confirmSend && confirmEdit && chips && avaTemplate) {
     const STORE = 'ionoshub-chat';
     type Msg = { role: 'user' | 'model'; text: string };
 
@@ -265,24 +488,46 @@ import { waLink, CALENDAR_URL } from '../lib/site';
     const gtag = (name: string, params: Record<string, unknown> = {}) =>
       (window as unknown as { gtag?: (...a: unknown[]) => void }).gtag?.('event', name, params);
 
-    /** Los mensajes se pintan con textContent: nada de HTML venido del modelo. */
+    const avatar = () => avaTemplate.content.firstElementChild!.cloneNode(true) as HTMLElement;
+
+    /**
+     * Pinta una fila. El texto va por textContent: nada de HTML venido del modelo.
+     * Las respuestas seguidas comparten cara: sólo la primera del grupo la muestra.
+     */
     const bubble = (text: string, kind: 'user' | 'model' | 'error') => {
+      const row = document.createElement('div');
+      row.className = `cw-row cw-row-${kind}`;
+      if (kind === 'model') {
+        const cara = avatar();
+        const anterior = log.lastElementChild;
+        if (anterior?.classList.contains('cw-row-model')) cara.classList.add('cw-ava-ghost');
+        row.appendChild(cara);
+      }
       const p = document.createElement('p');
-      p.className = `cw-msg cw-${kind} msg-in`;
+      p.className = `cw-msg cw-${kind}`;
       p.textContent = text;
-      log.appendChild(p);
+      row.appendChild(p);
+      log.appendChild(row);
       log.scrollTop = log.scrollHeight;
-      return p;
+      return row;
     };
 
     const typing = () => {
-      const el = document.createElement('div');
-      el.className = 'cw-msg cw-model cw-typing msg-in';
-      el.setAttribute('aria-label', 'IONIC está escribiendo');
-      el.innerHTML = '<span class="typing-dot"></span><span class="typing-dot"></span><span class="typing-dot"></span>';
-      log.appendChild(el);
+      const row = document.createElement('div');
+      row.className = 'cw-row cw-row-model';
+      row.setAttribute('aria-label', 'IONIC está escribiendo');
+      row.appendChild(avatar());
+      const bocadillo = document.createElement('div');
+      bocadillo.className = 'cw-msg cw-model cw-typing';
+      for (let i = 0; i < 3; i++) {
+        const punto = document.createElement('span');
+        punto.className = 'typing-dot';
+        bocadillo.appendChild(punto);
+      }
+      row.appendChild(bocadillo);
+      log.appendChild(row);
       log.scrollTop = log.scrollHeight;
-      return el;
+      return row;
     };
 
     const setBusy = (value: boolean) => {
@@ -295,6 +540,7 @@ import { waLink, CALENDAR_URL } from '../lib/site';
       closed = true;
       if (message) bubble(message, 'error');
       confirmBox.hidden = true;
+      chips.hidden = true;
       input.disabled = true;
       sendBtn.disabled = true;
       input.placeholder = 'Chat finalizado';
@@ -367,6 +613,7 @@ import { waLink, CALENDAR_URL } from '../lib/site';
         token = data.token ?? null;
         history = data.history;
         log.replaceChildren();
+        chips.hidden = true;
         for (const m of history) bubble(m.text, m.role === 'user' ? 'user' : 'model');
         if (data.closed) endChat();
       } catch {}
@@ -392,6 +639,7 @@ import { waLink, CALENDAR_URL } from '../lib/site';
     const send = async (text: string) => {
       if (busy || closed) return;
       setBusy(true);
+      chips.hidden = true;
       bubble(text, 'user');
       const dots = typing();
       try {
@@ -451,6 +699,9 @@ import { waLink, CALENDAR_URL } from '../lib/site';
       confirmBox.hidden = true;
       input.focus({ preventScroll: true });
     });
+    chips.querySelectorAll<HTMLButtonElement>('[data-chat-chip]').forEach((chip) =>
+      chip.addEventListener('click', () => void send(chip.textContent!.trim())),
+    );
     document.addEventListener('keydown', (e) => {
       if (e.key === 'Escape' && !panel.hidden) close();
     });

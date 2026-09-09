@@ -23,6 +23,8 @@ export type IconName =
   | 'marketing'
   | 'software'
   | 'shield'
+  | 'robot'
+  | 'sparkle'
   | 'menu'
   | 'close'
   | 'send'
@@ -74,6 +76,11 @@ const paths: Record<IconName, string> = {
   software:
     '<path d="m8 8.5-4 3.5 4 3.5"/><path d="m16 8.5 4 3.5-4 3.5"/><path d="m13.5 5.5-3 13"/>',
   shield: '<path d="M12 3.5 5 6.2v5.3c0 4.2 2.9 7.6 7 9 4.1-1.4 7-4.8 7-9V6.2L12 3.5Z"/><path d="m9 12 2 2 4-4.5"/>',
+  // IONIC en persona: cabeza redondeada, antena con señal y una sonrisa corta.
+  robot:
+    '<path d="M12 3v2.6"/><circle cx="12" cy="2.4" r="1.1"/><rect x="3.6" y="5.6" width="16.8" height="13" rx="4.2"/><circle cx="8.9" cy="11.2" r="1.25" fill="currentColor" stroke="none"/><circle cx="15.1" cy="11.2" r="1.25" fill="currentColor" stroke="none"/><path d="M9.6 15.1a3.4 3.4 0 0 0 4.8 0"/><path d="M1.6 10.4v3.4"/><path d="M22.4 10.4v3.4"/>',
+  sparkle:
+    '<path d="M12 4.2 13.4 9l4.8 1.4-4.8 1.4L12 16.6l-1.4-4.8L5.8 10.4 10.6 9 12 4.2Z"/><path d="M18.6 3.4v2.4"/><path d="M19.8 4.6h-2.4"/>',
   menu: '<path d="M4 7h16"/><path d="M4 12h16"/><path d="M4 17h16"/>',
   close: '<path d="m6 6 12 12"/><path d="m18 6-12 12"/>',
   send: '<path d="M20.5 3.5 3.5 10.7l7.4 2.4 2.4 7.4 7.2-17Z"/><path d="m10.9 13.1 4.6-4.6"/>',

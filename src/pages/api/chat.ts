@@ -1,7 +1,7 @@
 import type { APIRoute } from 'astro';
 import { systemInstruction, RESPONSE_SCHEMA } from '../../lib/chat/prompt';
 import { normalizeInterest } from '../../lib/chat/knowledge';
-import { FALLBACK_REPLY, LIMIT_REACHED_REPLY, SENSITIVE_REPLY, CLOSED_REPLY } from '../../lib/chat/copy';
+import { FALLBACK_REPLY, LIMIT_REACHED_REPLY, RATE_LIMITED_REPLY, SENSITIVE_REPLY, CLOSED_REPLY } from '../../lib/chat/copy';
 import {
   LIMITS,
   cleanUserMessage,
@@ -196,8 +196,8 @@ export const POST: APIRoute = async ({ request }) => {
   const input = cleanUserMessage(body.message);
   if (!input.ok) return json({ error: 'mensaje_invalido', detail: input.error }, 400);
 
-  if (!allowMessage(clientIp(request), !body.token)) {
-    return json({ reply: LIMIT_REACHED_REPLY, closed: true, stage: 'cierre', remaining: 0 }, 429);
+  if (!(await allowMessage(clientIp(request), !body.token))) {
+    return json({ reply: RATE_LIMITED_REPLY, closed: true, stage: 'cierre', remaining: 0 }, 429);
   }
 
   // Sesión: la primera petición no trae token; las siguientes deben traer uno válido y sin caducar.
@@ -240,9 +240,20 @@ export const POST: APIRoute = async ({ request }) => {
 
   const answer = await askGemini(systemInstruction(remaining, draft), contents, apiKey, model);
   if (!answer) {
+    // Aunque el modelo falle se devuelve sesión firmada: el siguiente intento continúa la misma
+    // conversación en vez de abrir una nueva (que contaría contra el límite por IP).
+    const fallbackHistory: ChatMessage[] = [
+      ...history,
+      { role: 'user', text: input.text },
+      { role: 'model', text: FALLBACK_REPLY },
+    ];
+    const tokenFallback = await signSession(
+      { ...session, n: session.n + 1, h: await fingerprint(fallbackHistory, secret), lead: draft },
+      secret,
+    );
     // El diagnóstico sólo viaja a quien conoce el secreto del servidor.
     const debug = request.headers.get('x-chat-debug') === secret ? { upstream: lastUpstreamError } : {};
-    return json({ reply: FALLBACK_REPLY, stage: 'duda', remaining, token: body.token ?? null, ...debug });
+    return json({ reply: FALLBACK_REPLY, stage: 'duda', remaining, token: tokenFallback, ...debug });
   }
 
   let reply = sanitizeReply(answer.respuesta);

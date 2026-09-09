@@ -18,3 +18,6 @@ export const SENSITIVE_REPLY =
 
 export const CLOSED_REPLY =
   'Ya tengo tus datos y un asesor de IonosHub se pondrá en contacto contigo en las próximas horas. Si quieres adelantar algo, escríbenos por WhatsApp.';
+
+export const RATE_LIMITED_REPLY =
+  'Hemos tenido muchas conversaciones desde tu conexión en la última hora. Escríbenos por WhatsApp o elige día y hora en la agenda: te atendemos igual de rápido.';
