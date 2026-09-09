@@ -28,7 +28,7 @@ export const prerender = false;
  *
  * Todo lo delicado ocurre aquí, nunca en el navegador: la clave de Gemini, el prompt del sistema y la
  * base de conocimiento. El modelo sólo devuelve texto y datos; jamás ejecuta acciones. La entrega del
- * lead al webhook de n8n la decide el servidor tras validar (se conecta en el siguiente paso).
+ * lead al webhook de n8n la decide el servidor tras validar, y la dispara la persona desde `/api/chat-lead`.
  *
  * Contrato con el cliente:
  *   POST { message: string, token?: string, history?: {role,text}[] }
@@ -70,6 +70,12 @@ interface ModelAnswer {
 let lastUpstreamError: string | null = null;
 
 /**
+ * Algunos modelos (Gemini 3.x) rechazan `thinkingConfig` con 400. Al primer rechazo se apunta aquí
+ * y el resto de la vida de la instancia se pide directamente sin esa opción: una llamada por mensaje.
+ */
+let thinkingSupported = true;
+
+/**
  * Cuerpo de la petición. `thinking` desactiva el razonamiento interno para abaratar y acelerar,
  * pero no todos los modelos lo admiten: si lo rechazan con 400, se reintenta sin esa opción.
  */
@@ -109,10 +115,10 @@ async function askGemini(
   const url = `https://generativelanguage.googleapis.com/v1beta/models/${model}:generateContent`;
   const headers = { 'Content-Type': 'application/json', 'x-goog-api-key': apiKey };
   try {
-    let res = await fetch(url, { method: 'POST', headers, signal: controller.signal, body: requestBody(system, contents, true) });
-    if (res.status === 400) {
-      const primero = (await res.text()).slice(0, 200);
-      console.warn('[api/chat] 400 con thinkingConfig; reintento sin él:', primero);
+    let res = await fetch(url, { method: 'POST', headers, signal: controller.signal, body: requestBody(system, contents, thinkingSupported) });
+    if (res.status === 400 && thinkingSupported) {
+      console.warn('[api/chat] 400 con thinkingConfig; este modelo no lo admite, se deja de enviar:', (await res.text()).slice(0, 160));
+      thinkingSupported = false;
       res = await fetch(url, { method: 'POST', headers, signal: controller.signal, body: requestBody(system, contents, false) });
     }
     if (!res.ok) {
@@ -151,39 +157,6 @@ export const GET: APIRoute = async ({ request, url }) => {
   const apiKey = readEnv('GEMINI_API_KEY');
   if (!apiKey) return json({ error: 'sin_clave' }, 503);
   const modelo = readEnv('GEMINI_MODEL') ?? 'gemini-2.5-flash-lite';
-
-  // Prueba qué campos de la petición admite el modelo configurado, para aislar un 400.
-  if (url.searchParams.get('diag') === 'probe') {
-    const contents = [{ role: 'user', parts: [{ text: 'Di la palabra ok' }] }];
-    const variantes: [string, Record<string, unknown>][] = [
-      ['completo', { temperature: 0.4, topP: 0.9, maxOutputTokens: 400, responseMimeType: 'application/json', responseSchema: RESPONSE_SCHEMA, thinkingConfig: { thinkingBudget: 0 } }],
-      ['sin-thinking', { temperature: 0.4, topP: 0.9, maxOutputTokens: 400, responseMimeType: 'application/json', responseSchema: RESPONSE_SCHEMA }],
-      ['sin-sampling', { maxOutputTokens: 400, responseMimeType: 'application/json', responseSchema: RESPONSE_SCHEMA }],
-      ['sin-schema', { temperature: 0.4, topP: 0.9, maxOutputTokens: 400 }],
-      ['minimo', { maxOutputTokens: 400 }],
-    ];
-    const resultados: Record<string, string> = {};
-    for (const [nombre, generationConfig] of variantes) {
-      const r = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/${modelo}:generateContent`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json', 'x-goog-api-key': apiKey },
-        body: JSON.stringify({ contents, generationConfig }),
-      });
-      resultados[nombre] = r.ok ? 'OK' : `${r.status}: ${(await r.text()).replace(/\s+/g, ' ').slice(0, 120)}`;
-    }
-    // Y una con safetySettings para ver si son ellos.
-    const rSafety = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/${modelo}:generateContent`, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json', 'x-goog-api-key': apiKey },
-      body: JSON.stringify({
-        contents,
-        generationConfig: { maxOutputTokens: 400 },
-        safetySettings: ['HARM_CATEGORY_HARASSMENT'].map((category) => ({ category, threshold: 'BLOCK_MEDIUM_AND_ABOVE' })),
-      }),
-    });
-    resultados['solo-safety'] = rSafety.ok ? 'OK' : `${rSafety.status}: ${(await rSafety.text()).replace(/\s+/g, ' ').slice(0, 120)}`;
-    return json({ modelo, resultados });
-  }
 
   if (url.searchParams.get('diag') !== 'models') return json({ modelo });
   const res = await fetch('https://generativelanguage.googleapis.com/v1beta/models', {
