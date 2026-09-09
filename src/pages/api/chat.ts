@@ -285,15 +285,25 @@ export const POST: APIRoute = async ({ request }) => {
     correo: 120,
     nota_detalle: 400,
   };
-  // Nombre, interés y nota puede corregirlos el modelo (se equivoca al inferirlos de una frase suelta).
-  // Teléfono y correo no: los fija la extracción determinista y sólo se rellenan si están vacíos.
-  const corregibles: (keyof LeadDraft)[] = ['nombre_negocio_o_persona', 'nota_detalle'];
+  // Lo que propone el modelo pasa filtro antes de guardarse: llegó a copiar la palabra "PENDIENTE"
+  // de su propia ficha de estado como si fuera un teléfono.
   const lead = { ...draft };
-  for (const campo of ['nombre_negocio_o_persona', 'telefono', 'correo', 'nota_detalle'] as (keyof LeadDraft)[]) {
-    const propuesto = (answer.lead?.[campo] ?? '').trim().slice(0, limits[campo]);
-    if (!propuesto) continue;
-    if (!lead[campo] || corregibles.includes(campo)) lead[campo] = propuesto;
-  }
+  const propuesto = (campo: keyof LeadDraft) => (answer.lead?.[campo] ?? '').trim().slice(0, limits[campo]);
+  const esMarcador = (v: string) => !v || /^(pendiente|falta\w*|desconocid[oa]|sin datos?|n\/?a|null|none|-{1,3}|\?+)$/i.test(v);
+
+  // El nombre sí puede corregirlo: suele inferirlo mal de la primera frase.
+  const nombre = propuesto('nombre_negocio_o_persona');
+  if (!esMarcador(nombre)) lead.nombre_negocio_o_persona = nombre;
+
+  // Teléfono y correo sólo se aceptan si tienen forma de teléfono y de correo.
+  const telefono = propuesto('telefono');
+  if (!lead.telefono && /^[+\d\s()-]{7,20}$/.test(telefono)) lead.telefono = telefono;
+  const correo = propuesto('correo');
+  if (!lead.correo && /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(correo)) lead.correo = correo;
+
+  // La nota se queda con lo primero que contó la persona, que es lo que aporta contexto.
+  const nota = propuesto('nota_detalle');
+  if (!lead.nota_detalle && !esMarcador(nota)) lead.nota_detalle = nota;
   // El interés sólo se acepta si encaja con una opción del formulario; si no, se sigue preguntando.
   const interesPropuesto = normalizeInterest(answer.lead?.servicio_interes ?? '');
   if (interesPropuesto) lead.servicio_interes = interesPropuesto;

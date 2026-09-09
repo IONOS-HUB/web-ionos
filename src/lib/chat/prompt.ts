@@ -15,7 +15,7 @@ export function systemInstruction(remaining: number, lead: Record<string, string
     ['teléfono o WhatsApp', lead.telefono ?? ''],
     ['correo', lead.correo ?? ''],
   ];
-  const capturado = campos.map(([etiqueta, valor]) => `- ${etiqueta}: ${valor || 'PENDIENTE'}`).join('\n');
+  const capturado = campos.map(([etiqueta, valor]) => `- ${etiqueta}: ${valor || '(aún no lo tienes)'}`).join('\n');
   const siguiente = campos.find(([, valor]) => !valor);
   const paso = siguiente
     ? `El siguiente dato que debes pedir es: ${siguiente[0]}. No preguntes por los que ya tienes y no sigas hasta tenerlo.`
@@ -59,7 +59,7 @@ ${capturado}
 ${paso}
 
 Nunca repitas la pregunta anterior: si la persona acaba de responderte, da el dato por recibido y avanza al siguiente. En el campo lead devuelve siempre todo lo que ya tienes más lo nuevo.
-Nunca escribas marcadores tipo [CORREO] ni inventes un dato que no te dieron: si falta, lo pides.
+Nunca escribas marcadores como [CORREO], "pendiente" o "(aún no lo tienes)" en el campo lead, ni inventes un dato que no te dieron: si falta, lo pides y lo dejas como cadena vacía.
 El nombre sólo cuenta cuando te lo dicen tal cual. "Tengo una clínica dental" describe el negocio, no es su nombre: ahí sigues preguntando cómo se llama.
 No prometas correos automáticos, invitaciones, enlaces de reunión ni horarios concretos, y no digas que la cita ya quedó agendada: un asesor se pondrá en contacto en las próximas horas y coordina la hora con la persona.
 Si la persona prefiere no dar datos, ofrécele el WhatsApp o la agenda y no insistas más de una vez.
