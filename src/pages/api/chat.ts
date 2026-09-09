@@ -141,6 +141,28 @@ async function askGemini(
   }
 }
 
+/**
+ * Diagnóstico de operación: `GET /api/chat?diag=models` con la cabecera `x-chat-debug` igual al
+ * CHAT_SECRET devuelve los modelos que admite la clave configurada. Sin esa cabecera, 404.
+ */
+export const GET: APIRoute = async ({ request, url }) => {
+  const secret = readEnv('CHAT_SECRET');
+  if (!secret || request.headers.get('x-chat-debug') !== secret) return new Response('Not found', { status: 404 });
+  if (url.searchParams.get('diag') !== 'models') return json({ modelo: readEnv('GEMINI_MODEL') ?? 'gemini-2.5-flash-lite' });
+  const apiKey = readEnv('GEMINI_API_KEY');
+  if (!apiKey) return json({ error: 'sin_clave' }, 503);
+  const res = await fetch('https://generativelanguage.googleapis.com/v1beta/models', {
+    headers: { 'x-goog-api-key': apiKey },
+  });
+  if (!res.ok) return json({ error: `HTTP ${res.status}`, detail: (await res.text()).slice(0, 300) }, 502);
+  const data = (await res.json()) as { models?: { name?: string; supportedGenerationMethods?: string[] }[] };
+  const modelos = (data.models ?? [])
+    .filter((m) => m.supportedGenerationMethods?.includes('generateContent'))
+    .map((m) => m.name?.replace('models/', ''))
+    .filter((n): n is string => Boolean(n) && /flash|lite|pro/.test(n!));
+  return json({ configurado: readEnv('GEMINI_MODEL') ?? '(por defecto)', disponibles: modelos });
+};
+
 export const POST: APIRoute = async ({ request }) => {
   if (readEnv('CHAT_ENABLED') === '0') return json({ error: 'chat_deshabilitado' }, 503);
   if (!originAllowed(request)) return json({ error: 'origen_no_permitido' }, 403);
