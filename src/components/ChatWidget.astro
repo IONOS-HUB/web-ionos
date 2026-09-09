@@ -41,6 +41,31 @@ import { waLink, CALENDAR_URL } from '../lib/site';
     <p class="cw-msg cw-model">{GREETING}</p>
   </div>
 
+  <!-- Confirmación explícita antes de mover un dato personal: los valores los pone el servidor. -->
+  <div class="cw-confirm" data-chat-confirm hidden>
+    <p class="text-[0.85rem] font-semibold text-ink">Revisa tus datos antes de enviarlos</p>
+    <dl class="mt-2 grid grid-cols-[auto_1fr] gap-x-3 gap-y-1 text-[0.85rem]">
+      <dt class="text-ink-3">Negocio</dt>
+      <dd class="min-w-0 truncate font-medium text-ink" data-cw-nombre></dd>
+      <dt class="text-ink-3">Interés</dt>
+      <dd class="min-w-0 truncate font-medium text-ink" data-cw-interes></dd>
+      <dt class="text-ink-3">Teléfono</dt>
+      <dd class="tnum min-w-0 truncate font-medium text-ink" data-cw-telefono></dd>
+      <dt class="text-ink-3">Correo</dt>
+      <dd class="min-w-0 truncate font-medium text-ink" data-cw-correo></dd>
+    </dl>
+    <div class="mt-3 flex flex-wrap gap-2">
+      <button type="button" class="btn btn-primary !min-h-10 !px-4 text-[0.88rem]" data-chat-confirm-send>
+        Confirmar y enviar
+      </button>
+      <button type="button" class="btn btn-ghost !min-h-10 !px-4 text-[0.88rem]" data-chat-confirm-edit>Corregir</button>
+    </div>
+    <p class="mt-2 text-[0.75rem] text-ink-3">
+      Al enviar aceptas que te contactemos para coordinar el diagnóstico.
+      <a href="/politica-de-privacidad" class="underline hover:text-ink-2">Cómo tratamos tus datos</a>.
+    </p>
+  </div>
+
   <p class="cw-hint" data-chat-hint hidden></p>
 
   <form class="flex shrink-0 items-end gap-2 border-t border-line-soft bg-canvas p-3" data-chat-form>
@@ -186,6 +211,14 @@ import { waLink, CALENDAR_URL } from '../lib/site';
     background: var(--color-ink-3);
   }
 
+  .cw-confirm {
+    flex-shrink: 0;
+    padding: 0.85rem 1rem;
+    border-top: 1px solid var(--color-line-soft);
+    background: var(--color-ice);
+    animation: msg-in 0.5s var(--ease-out-expo) both;
+  }
+
   .cw-hint {
     flex-shrink: 0;
     margin: 0;
@@ -215,8 +248,11 @@ import { waLink, CALENDAR_URL } from '../lib/site';
   const sendBtn = document.querySelector<HTMLButtonElement>('[data-chat-send]');
   const hint = document.querySelector<HTMLElement>('[data-chat-hint]');
   const closeBtn = document.querySelector<HTMLButtonElement>('[data-chat-close]');
+  const confirmBox = document.querySelector<HTMLElement>('[data-chat-confirm]');
+  const confirmSend = document.querySelector<HTMLButtonElement>('[data-chat-confirm-send]');
+  const confirmEdit = document.querySelector<HTMLButtonElement>('[data-chat-confirm-edit]');
 
-  if (launcher && panel && log && form && input && sendBtn && hint && closeBtn) {
+  if (launcher && panel && log && form && input && sendBtn && hint && closeBtn && confirmBox && confirmSend && confirmEdit) {
     const STORE = 'ionoshub-chat';
     type Msg = { role: 'user' | 'model'; text: string };
 
@@ -258,10 +294,59 @@ import { waLink, CALENDAR_URL } from '../lib/site';
     const endChat = (message?: string) => {
       closed = true;
       if (message) bubble(message, 'error');
+      confirmBox.hidden = true;
       input.disabled = true;
       sendBtn.disabled = true;
       input.placeholder = 'Chat finalizado';
       save();
+    };
+
+    /** Muestra el resumen para que la persona confirme. Los valores vienen del servidor. */
+    const showConfirm = (lead: Record<string, string>) => {
+      const campos: [string, string][] = [
+        ['[data-cw-nombre]', lead.nombre_negocio_o_persona],
+        ['[data-cw-interes]', lead.servicio_interes],
+        ['[data-cw-telefono]', lead.telefono],
+        ['[data-cw-correo]', lead.correo],
+      ];
+      for (const [sel, value] of campos) {
+        const el = confirmBox.querySelector(sel);
+        if (el) el.textContent = value ?? '';
+      }
+      confirmBox.hidden = false;
+      log.scrollTop = log.scrollHeight;
+    };
+
+    const sendLead = async () => {
+      if (busy || closed) return;
+      setBusy(true);
+      confirmSend.disabled = true;
+      try {
+        const res = await fetch('/api/chat-lead', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ token, pagina_origen: location.href }),
+        });
+        const data = (await res.json()) as { reply?: string; token?: string; delivered?: boolean };
+        if (!res.ok) {
+          bubble('No pudimos enviar tus datos. Escríbenos por WhatsApp y lo resolvemos al instante.', 'error');
+          confirmSend.disabled = false;
+          return;
+        }
+        if (data.token) token = data.token;
+        confirmBox.hidden = true;
+        const reply = data.reply ?? 'Listo, un asesor se pondrá en contacto contigo.';
+        bubble(reply, 'model');
+        history = [...history, { role: 'model', text: reply }];
+        // Conversión principal del sitio, igual que en el formulario.
+        gtag('generate_lead', { method: 'chat', page_path: location.pathname });
+        endChat();
+      } catch {
+        bubble('No pudimos enviar tus datos. Escríbenos por WhatsApp y lo resolvemos al instante.', 'error');
+        confirmSend.disabled = false;
+      } finally {
+        setBusy(false);
+      }
     };
 
     const save = () => {
@@ -321,6 +406,8 @@ import { waLink, CALENDAR_URL } from '../lib/site';
           remaining?: number;
           closed?: boolean;
           detail?: string;
+          leadReady?: boolean;
+          lead?: Record<string, string>;
         };
         dots.remove();
 
@@ -335,6 +422,9 @@ import { waLink, CALENDAR_URL } from '../lib/site';
         if (data.token) token = data.token;
         history = [...history, { role: 'user', text }, { role: 'model', text: reply }];
         gtag('chat_message', { page_path: location.pathname });
+
+        if (data.leadReady && data.lead) showConfirm(data.lead);
+        else confirmBox.hidden = true;
 
         if (typeof data.remaining === 'number' && data.remaining > 0 && data.remaining <= 3) {
           hint.hidden = false;
@@ -356,6 +446,11 @@ import { waLink, CALENDAR_URL } from '../lib/site';
 
     launcher.addEventListener('click', () => (panel.hidden ? open() : close()));
     closeBtn.addEventListener('click', close);
+    confirmSend.addEventListener('click', () => void sendLead());
+    confirmEdit.addEventListener('click', () => {
+      confirmBox.hidden = true;
+      input.focus({ preventScroll: true });
+    });
     document.addEventListener('keydown', (e) => {
       if (e.key === 'Escape' && !panel.hidden) close();
     });

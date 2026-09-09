@@ -38,9 +38,9 @@ const gaId = (import.meta.env.PUBLIC_GA_MEASUREMENT_ID as string | undefined) ||
 const googleVerification = import.meta.env.PUBLIC_GOOGLE_SITE_VERIFICATION as string | undefined;
 const bingVerification = import.meta.env.PUBLIC_BING_SITE_VERIFICATION as string | undefined;
 
-// El chat sólo se dibuja donde PUBLIC_CHAT_UI valga 1. Así el widget puede viajar a producción
-// sin mostrarse hasta que la entrega del lead esté conectada y probada.
-const chatUi = import.meta.env.PUBLIC_CHAT_UI === '1';
+// El chat va visible salvo que se apague con PUBLIC_CHAT_UI=0 (oculta la burbuja).
+// Para cortar también el endpoint, CHAT_ENABLED=0 en Vercel.
+const chatUi = import.meta.env.PUBLIC_CHAT_UI !== '0';
 
 const orgJsonLd = {
   '@context': 'https://schema.org',

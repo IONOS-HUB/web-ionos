@@ -10,6 +10,7 @@ import {
   validateLead,
   extractContact,
 } from '../../lib/chat/limits';
+import { allowMessage, clientIp } from '../../lib/chat/ratelimit';
 import {
   fingerprint,
   newSession,
@@ -139,6 +140,10 @@ export const POST: APIRoute = async ({ request }) => {
 
   const input = cleanUserMessage(body.message);
   if (!input.ok) return json({ error: 'mensaje_invalido', detail: input.error }, 400);
+
+  if (!allowMessage(clientIp(request), !body.token)) {
+    return json({ reply: LIMIT_REACHED_REPLY, closed: true, stage: 'cierre', remaining: 0 }, 429);
+  }
 
   // Sesión: la primera petición no trae token; las siguientes deben traer uno válido y sin caducar.
   // La sesión nueva arranca con la huella del historial vacío, que es lo que debe enviar el cliente.

@@ -1,11 +1,11 @@
 import type { APIRoute } from 'astro';
+import { deliverLead } from '../../lib/lead';
 
 export const prerender = false;
 
 /**
- * Recibe el formulario de contacto, lo valida y lo reenvía por POST al webhook de n8n
- * (LEAD_WEBHOOK_URL), que lo registra en el CRM y avisa al equipo.
- * La URL es una variable de entorno; nunca se escribe en el código.
+ * Recibe el formulario de contacto, lo valida y lo entrega por el webhook de n8n.
+ * La misma entrega la usa el agente IONIC en `/api/chat-lead` (ver `src/lib/lead.ts`).
  */
 
 interface LeadBody {
@@ -43,7 +43,7 @@ export const POST: APIRoute = async ({ request }) => {
     return json({ error: 'Campos obligatorios faltantes o inválidos' }, 400);
   }
 
-  const payload = {
+  const result = await deliverLead({
     nombre_negocio_o_persona: nombre,
     servicio_interes: interes,
     telefono,
@@ -51,34 +51,13 @@ export const POST: APIRoute = async ({ request }) => {
     nota_detalle: nota,
     pagina_origen: String(body.pagina_origen ?? ''),
     fecha_envio: body.fecha_envio ?? new Date().toISOString(),
-  };
+    canal: 'formulario',
+  });
 
-  const env = import.meta.env;
-  const webhookUrl = env.LEAD_WEBHOOK_URL as string | undefined;
-
-  if (!webhookUrl) {
-    // Sin webhook configurado. En desarrollo se acepta para probar la UI; en producción se avisa.
-    if (env.DEV) {
-      console.warn('[api/lead] Sin LEAD_WEBHOOK_URL: lead recibido pero no entregado', payload);
-      return json({ ok: true, delivered: false });
-    }
-    return json({ error: 'Canal de entrega no configurado' }, 503);
+  // Sin webhook configurado: en desarrollo se acepta para poder probar la interfaz; en producción se avisa.
+  if (result === 'sin-canal') {
+    return import.meta.env.DEV ? json({ ok: true, delivered: false }) : json({ error: 'Canal de entrega no configurado' }, 503);
   }
-
-  try {
-    const r = await fetch(webhookUrl, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify(payload),
-    });
-    if (!r.ok) {
-      console.error('Webhook de leads respondió', r.status);
-      return json({ error: 'No se pudo entregar la solicitud' }, 502);
-    }
-  } catch (e) {
-    console.error('Error llamando al webhook de leads:', e);
-    return json({ error: 'No se pudo entregar la solicitud' }, 502);
-  }
-
+  if (result === 'error') return json({ error: 'No se pudo entregar la solicitud' }, 502);
   return json({ ok: true, delivered: true });
 };
