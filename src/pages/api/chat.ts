@@ -69,6 +69,35 @@ interface ModelAnswer {
  */
 let lastUpstreamError: string | null = null;
 
+/**
+ * Cuerpo de la petición. `thinking` desactiva el razonamiento interno para abaratar y acelerar,
+ * pero no todos los modelos lo admiten: si lo rechazan con 400, se reintenta sin esa opción.
+ */
+function requestBody(
+  system: string,
+  contents: { role: string; parts: { text: string }[] }[],
+  thinking: boolean,
+) {
+  return JSON.stringify({
+    systemInstruction: { parts: [{ text: system }] },
+    contents,
+    generationConfig: {
+      temperature: 0.4,
+      topP: 0.9,
+      maxOutputTokens: LIMITS.maxOutputTokens,
+      responseMimeType: 'application/json',
+      responseSchema: RESPONSE_SCHEMA,
+      ...(thinking ? { thinkingConfig: { thinkingBudget: 0 } } : {}),
+    },
+    safetySettings: [
+      'HARM_CATEGORY_HARASSMENT',
+      'HARM_CATEGORY_HATE_SPEECH',
+      'HARM_CATEGORY_SEXUALLY_EXPLICIT',
+      'HARM_CATEGORY_DANGEROUS_CONTENT',
+    ].map((category) => ({ category, threshold: 'BLOCK_MEDIUM_AND_ABOVE' })),
+  });
+}
+
 async function askGemini(
   system: string,
   contents: { role: string; parts: { text: string }[] }[],
@@ -77,30 +106,15 @@ async function askGemini(
 ): Promise<ModelAnswer | null> {
   const controller = new AbortController();
   const timer = setTimeout(() => controller.abort(), LIMITS.requestTimeoutMs);
+  const url = `https://generativelanguage.googleapis.com/v1beta/models/${model}:generateContent`;
+  const headers = { 'Content-Type': 'application/json', 'x-goog-api-key': apiKey };
   try {
-    const res = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/${model}:generateContent`, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json', 'x-goog-api-key': apiKey },
-      signal: controller.signal,
-      body: JSON.stringify({
-        systemInstruction: { parts: [{ text: system }] },
-        contents,
-        generationConfig: {
-          temperature: 0.4,
-          topP: 0.9,
-          maxOutputTokens: LIMITS.maxOutputTokens,
-          responseMimeType: 'application/json',
-          responseSchema: RESPONSE_SCHEMA,
-          thinkingConfig: { thinkingBudget: 0 },
-        },
-        safetySettings: [
-          'HARM_CATEGORY_HARASSMENT',
-          'HARM_CATEGORY_HATE_SPEECH',
-          'HARM_CATEGORY_SEXUALLY_EXPLICIT',
-          'HARM_CATEGORY_DANGEROUS_CONTENT',
-        ].map((category) => ({ category, threshold: 'BLOCK_MEDIUM_AND_ABOVE' })),
-      }),
-    });
+    let res = await fetch(url, { method: 'POST', headers, signal: controller.signal, body: requestBody(system, contents, true) });
+    if (res.status === 400) {
+      const primero = (await res.text()).slice(0, 200);
+      console.warn('[api/chat] 400 con thinkingConfig; reintento sin él:', primero);
+      res = await fetch(url, { method: 'POST', headers, signal: controller.signal, body: requestBody(system, contents, false) });
+    }
     if (!res.ok) {
       const detail = (await res.text()).slice(0, 200);
       lastUpstreamError = `${model} HTTP ${res.status}: ${detail}`;
