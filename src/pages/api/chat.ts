@@ -63,6 +63,12 @@ interface ModelAnswer {
   listo_para_enviar?: boolean;
 }
 
+/**
+ * Último fallo del proveedor, para diagnosticar sin abrir los registros de Vercel.
+ * Sólo se devuelve a quien mande la cabecera `x-chat-debug` con el CHAT_SECRET.
+ */
+let lastUpstreamError: string | null = null;
+
 async function askGemini(
   system: string,
   contents: { role: string; parts: { text: string }[] }[],
@@ -96,7 +102,9 @@ async function askGemini(
       }),
     });
     if (!res.ok) {
-      console.error('[api/chat] Gemini respondió', res.status);
+      const detail = (await res.text()).slice(0, 200);
+      lastUpstreamError = `${model} HTTP ${res.status}: ${detail}`;
+      console.error('[api/chat] Gemini respondió', res.status, detail);
       return null;
     }
     const data = (await res.json()) as {
@@ -104,12 +112,15 @@ async function askGemini(
     };
     const text = data.candidates?.[0]?.content?.parts?.[0]?.text;
     if (!text) {
-      console.error('[api/chat] Respuesta vacía del modelo:', data.candidates?.[0]?.finishReason ?? 'sin motivo');
+      const motivo = data.candidates?.[0]?.finishReason ?? 'sin motivo';
+      lastUpstreamError = `respuesta vacía (${motivo})`;
+      console.error('[api/chat] Respuesta vacía del modelo:', motivo);
       return null;
     }
     return JSON.parse(text) as ModelAnswer;
   } catch (e) {
-    console.error('[api/chat] Error llamando al modelo:', e instanceof Error ? e.message : e);
+    lastUpstreamError = e instanceof Error ? `${e.name}: ${e.message}` : String(e);
+    console.error('[api/chat] Error llamando al modelo:', lastUpstreamError);
     return null;
   } finally {
     clearTimeout(timer);
@@ -184,7 +195,11 @@ export const POST: APIRoute = async ({ request }) => {
   }
 
   const answer = await askGemini(systemInstruction(remaining, draft), contents, apiKey, model);
-  if (!answer) return json({ reply: FALLBACK_REPLY, stage: 'duda', remaining, token: body.token ?? null });
+  if (!answer) {
+    // El diagnóstico sólo viaja a quien conoce el secreto del servidor.
+    const debug = request.headers.get('x-chat-debug') === secret ? { upstream: lastUpstreamError } : {};
+    return json({ reply: FALLBACK_REPLY, stage: 'duda', remaining, token: body.token ?? null, ...debug });
+  }
 
   let reply = sanitizeReply(answer.respuesta);
   if (!reply) reply = FALLBACK_REPLY;
