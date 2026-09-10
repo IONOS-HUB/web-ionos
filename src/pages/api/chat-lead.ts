@@ -60,7 +60,14 @@ export const POST: APIRoute = async ({ request }) => {
   const segundos = (Date.now() - (session.iat ?? 0)) / 1000;
   if (session.n < 3 || segundos < 15) {
     console.warn('[api/chat-lead] Envío demasiado rápido', { mensajes: session.n, segundos: Math.round(segundos) });
-    return json({ error: 'demasiado_rapido' }, 429);
+    // Con `reply` la persona ve un mensaje normal y puede volver a pulsar; el botón sigue activo.
+    return json(
+      {
+        error: 'demasiado_rapido',
+        reply: 'Dame un segundo para terminar de registrar la conversación y vuelve a pulsar "Confirmar y enviar".',
+      },
+      429,
+    );
   }
 
   // Freno que no se esquiva cambiando de navegador: cuenta la IP y el contacto, no la sesión.

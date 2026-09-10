@@ -573,10 +573,13 @@ const sugerencias = ['¿Qué hacen exactamente?', '¿Cómo atiende llamadas la I
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({ token, pagina_origen: location.href }),
         });
-        const data = (await res.json()) as { reply?: string; token?: string; delivered?: boolean };
+        const data = (await res.json()) as { reply?: string; token?: string; delivered?: boolean; closed?: boolean };
         if (!res.ok) {
-          bubble('No pudimos enviar tus datos. Escríbenos por WhatsApp y lo resolvemos al instante.', 'error');
-          confirmSend.disabled = false;
+          // El servidor manda su propio texto cuando el motivo tiene explicación (ir muy rápido,
+          // demasiadas solicitudes hoy). Si no, el mensaje genérico.
+          bubble(data.reply ?? 'No pudimos enviar tus datos. Escríbenos por WhatsApp y lo resolvemos al instante.', 'error');
+          if (data.closed) endChat();
+          else confirmSend.disabled = false;
           return;
         }
         if (data.token) token = data.token;
