@@ -1,5 +1,6 @@
 import type { APIRoute } from 'astro';
 import { deliverLead } from '../../lib/lead';
+import { allowLead, clientIp } from '../../lib/chat/ratelimit';
 
 export const prerender = false;
 
@@ -41,6 +42,16 @@ export const POST: APIRoute = async ({ request }) => {
 
   if (nombre.length < 2 || !interes || telefono.length < 7 || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(correo)) {
     return json({ error: 'Campos obligatorios faltantes o inválidos' }, 400);
+  }
+
+  // El mismo freno que el chat: por IP y por contacto, para que el formulario no sea la puerta fácil.
+  const veredicto = await allowLead(clientIp(request), correo, telefono);
+  if (veredicto === 'demasiados') {
+    return json({ error: 'Ya recibimos varias solicitudes desde tu conexión hoy. Escríbenos por WhatsApp.' }, 429);
+  }
+  if (veredicto === 'repetido') {
+    // Ya la tenemos: se responde bien para no invitar a reintentar, pero no se duplica en el CRM.
+    return json({ ok: true, delivered: true, duplicado: true });
   }
 
   const result = await deliverLead({

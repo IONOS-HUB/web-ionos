@@ -1,6 +1,7 @@
 import type { APIRoute } from 'astro';
 import { deliverLead, readEnv } from '../../lib/lead';
 import { validateLead } from '../../lib/chat/limits';
+import { allowLead, clientIp } from '../../lib/chat/ratelimit';
 import { signSession, verifySession } from '../../lib/chat/session';
 import { CLOSED_REPLY } from '../../lib/chat/copy';
 
@@ -53,6 +54,37 @@ export const POST: APIRoute = async ({ request }) => {
   const lead = session.lead;
   const check = validateLead(lead ?? {});
   if (!lead || !check.ok) return json({ error: 'lead_incompleto', missing: check.missing }, 400);
+
+  // Un lead exige conversación real: cuatro datos no se dan en dos mensajes ni en cinco segundos.
+  // Filtra guiones automáticos que rellenan y envían de golpe.
+  const segundos = (Date.now() - (session.iat ?? 0)) / 1000;
+  if (session.n < 3 || segundos < 15) {
+    console.warn('[api/chat-lead] Envío demasiado rápido', { mensajes: session.n, segundos: Math.round(segundos) });
+    return json({ error: 'demasiado_rapido' }, 429);
+  }
+
+  // Freno que no se esquiva cambiando de navegador: cuenta la IP y el contacto, no la sesión.
+  const veredicto = await allowLead(clientIp(request), lead.correo, lead.telefono);
+  if (veredicto === 'demasiados') {
+    return json(
+      {
+        reply:
+          'Ya recibimos varias solicitudes desde tu conexión hoy. Si necesitas algo más, escríbenos por WhatsApp y te atendemos al momento.',
+        closed: true,
+      },
+      429,
+    );
+  }
+  if (veredicto === 'repetido') {
+    // No se reenvía al CRM, pero la persona no se queda con cara de error: su solicitud ya está.
+    return json({
+      reply:
+        'Ya tenemos tu solicitud registrada con estos datos. Un asesor se pondrá en contacto contigo; si es urgente, escríbenos por WhatsApp.',
+      closed: true,
+      delivered: true,
+      token: await signSession({ ...session, sent: true }, secret),
+    });
+  }
 
   const result = await deliverLead({
     nombre_negocio_o_persona: lead.nombre_negocio_o_persona,
