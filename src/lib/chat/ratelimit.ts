@@ -21,7 +21,7 @@ const DAY_SECONDS = 24 * HOUR_SECONDS;
 export const IP_LIMITS = { sessions: 8, messages: 90 } as const;
 
 /** Solicitudes de contacto por IP y día, y repeticiones del mismo contacto en 24 horas. */
-export const LEAD_LIMITS = { perIpPerDay: 3, sameContactPerDay: 1 } as const;
+export const LEAD_LIMITS = { perIpPerDay: 5, sameContactPerDay: 1 } as const;
 
 const readEnv = (name: string): string | undefined =>
   (import.meta.env as Record<string, string | undefined>)[name] ?? process.env[name];
@@ -150,17 +150,8 @@ export type LeadCheck = 'ok' | 'demasiados' | 'repetido';
 export async function allowLead(ip: string, correo: string, telefono: string): Promise<LeadCheck> {
   const dia = Math.floor(Date.now() / (DAY_SECONDS * 1000));
 
-  const porIp = await contar(`lead:ip:${ip}:${dia}`, DAY_SECONDS);
-  if (porIp === null) {
-    // Sin Redis: al menos se frena dentro de la instancia.
-    const bucket = bucketFor(`lead:${ip}`, DAY_SECONDS * 1000);
-    if (bucket.leads >= LEAD_LIMITS.perIpPerDay) return 'demasiados';
-    bucket.leads += 1;
-    return 'ok';
-  }
-  if (porIp > LEAD_LIMITS.perIpPerDay) return 'demasiados';
-
-  // Mismo correo o mismo teléfono en 24 horas: es la misma persona insistiendo o un bot repitiendo.
+  // Primero el duplicado: si es el mismo contacto de hoy no llega al CRM, y tampoco gasta el cupo
+  // diario de la IP. Así un doble clic en el formulario no deja fuera a la siguiente persona.
   const correoNorm = correo.trim().toLowerCase();
   const telefonoNorm = telefono.replace(/\D/g, '').slice(-9);
   const claves = [
@@ -172,7 +163,16 @@ export async function allowLead(ip: string, correo: string, telefono: string): P
     const repetido = await yaVisto(clave, DAY_SECONDS);
     if (repetido === true) return 'repetido';
   }
-  return 'ok';
+
+  const porIp = await contar(`lead:ip:${ip}:${dia}`, DAY_SECONDS);
+  if (porIp === null) {
+    // Sin Redis: al menos se frena dentro de la instancia.
+    const bucket = bucketFor(`lead:${ip}`, DAY_SECONDS * 1000);
+    if (bucket.leads >= LEAD_LIMITS.perIpPerDay) return 'demasiados';
+    bucket.leads += 1;
+    return 'ok';
+  }
+  return porIp > LEAD_LIMITS.perIpPerDay ? 'demasiados' : 'ok';
 }
 
 /**
