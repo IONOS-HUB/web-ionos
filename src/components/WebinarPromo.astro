@@ -3,146 +3,239 @@
  * Aviso del próximo webinar. Se arma solo desde `src/data/webinars.ts`: si no hay ninguna edición
  * futura, este componente no emite nada, así que publicar o dejar de publicar no toca el layout.
  *
- * Reglas de aparición, pensadas para no encimarse con nada:
+ * Es una ventana modal centrada sobre el sitio atenuado. Se usa `<dialog>` nativo con `showModal()`
+ * para heredar lo que ya resuelve el navegador: fondo propio, foco atrapado dentro, resto de la
+ * página inerte y cierre con Escape.
+ *
+ * Todo el cartel es un enlace al evento; lo único que no navega es el botón de cerrar, que va por
+ * encima como hermano y no anidado, porque un botón dentro de un enlace es HTML inválido.
+ *
+ * Reglas de aparición:
  *  - Nunca en /webinars (ahí ya está el evento) ni mientras el aviso de cookies siga abierto.
- *  - A los 12 segundos o al 35 % de scroll, lo que ocurra antes, y una sola vez por sesión.
+ *  - A los 8 segundos o al 30 % de scroll, lo que ocurra antes, y una sola vez por sesión.
  *  - Si se cierra, no vuelve a salir para esa edición (queda anotado en el navegador).
- *  - En móvil se apoya encima de la columna de botones flotantes, igual que el panel del chat.
  */
 import Icon from './Icon.astro';
 import { nextWebinar, formatWebinarDate, formatWebinarTime } from '../data/webinars';
 
 const webinar = nextWebinar();
+const cartel = webinar?.promoImage;
 ---
 
 {
   webinar && (
-    <aside
-      class="wp"
-      role="complementary"
-      aria-label="Próximo webinar de IonosHub"
-      hidden
-      data-webinar-promo
-      data-slug={webinar.slug}
-      data-path={`/webinars/${webinar.slug}`}
-    >
-      <div class="wp-head">
-        <span class="wp-avatar" aria-hidden="true">
-          <Icon name="calendar" size={16} />
-        </span>
-        <span class="min-w-0 leading-tight">
-          <span class="block text-[0.9rem] font-semibold">Webinar gratuito</span>
-          <span class="tnum block text-[0.76rem] text-white/70 first-letter:uppercase">
-            {formatWebinarDate(webinar.startsAt)} · {formatWebinarTime(webinar.startsAt)}
+    <dialog class="wp" aria-labelledby="wp-titulo" data-webinar-promo data-slug={webinar.slug}>
+      <a class="wp-link" href={`/webinars/${webinar.slug}#registro`} data-webinar-promo-cta>
+        {cartel ? (
+          <img
+            class="wp-img"
+            src={cartel.src}
+            alt={cartel.alt}
+            width={cartel.width}
+            height={cartel.height}
+            decoding="async"
+          />
+        ) : (
+          <span class="wp-sincartel">
+            <span class="wp-etiqueta">Webinar gratuito</span>
+            <span id="wp-titulo" class="wp-titulo">{webinar.title}</span>
+            <span class="wp-bajada">{webinar.tagline}</span>
+            <span class="wp-organiza">{webinar.hosts.join(' × ')}</span>
+          </span>
+        )}
+
+        <span class="wp-bar">
+          <span class="min-w-0">
+            <span class="tnum block text-[0.78rem] text-white/75 first-letter:uppercase">
+              {formatWebinarDate(webinar.startsAt)} · {formatWebinarTime(webinar.startsAt)} · {webinar.price}
+            </span>
+            <span class="block truncate text-[1.02rem] font-semibold">Reservar mi lugar</span>
+          </span>
+          <span class="wp-go" aria-hidden="true">
+            <Icon name="arrow-right" size={18} />
           </span>
         </span>
-        <button type="button" class="wp-close" aria-label="Cerrar aviso" data-webinar-promo-close>
-          <Icon name="close" size={16} />
-        </button>
-      </div>
+      </a>
 
-      <div class="wp-body">
-        <p class="text-[1.02rem] font-semibold leading-tight text-ink">{webinar.title}</p>
-        <p class="mt-1.5 text-[0.9rem] leading-relaxed text-ink-2">{webinar.tagline}</p>
-        <p class="mt-3 text-[0.78rem] font-semibold uppercase tracking-wide text-ink-3">
-          {webinar.hosts.join(' × ')}
-        </p>
-        <a href={`/webinars/${webinar.slug}#registro`} class="btn btn-primary mt-4 w-full !min-h-11 text-[0.92rem]" data-webinar-promo-cta>
-          Reservar mi lugar
-          <Icon name="arrow-right" size={16} />
-        </a>
-      </div>
-    </aside>
+      <button type="button" class="wp-close" aria-label="Cerrar aviso" data-webinar-promo-close>
+        <Icon name="close" size={18} />
+      </button>
+    </dialog>
   )
 }
 
 <style>
   .wp {
-    position: fixed;
-    z-index: 55;
-    right: 0.75rem;
-    /* Por encima de la columna entera (WhatsApp + chat), no sólo del primer botón. */
-    bottom: 11rem;
-    left: 0.75rem;
+    /* El reinicio de Tailwind pone `margin: 0` en todo y deja el diálogo pegado arriba a la
+       izquierda: el centrado de una ventana modal depende justo de este margen automático. */
+    margin: auto;
+    width: min(26rem, calc(100vw - 2rem));
+    max-height: calc(100dvh - 2.5rem);
+    padding: 0;
     overflow: hidden;
-    border-radius: 1.5rem;
     border: 1px solid var(--color-line);
+    border-radius: 1.75rem;
     background: var(--color-canvas);
     box-shadow: var(--shadow-phone);
+    color: var(--color-ink);
   }
-  .wp:not([hidden]) {
-    display: block;
-    animation: wp-in 0.6s var(--ease-out-expo) both;
+  .wp::backdrop {
+    background: rgb(11 27 51 / 0.62);
+    backdrop-filter: blur(3px);
   }
-  /* Entra como un mensaje que llega a la bandeja: sube, aparece y asienta. */
+  .wp[open] {
+    animation: wp-in 0.5s var(--ease-out-expo) both;
+  }
+  .wp[open]::backdrop {
+    animation: wp-fade 0.45s var(--ease-out-expo) both;
+  }
   @keyframes wp-in {
     from {
       opacity: 0;
-      transform: translateY(18px) scale(0.97);
+      transform: translateY(22px) scale(0.96);
     }
   }
-  @media (min-width: 640px) {
-    .wp {
-      right: auto;
-      bottom: 1.5rem;
-      left: 1.5rem;
-      width: 22.5rem;
+  @keyframes wp-fade {
+    from {
+      opacity: 0;
     }
   }
 
-  .wp-head {
+  .wp-link {
+    display: block;
+    color: inherit;
+  }
+  .wp-link:focus-visible {
+    outline: 3px solid var(--color-cobalt);
+    outline-offset: -3px;
+  }
+
+  .wp-img {
+    display: block;
+    width: 100%;
+    height: auto;
+    /* En pantallas bajas se recorta por el centro antes que desbordar la ventana. */
+    max-height: 62dvh;
+    object-fit: cover;
+    background: var(--color-ice-3);
+    transition: opacity 0.4s var(--ease-out-expo);
+  }
+
+  /* Versión sin cartel: el propio campo de cobalto hace de portada. */
+  .wp-sincartel {
+    display: block;
+    padding: 2rem 1.75rem 1.75rem;
+    background: linear-gradient(140deg, var(--color-cobalt-glow), var(--color-cobalt) 45%, var(--color-cobalt-deep));
+    color: #fff;
+  }
+  .wp-etiqueta {
+    display: inline-block;
+    border-radius: 999px;
+    padding: 0.3rem 0.75rem;
+    background: rgb(255 255 255 / 0.18);
+    font-size: 0.72rem;
+    font-weight: 700;
+    letter-spacing: 0.05em;
+    text-transform: uppercase;
+  }
+  .wp-titulo {
+    display: block;
+    margin-top: 1rem;
+    font-size: 1.75rem;
+    font-weight: 600;
+    line-height: 1.08;
+    letter-spacing: -0.03em;
+    font-variation-settings: 'opsz' 96, 'wdth' 96;
+  }
+  .wp-bajada {
+    display: block;
+    margin-top: 0.75rem;
+    font-size: 1rem;
+    line-height: 1.5;
+    color: rgb(255 255 255 / 0.8);
+  }
+  .wp-organiza {
+    display: block;
+    margin-top: 1.25rem;
+    font-size: 0.78rem;
+    font-weight: 600;
+    letter-spacing: 0.05em;
+    text-transform: uppercase;
+    color: rgb(255 255 255 / 0.65);
+  }
+
+  .wp-bar {
     display: flex;
     align-items: center;
-    gap: 0.7rem;
-    padding: 0.75rem 0.9rem;
+    gap: 0.75rem;
+    padding: 0.85rem 1rem 0.9rem 1.15rem;
     background: linear-gradient(135deg, var(--color-cobalt-glow), var(--color-cobalt) 45%, var(--color-cobalt-deep));
     color: #fff;
   }
-  .wp-avatar {
+  .wp-go {
     display: flex;
     flex-shrink: 0;
     align-items: center;
     justify-content: center;
-    width: 2.1rem;
-    height: 2.1rem;
-    border-radius: 999px;
-    background: rgb(255 255 255 / 0.16);
-    box-shadow: inset 0 0 0 1px rgb(255 255 255 / 0.25);
-  }
-  .wp-close {
-    display: flex;
-    flex-shrink: 0;
-    align-items: center;
-    justify-content: center;
-    width: 2rem;
-    height: 2rem;
+    width: 2.35rem;
+    height: 2.35rem;
     margin-left: auto;
     border-radius: 999px;
-    color: rgb(255 255 255 / 0.75);
-    transition: background-color 0.25s, color 0.25s;
+    background: rgb(255 255 255 / 0.18);
+    transition: transform 0.5s var(--ease-out-expo), background-color 0.3s;
   }
-  .wp-close:hover {
-    background: rgb(255 255 255 / 0.15);
-    color: #fff;
+  @media (hover: hover) {
+    .wp-link:hover .wp-go {
+      background: rgb(255 255 255 / 0.32);
+      transform: translateX(3px);
+    }
+    .wp-link:hover .wp-img {
+      opacity: 0.94;
+    }
   }
 
-  .wp-body {
-    padding: 1rem 1.1rem 1.1rem;
+  .wp-close {
+    position: absolute;
+    top: 0.7rem;
+    right: 0.7rem;
+    z-index: 2;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 2.3rem;
+    height: 2.3rem;
+    border-radius: 999px;
+    background: rgb(15 23 34 / 0.5);
+    color: #fff;
+    backdrop-filter: blur(4px);
+    transition: background-color 0.25s, transform 0.4s var(--ease-out-expo);
+  }
+  .wp-close:hover {
+    background: rgb(15 23 34 / 0.75);
+    transform: scale(1.06);
+  }
+
+  /* Mientras la ventana está abierta, el fondo no se desplaza. */
+  :global(html.wp-open),
+  :global(html.wp-open body) {
+    overflow: hidden;
   }
 
   @media (prefers-reduced-motion: reduce) {
-    .wp:not([hidden]) {
+    .wp[open],
+    .wp[open]::backdrop {
       animation: none;
     }
   }
 </style>
 
 <script>
-  const promo = document.querySelector<HTMLElement>('[data-webinar-promo]');
+  const promo = document.querySelector<HTMLDialogElement>('[data-webinar-promo]');
   if (promo) {
     const slug = promo.dataset.slug ?? '';
     const DESCARTADO = 'ionoshub-webinar-promo';
     const VISTO = 'ionoshub-webinar-promo-sesion';
+    const raiz = document.documentElement;
 
     const leer = (almacen: Storage, clave: string) => {
       try {
@@ -164,13 +257,20 @@ const webinar = nextWebinar();
     if (!enSuPagina && !yaDescartado && !yaVisto) {
       let mostrado = false;
 
+      const cerrar = (recordar = true) => {
+        if (promo.open) promo.close();
+        raiz.classList.remove('wp-open');
+        if (recordar) guardar(localStorage, DESCARTADO, slug);
+      };
+
       const mostrar = () => {
         if (mostrado) return;
         // Con el aviso de cookies abierto se espera: dos interrupciones a la vez no se hacen.
-        if (document.documentElement.classList.contains('cc-open')) return;
+        if (raiz.classList.contains('cc-open')) return;
         mostrado = true;
         limpiar();
-        promo.hidden = false;
+        promo.showModal();
+        raiz.classList.add('wp-open');
         guardar(sessionStorage, VISTO, slug);
         (window as unknown as { gtag?: (...a: unknown[]) => void }).gtag?.('event', 'webinar_promo_view', {
           webinar: slug,
@@ -180,14 +280,14 @@ const webinar = nextWebinar();
 
       const porScroll = () => {
         const alto = document.documentElement.scrollHeight - window.innerHeight;
-        if (alto > 0 && window.scrollY / alto >= 0.35) mostrar();
+        if (alto > 0 && window.scrollY / alto >= 0.3) mostrar();
       };
 
-      const temporizador = window.setTimeout(mostrar, 12000);
+      const temporizador = window.setTimeout(mostrar, 8000);
       const reintento = window.setInterval(() => {
         // Si el aviso de cookies bloqueó el primer intento, se reintenta al cerrarse.
         if (mostrado) return;
-        if (!document.documentElement.classList.contains('cc-open') && window.scrollY > 0) porScroll();
+        if (!raiz.classList.contains('cc-open') && window.scrollY > 0) porScroll();
       }, 2000);
 
       function limpiar() {
@@ -198,13 +298,21 @@ const webinar = nextWebinar();
 
       window.addEventListener('scroll', porScroll, { passive: true });
 
-      promo.querySelector('[data-webinar-promo-close]')?.addEventListener('click', () => {
-        promo.hidden = true;
+      promo.querySelector('[data-webinar-promo-close]')?.addEventListener('click', () => cerrar());
+
+      // Clic en el fondo atenuado: el propio <dialog> recibe el evento fuera de su contenido.
+      promo.addEventListener('click', (e) => {
+        if (e.target === promo) cerrar();
+      });
+      // Escape lo cierra el navegador; aquí sólo se limpia el bloqueo de scroll y se recuerda.
+      promo.addEventListener('close', () => {
+        raiz.classList.remove('wp-open');
         guardar(localStorage, DESCARTADO, slug);
       });
 
       promo.querySelector('[data-webinar-promo-cta]')?.addEventListener('click', () => {
         guardar(localStorage, DESCARTADO, slug);
+        raiz.classList.remove('wp-open');
         (window as unknown as { gtag?: (...a: unknown[]) => void }).gtag?.('event', 'webinar_promo_click', {
           webinar: slug,
           page_path: location.pathname,

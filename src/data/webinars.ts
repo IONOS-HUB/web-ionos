@@ -15,6 +15,10 @@ export interface WebinarSession {
   host: string;
   /** Persona ponente, sólo si está confirmada */
   speaker?: string;
+  /** Cargo o especialidad de quien expone */
+  speakerRole?: string;
+  /** Quien modera la sesión */
+  moderator?: string;
   /** Una frase de lo que se ve en esa sesión */
   detail?: string;
 }
@@ -44,6 +48,19 @@ export interface Webinar {
   /** Qué se lleva quien asiste */
   takeaways: string[];
   sessions: WebinarSession[];
+  /**
+   * Cartel del pop-up de promoción. Cuadrado (1080×1080) o vertical 4:5 (1080×1350), WebP y por
+   * debajo de 300 KB. Deja el texto importante en el 80 % central: en pantallas bajas la imagen se
+   * recorta por arriba y por abajo. Sin esta propiedad, el pop-up sale en versión de sólo texto.
+   */
+  promoImage?: {
+    src: string;
+    alt: string;
+    width: number;
+    height: number;
+  };
+  /** Logos de quien organiza. Sin esto, la página los nombra sólo con texto. */
+  organizerLogos?: { src: string; alt: string; width: number; height: number }[];
   /** Comunidad de WhatsApp donde se manda el enlace de acceso */
   whatsappCommunity?: string;
   /** Con false, la página muestra el evento sin formulario */
@@ -61,45 +78,65 @@ export const webinars: Webinar[] = [
   {
     slug: 'ia-en-tu-trabajo',
     edition: 1,
-    title: 'Aprende a usar IA en tu trabajo',
-    tagline: 'Dos charlas, un solo registro: primero el marco legal, después la aplicación en tu empresa.',
+    title: 'Derecho e inteligencia artificial, y Claude para empresarios',
+    tagline: 'Dos ponencias académicas en una tarde: primero los desafíos legales, después la IA aplicada al negocio.',
     summary:
-      'Un webinar en dos partes junto a Cyberprevention. Primero, qué dice la ley cuando una empresa usa inteligencia artificial. Después, cómo aplicarla en el día a día de un negocio sin perder de vista la seguridad de la información.',
+      'Webinar académico en modalidad virtual, organizado por Academia Debate & Sociedad, IonosHub y Cyberprevention. Dos ponencias con sus moderadores: los nuevos desafíos que la inteligencia artificial plantea al derecho, y cómo un empresario puede usar Claude en su operación.',
     startsAt: '2026-09-24T19:00:00-05:00',
     timezone: 'GMT-5 · Ecuador',
-    hosts: ['Cyberprevention', 'IonosHub'],
-    format: 'En línea y en vivo',
+    hosts: ['Academia Debate & Sociedad', 'IonosHub', 'Cyberprevention'],
+    format: 'Webinar académico, en vivo por YouTube',
     price: 'Gratuito',
-    topics: ['Inteligencia artificial', 'Marco legal', 'Empresas'],
+    topics: ['Inteligencia artificial', 'Derecho', 'Empresas'],
     audience: [
-      'Dueños y administradores de pequeñas y medianas empresas',
-      'Equipos que ya usan IA sin reglas claras y quieren ordenarlo',
-      'Profesionales responsables de datos, cumplimiento o seguridad',
+      'Abogados y estudiantes de derecho que ven llegar la IA a su profesión',
+      'Dueños y administradores de empresas que quieren usar IA sin meterse en problemas',
+      'Profesionales responsables de datos, cumplimiento o seguridad de la información',
     ],
     takeaways: [
-      'Qué exige la ley ecuatoriana cuando tu empresa trata datos con inteligencia artificial',
-      'Dónde están los riesgos reales al usar herramientas de IA en el trabajo diario',
-      'Por dónde empezar a aplicarla en tu operación sin exponer información del negocio',
+      'Qué desafíos plantea la inteligencia artificial al derecho y dónde están hoy los vacíos',
+      'Qué puede hacer un empresario con Claude en el trabajo diario de su negocio',
+      'Cómo adoptar estas herramientas sin exponer la información de la empresa',
     ],
     sessions: [
       {
-        label: 'Sesión 1',
-        title: 'IA y el marco legal',
-        host: 'Cyberprevention',
-        detail: 'Qué se puede y qué no cuando una empresa trata datos con inteligencia artificial.',
+        label: 'Ponencia 1',
+        title: 'Derecho e inteligencia artificial: nuevos desafíos',
+        host: 'Academia Debate & Sociedad',
+        speaker: 'Luis Alejandro Vásquez',
+        speakerRole: 'Abogado en Constitucional y Digital',
+        moderator: 'Tomás Alvarado',
       },
       {
-        label: 'Sesión 2',
-        title: 'IA para empresarios',
+        label: 'Ponencia 2',
+        title: 'Claude para empresarios: nuevos desafíos',
         host: 'IonosHub',
-        detail: 'Cómo llevarla a la operación: atención, automatización y control de la información.',
+        speaker: 'Cristhian Recalde',
+        speakerRole: 'Ing. en Tecnologías de la Información',
+        moderator: 'Santiago Guerra',
       },
+    ],
+    /**
+     * Arte de la primera ponencia, recortado por encima del bloque de fecha: el original lleva
+     * impresa la fecha antigua (15 de septiembre) y el aviso muestra la buena justo debajo, así que
+     * verlas juntas confundiría. Cuando llegue el arte corregido, se apunta aquí el archivo entero.
+     */
+    promoImage: {
+      src: '/imgs/webinars/derecho-e-ia-popup.jpg',
+      alt: 'Arte del webinar "Derecho e inteligencia artificial: nuevos desafíos", con el abogado Luis Alejandro Vásquez',
+      width: 1080,
+      height: 840,
+    },
+    organizerLogos: [
+      { src: '/imgs/webinars/academia-debate-sociedad.png', alt: 'Academia Debate & Sociedad', width: 1024, height: 335 },
+      { src: '/imgs/logo.webp', alt: 'IonosHub', width: 320, height: 97 },
+      { src: '/imgs/webinars/cyberprevention.jpg', alt: 'Cyberprevention', width: 518, height: 518 },
     ],
     whatsappCommunity: 'https://chat.whatsapp.com/IPTNct7Pli891HPG2b77Zj?mode=gi_t',
     registrationOpen: true,
-    metaTitle: 'Webinar gratuito: aprende a usar IA en tu trabajo | IonosHub × Cyberprevention',
+    metaTitle: 'Webinar gratuito: derecho e IA, y Claude para empresarios | 24 de septiembre',
     metaDescription:
-      'Webinar en línea y gratuito, 24 de septiembre de 2026. Dos charlas: el marco legal de la inteligencia artificial y cómo aplicarla en tu empresa. Organizan Cyberprevention e IonosHub.',
+      'Webinar académico gratuito y virtual, 24 de septiembre de 2026 a las 19:00. Dos ponencias: los nuevos desafíos del derecho ante la inteligencia artificial, con Luis Alejandro Vásquez, y Claude para empresarios, con Cristhian Recalde. Organizan Academia Debate & Sociedad, IonosHub y Cyberprevention.',
   },
 ];
 

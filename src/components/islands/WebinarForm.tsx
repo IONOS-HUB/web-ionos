@@ -1,27 +1,12 @@
 import { useState, type FormEvent, type ReactNode } from 'react';
+import SelectorPais from './SelectorPais';
+import { paisPorIso, PAIS_POR_DEFECTO } from '../../data/paises';
 
 /**
  * Registro a un webinar. Misma captura que el repo de referencia (nombre, correo, teléfono con código
  * de país, empresa, área, cargo y consentimiento), sobre el endpoint `/api/webinar`.
  * Al terminar lleva a la comunidad de WhatsApp, que es donde se reparte el enlace de acceso.
  */
-
-interface CountryCode {
-  code: string;
-  label: string;
-  digits: [min: number, max: number];
-}
-
-const COUNTRY_CODES: CountryCode[] = [
-  { code: '+593', label: 'Ecuador', digits: [9, 9] },
-  { code: '+57', label: 'Colombia', digits: [10, 10] },
-  { code: '+51', label: 'Perú', digits: [9, 9] },
-  { code: '+52', label: 'México', digits: [10, 10] },
-  { code: '+1', label: 'Estados Unidos', digits: [10, 10] },
-  { code: '+34', label: 'España', digits: [9, 9] },
-  { code: '+56', label: 'Chile', digits: [9, 9] },
-  { code: '+54', label: 'Argentina', digits: [10, 11] },
-];
 
 interface Props {
   slug: string;
@@ -32,7 +17,7 @@ interface Props {
 const initial = {
   nombre: '',
   correo: '',
-  codigo_pais: '+593',
+  pais: PAIS_POR_DEFECTO,
   telefono: '',
   empresa: '',
   area: '',
@@ -59,8 +44,9 @@ export default function WebinarForm({ slug, titulo, comunidad }: Props) {
     if (data.nombre.trim().length < 3) e.nombre = 'Escribe tu nombre completo.';
     if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(data.correo.trim())) e.correo = 'Escribe un correo válido.';
     const digitos = data.telefono.replace(/\D/g, '');
-    const pais = COUNTRY_CODES.find((c) => c.code === data.codigo_pais);
-    const [min, max] = pais?.digits ?? [7, 12];
+    const pais = paisPorIso(data.pais);
+    const min = pais?.min ?? 6;
+    const max = pais?.max ?? 14;
     if (digitos.length < min || digitos.length > max) e.telefono = 'Revisa el número de teléfono.';
     if (!data.empresa.trim()) e.empresa = 'Cuéntanos dónde trabajas.';
     if (!data.area.trim()) e.area = 'Indica tu área.';
@@ -83,7 +69,7 @@ export default function WebinarForm({ slug, titulo, comunidad }: Props) {
           webinar: slug,
           nombre: data.nombre.trim(),
           correo: data.correo.trim(),
-          codigo_pais: data.codigo_pais,
+          codigo_pais: paisPorIso(data.pais)?.prefijo ?? '',
           telefono: data.telefono.trim(),
           empresa: data.empresa.trim(),
           area: data.area.trim(),
@@ -155,7 +141,7 @@ export default function WebinarForm({ slug, titulo, comunidad }: Props) {
   }
 
   const campo =
-    'w-full rounded-2xl border bg-canvas px-4 py-3.5 text-[1rem] text-ink placeholder:text-ink-3/70 transition-[border-color,box-shadow] duration-300 focus:border-cobalt focus:outline-none focus:ring-4 focus:ring-cobalt/15';
+    'rounded-2xl border bg-canvas px-4 py-3.5 text-[1rem] text-ink placeholder:text-ink-3/70 transition-[border-color,box-shadow] duration-300 focus:border-cobalt focus:outline-none focus:ring-4 focus:ring-cobalt/15';
   const bien = 'border-line hover:border-ice-2';
   const mal = 'border-red-500 ring-4 ring-red-500/10';
 
@@ -172,7 +158,7 @@ export default function WebinarForm({ slug, titulo, comunidad }: Props) {
           type="text"
           autoComplete="name"
           placeholder="Ana Torres"
-          className={`${campo} ${errores.nombre ? mal : bien}`}
+          className={`${campo} w-full ${errores.nombre ? mal : bien}`}
           value={data.nombre}
           onChange={(e) => set('nombre', e.target.value)}
           aria-invalid={!!errores.nombre}
@@ -187,7 +173,7 @@ export default function WebinarForm({ slug, titulo, comunidad }: Props) {
           inputMode="email"
           autoComplete="email"
           placeholder="ana@empresa.com"
-          className={`${campo} ${errores.correo ? mal : bien}`}
+          className={`${campo} w-full ${errores.correo ? mal : bien}`}
           value={data.correo}
           onChange={(e) => set('correo', e.target.value)}
           aria-invalid={!!errores.correo}
@@ -197,24 +183,20 @@ export default function WebinarForm({ slug, titulo, comunidad }: Props) {
 
       <Campo label="Teléfono o WhatsApp" id="wf-telefono" error={errores.telefono}>
         <div className="flex gap-2">
-          <select
-            aria-label="Código de país"
-            className={`${campo} ${bien} tnum w-[7.5rem] shrink-0 appearance-none pr-8`}
-            value={data.codigo_pais}
-            onChange={(e) => set('codigo_pais', e.target.value)}
-          >
-            {COUNTRY_CODES.map((c) => (
-              <option key={c.code} value={c.code}>
-                {c.code} {c.label}
-              </option>
-            ))}
-          </select>
+          <SelectorPais
+            valor={data.pais}
+            onChange={(iso) => {
+              setData((d) => ({ ...d, pais: iso }));
+              if (errores.telefono) setErrores((x) => ({ ...x, telefono: '' }));
+            }}
+            invalido={!!errores.telefono}
+          />
           <input
             id="wf-telefono"
             type="tel"
             inputMode="tel"
             autoComplete="tel-national"
-            placeholder="991234567"
+            placeholder={paisPorIso(data.pais)?.ejemplo || '991234567'}
             className={`${campo} tnum min-w-0 flex-1 ${errores.telefono ? mal : bien}`}
             value={data.telefono}
             onChange={(e) => set('telefono', e.target.value)}
@@ -230,7 +212,7 @@ export default function WebinarForm({ slug, titulo, comunidad }: Props) {
           type="text"
           autoComplete="organization"
           placeholder="Ferretería El Tornillo"
-          className={`${campo} ${errores.empresa ? mal : bien}`}
+          className={`${campo} w-full ${errores.empresa ? mal : bien}`}
           value={data.empresa}
           onChange={(e) => set('empresa', e.target.value)}
           aria-invalid={!!errores.empresa}
@@ -244,7 +226,7 @@ export default function WebinarForm({ slug, titulo, comunidad }: Props) {
             id="wf-area"
             type="text"
             placeholder="Operaciones"
-            className={`${campo} ${errores.area ? mal : bien}`}
+            className={`${campo} w-full ${errores.area ? mal : bien}`}
             value={data.area}
             onChange={(e) => set('area', e.target.value)}
             aria-invalid={!!errores.area}
@@ -257,7 +239,7 @@ export default function WebinarForm({ slug, titulo, comunidad }: Props) {
             type="text"
             autoComplete="organization-title"
             placeholder="Administradora"
-            className={`${campo} ${errores.cargo ? mal : bien}`}
+            className={`${campo} w-full ${errores.cargo ? mal : bien}`}
             value={data.cargo}
             onChange={(e) => set('cargo', e.target.value)}
             aria-invalid={!!errores.cargo}

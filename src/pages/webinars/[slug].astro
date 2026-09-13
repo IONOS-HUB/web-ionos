@@ -132,7 +132,7 @@ const eventJsonLd = {
             </span>
             <span class="min-w-0 leading-tight">
               <span class="block text-[0.98rem] font-semibold text-ink">{abierto ? 'Reserva tu lugar' : 'Edición finalizada'}</span>
-              <span class="block text-[0.8rem] text-ink-3">{abierto ? 'Un registro, las dos charlas' : 'El registro ya está cerrado'}</span>
+              <span class="block text-[0.8rem] text-ink-3">{abierto ? 'Un registro, las dos ponencias' : 'El registro ya está cerrado'}</span>
             </span>
           </div>
 
@@ -168,7 +168,7 @@ const eventJsonLd = {
     <div class="grid gap-10 lg:grid-cols-12 lg:gap-14">
       <div class="min-w-0 lg:col-span-5" data-reveal>
         <h2 class="display-tight text-[clamp(2rem,4.2vw,3.25rem)] font-semibold text-ink">
-          {webinar.sessions.length === 2 ? 'Dos charlas, un solo registro.' : 'La agenda del webinar.'}
+          {webinar.sessions.length === 2 ? 'Dos ponencias, un solo registro.' : 'La agenda del webinar.'}
         </h2>
         <p class="mt-5 text-[clamp(1.05rem,1.4vw,1.25rem)] leading-relaxed text-ink-2">{webinar.summary}</p>
 
@@ -198,7 +198,16 @@ const eventJsonLd = {
                   </span>
                   <div class="min-w-0">
                     <p class="text-[1.08rem] font-semibold leading-tight text-ink">{s.title}</p>
-                    <p class="mt-1 text-[0.9rem] text-ink-3">{s.speaker ? `${s.speaker} · ${s.host}` : s.host}</p>
+                    {s.speaker && (
+                      <p class="mt-1.5 text-[0.98rem] font-semibold text-cobalt-ink">
+                        {s.speaker}
+                        {s.speakerRole && <span class="font-normal text-ink-3"> · {s.speakerRole}</span>}
+                      </p>
+                    )}
+                    <p class="mt-1 text-[0.9rem] text-ink-3">
+                      {s.host}
+                      {s.moderator && <span> · Modera {s.moderator}</span>}
+                    </p>
                     {s.detail && <p class="mt-2 text-[0.98rem] leading-relaxed text-ink-2">{s.detail}</p>}
                   </div>
                 </li>
@@ -273,6 +282,29 @@ const eventJsonLd = {
           {otras.map((w, i) => (
             <li data-reveal data-reveal-delay={Math.min(i, 3) * 70}>
               <WebinarCard webinar={w} />
+            </li>
+          ))}
+        </ul>
+      </section>
+    )
+  }
+
+  {
+    webinar.organizerLogos && webinar.organizerLogos.length > 0 && (
+      <section class="wrap pb-4">
+        <p class="text-[0.72rem] font-semibold uppercase tracking-wide text-ink-3" data-reveal>Organizan</p>
+        <ul class="mt-5 flex flex-wrap items-stretch gap-4" data-reveal data-reveal-delay="60">
+          {webinar.organizerLogos.map((logo) => (
+            <li class="flex h-20 w-40 items-center justify-center overflow-hidden rounded-[1.25rem] border border-line bg-canvas px-5 py-4">
+              <img
+                src={logo.src}
+                alt={logo.alt}
+                width={logo.width}
+                height={logo.height}
+                loading="lazy"
+                decoding="async"
+                class="max-h-full w-auto object-contain"
+              />
             </li>
           ))}
         </ul>

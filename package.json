@@ -11,7 +11,9 @@
     "preview": "astro preview",
     "astro": "astro",
     "check": "astro check",
-    "images": "node scripts/responsive-images.mjs"
+    "images": "node scripts/responsive-images.mjs",
+    "webinar:cartel": "node scripts/webinar-placeholder.mjs",
+    "paises": "node scripts/generar-paises.mjs"
   },
   "dependencies": {
     "@astrojs/react": "^6.0.5",
@@ -30,6 +32,7 @@
   "devDependencies": {
     "@types/react": "^19.2.18",
     "@types/react-dom": "^19.2.7",
-    "fontaine": "^0.8.1"
+    "fontaine": "^0.8.1",
+    "libphonenumber-js": "^1.13.13"
   }
 }

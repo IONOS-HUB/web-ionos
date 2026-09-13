@@ -19,9 +19,10 @@ Estos son obligatorios. Pregunta **sólo por los que falten**, en un único mens
 | `title` | Nombre del webinar, en la voz del asistente, no del organizador | `Aprende a usar IA en tu trabajo` |
 | `startsAt` | Fecha y hora en ISO **con zona** | `2026-09-24T19:00:00-05:00` |
 | `hosts` | Organizaciones que lo dan | `['Cyberprevention', 'IonosHub']` |
-| `sessions` | Una entrada por charla: `label`, `title`, `host` y, si aporta, `detail` | ver el archivo |
+| `sessions` | Una entrada por ponencia: `label`, `title`, `host` y, cuando estén confirmados, `speaker`, `speakerRole`, `moderator` y `detail` | ver el archivo |
 | `topics` | 2 o 3 etiquetas para filtrar en el índice | `['Inteligencia artificial', 'Marco legal']` |
 | `whatsappCommunity` | Enlace del grupo donde se reparte el acceso | `https://chat.whatsapp.com/…` |
+| `promoImage` | Cartel del pop-up: 1080×1080 o 1080×1350, en `public/imgs/webinars/`. Si no lo tienen, genera el provisional con `npm run webinar:cartel <slug>` | ver `docs/WEBINARS.md` |
 
 Si falta la fecha, pregunta antes de escribir nada: de ella salen la cuenta atrás, el estado y el
 `Event` de datos estructurados. Si falta el enlace del grupo, se puede publicar sin él (la pantalla

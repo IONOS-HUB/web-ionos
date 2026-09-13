@@ -225,12 +225,16 @@ const breadcrumbJsonLd = {
     font-weight: 600;
     color: var(--color-ink);
   }
-  .prose a {
+  /*
+   * Los enlaces del artículo van subrayados, pero los botones que viven dentro del mismo contenedor
+   * (el bloque "Cómo lo aplicamos") no: se veían como texto enlazado dentro de una píldora.
+   */
+  .prose a:not(.btn) {
     color: var(--color-cobalt);
     text-decoration: underline;
     text-underline-offset: 0.18em;
   }
-  .prose a:hover {
+  .prose a:not(.btn):hover {
     color: var(--color-cobalt-deep);
   }
   .prose blockquote {
