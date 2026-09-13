@@ -1,0 +1,269 @@
+---
+/**
+ * Índice de webinars: el próximo en grande, el resto en rejilla, con filtros por estado y por tema.
+ * Los filtros son vanilla sobre atributos de datos; con una sola edición siguen teniendo sentido
+ * porque "Anteriores" muestra su propio estado vacío en vez de una rejilla rota.
+ */
+import BaseLayout from '../../layouts/BaseLayout.astro';
+import Icon from '../../components/Icon.astro';
+import WebinarCard from '../../components/webinars/WebinarCard.astro';
+import WebinarCountdown from '../../components/webinars/WebinarCountdown.astro';
+import Contact from '../../components/home/Contact.astro';
+import { sortedWebinars, allTopics, formatWebinarDate, formatWebinarTime, webinars } from '../../data/webinars';
+import { SITE } from '../../lib/site';
+
+const { proximos, pasados } = sortedWebinars();
+const [destacado, ...siguientes] = proximos;
+const temas = allTopics();
+const restantes = [...siguientes, ...pasados];
+const wa = 'Hola IonosHub, quiero saber más sobre sus webinars.';
+
+const listaJsonLd = {
+  '@context': 'https://schema.org',
+  '@type': 'ItemList',
+  name: 'Webinars de IonosHub',
+  itemListElement: webinars.map((w, i) => ({
+    '@type': 'ListItem',
+    position: i + 1,
+    url: new URL(`/webinars/${w.slug}`, SITE.url).href,
+    name: w.title,
+  })),
+};
+---
+
+<BaseLayout
+  title="Webinars de IonosHub · formación gratuita sobre IA para empresas en Ecuador"
+  description="Webinars en línea y gratuitos de IonosHub sobre inteligencia artificial, automatización y datos aplicados a pequeñas y medianas empresas. Regístrate en el próximo o revisa las ediciones anteriores."
+  path="/webinars"
+  waMessage={wa}
+>
+  <script type="application/ld+json" slot="head" set:html={JSON.stringify(listaJsonLd)} />
+
+  <section class="wrap py-14 lg:py-20">
+    <div class="max-w-3xl" data-reveal>
+      <h1 class="display-tight text-[clamp(2.4rem,5vw,4.2rem)] font-semibold text-ink">
+        Formación en vivo, gratuita y sin relleno.
+      </h1>
+      <p class="mt-6 text-[clamp(1.1rem,1.5vw,1.3rem)] leading-relaxed text-ink-2">
+        Cada cierto tiempo juntamos a quien sabe del tema y lo contamos en abierto: qué puede hacer hoy la IA en un
+        negocio como el tuyo, qué exige la ley y por dónde se empieza. Te registras una vez y recibes el enlace por
+        WhatsApp.
+      </p>
+    </div>
+
+    {
+      destacado && (
+        <article class="mt-12 overflow-hidden rounded-[1.75rem] bg-cobalt text-white shadow-lift lg:mt-16" data-reveal data-reveal-delay="80">
+          <div class="relative">
+            <div class="wb-mesh" aria-hidden="true" />
+            <div class="relative grid gap-10 p-7 sm:p-10 lg:grid-cols-12 lg:items-center lg:gap-12 lg:p-14">
+              <div class="min-w-0 lg:col-span-7">
+                <p class="flex flex-wrap items-center gap-x-2.5 gap-y-1 text-[0.9rem] font-semibold text-white/80">
+                  <span class="rounded-full bg-white px-2.5 py-1 text-[0.7rem] uppercase tracking-wide text-cobalt-ink">
+                    Próximo
+                  </span>
+                  {destacado.hosts.join(' × ')}
+                </p>
+                <h2 class="display-tight mt-5 text-[clamp(2rem,4vw,3.25rem)] font-semibold [text-wrap:balance]">
+                  <a href={`/webinars/${destacado.slug}`} class="hover:text-white/90">{destacado.title}</a>
+                </h2>
+                <p class="mt-4 max-w-xl text-[1.05rem] leading-relaxed text-white/80">{destacado.tagline}</p>
+
+                <p class="tnum mt-6 flex flex-wrap items-center gap-x-5 gap-y-2 text-[1rem] font-semibold">
+                  <span class="inline-flex items-center gap-2 first-letter:uppercase">
+                    <Icon name="calendar" size={17} class="text-white/70" />
+                    {formatWebinarDate(destacado.startsAt, { year: true })}
+                  </span>
+                  <span class="inline-flex items-center gap-2">
+                    <Icon name="clock" size={17} class="text-white/70" />
+                    {formatWebinarTime(destacado.startsAt)} · {destacado.timezone}
+                  </span>
+                </p>
+
+                <div class="mt-8 flex flex-col gap-3 sm:flex-row sm:items-center">
+                  <a href={`/webinars/${destacado.slug}#registro`} class="btn btn-on-dark">
+                    Reservar mi lugar
+                    <Icon name="arrow-right" size={18} />
+                  </a>
+                  <a href={`/webinars/${destacado.slug}`} class="inline-flex items-center gap-2 px-2 text-[0.95rem] font-semibold text-white/85 hover:text-white">
+                    Ver la agenda
+                    <Icon name="arrow-up-right" size={16} />
+                  </a>
+                </div>
+              </div>
+
+              <div class="min-w-0 lg:col-span-5">
+                <WebinarCountdown startsAt={destacado.startsAt} class="justify-start lg:justify-end" />
+                <ul class="mt-6 flex flex-col gap-2.5">
+                  {destacado.sessions.map((s) => (
+                    <li class="flex items-start gap-3 rounded-[1.25rem] bg-white/10 px-4 py-3">
+                      <span class="mt-0.5 shrink-0 text-[0.72rem] font-semibold uppercase tracking-wide text-white/55">
+                        {s.label}
+                      </span>
+                      <span class="min-w-0">
+                        <span class="block text-[0.98rem] font-semibold leading-tight">{s.title}</span>
+                        <span class="block text-[0.85rem] text-white/65">{s.host}</span>
+                      </span>
+                    </li>
+                  ))}
+                </ul>
+              </div>
+            </div>
+          </div>
+        </article>
+      )
+    }
+  </section>
+
+  <section class="bg-ice-3 py-16 lg:py-24" data-webinar-list>
+    <div class="wrap">
+      <div class="flex flex-wrap items-end justify-between gap-6" data-reveal>
+        <h2 class="display-tight text-[clamp(1.75rem,3vw,2.5rem)] font-semibold text-ink">Todas las ediciones</h2>
+
+        <div class="flex flex-wrap items-center gap-2" role="group" aria-label="Filtrar webinars">
+          <div class="flex gap-1 rounded-full bg-canvas p-1 shadow-lift" role="tablist" aria-label="Estado">
+            <button type="button" class="wfilter is-on" role="tab" aria-selected="true" data-filter-status="todos">Todos</button>
+            <button type="button" class="wfilter" role="tab" aria-selected="false" data-filter-status="proximo">Próximos</button>
+            <button type="button" class="wfilter" role="tab" aria-selected="false" data-filter-status="pasado">Anteriores</button>
+          </div>
+        </div>
+      </div>
+
+      {
+        temas.length > 1 && (
+          <ul class="mt-6 flex flex-wrap gap-2" aria-label="Filtrar por tema" data-reveal data-reveal-delay="60">
+            <li>
+              <button type="button" class="wchip is-on" data-filter-topic="todos" aria-pressed="true">Todos los temas</button>
+            </li>
+            {temas.map((t) => (
+              <li>
+                <button type="button" class="wchip" data-filter-topic={t} aria-pressed="false">{t}</button>
+              </li>
+            ))}
+          </ul>
+        )
+      }
+
+      <ul class="mt-8 grid gap-6 sm:grid-cols-2 lg:grid-cols-3" data-webinar-grid>
+        {[...proximos, ...pasados].map((w, i) => (
+          <li data-reveal data-reveal-delay={Math.min(i, 4) * 60} data-webinar-item data-status={w.slug && (proximos.includes(w) ? 'proximo' : 'pasado')} data-topics={w.topics.join('|')}>
+            <WebinarCard webinar={w} />
+          </li>
+        ))}
+      </ul>
+
+      <p class="mt-10 hidden rounded-[1.25rem] border border-line bg-canvas px-6 py-8 text-center text-[1.02rem] text-ink-2" data-webinar-empty>
+        Todavía no hay ediciones con ese filtro. Mientras tanto, puedes ver las demás o escribirnos para proponer un
+        tema.
+      </p>
+
+      {
+        restantes.length === 0 && pasados.length === 0 && (
+          <p class="mt-8 text-[1.02rem] text-ink-3">
+            Esta es la primera edición. Las siguientes se publicarán aquí y quedarán disponibles para consulta.
+          </p>
+        )
+      }
+    </div>
+  </section>
+
+  <Contact
+    title="¿Quieres que el próximo webinar trate tu problema?"
+    waMessage={wa}
+  />
+</BaseLayout>
+
+<style>
+  .wb-mesh {
+    position: absolute;
+    inset: 0;
+    background:
+      radial-gradient(38rem 22rem at 92% -20%, rgb(63 134 230 / 0.6), transparent 70%),
+      radial-gradient(26rem 20rem at 0% 115%, rgb(10 71 160 / 0.6), transparent 72%);
+  }
+
+  .wfilter {
+    border-radius: 999px;
+    padding: 0.45rem 1rem;
+    font-size: 0.9rem;
+    font-weight: 600;
+    color: var(--color-ink-2);
+    transition: background-color 0.25s, color 0.25s;
+  }
+  .wfilter:hover {
+    color: var(--color-ink);
+  }
+  .wfilter.is-on {
+    background: var(--color-cobalt);
+    color: #fff;
+  }
+
+  .wchip {
+    border-radius: 999px;
+    padding: 0.4rem 0.85rem;
+    background: var(--color-canvas);
+    box-shadow: inset 0 0 0 1px var(--color-ice-2);
+    color: var(--color-cobalt-ink);
+    font-size: 0.88rem;
+    font-weight: 500;
+    transition: background-color 0.25s, box-shadow 0.25s, color 0.25s;
+  }
+  .wchip:hover {
+    background: var(--color-ice);
+  }
+  .wchip.is-on {
+    background: var(--color-cobalt);
+    color: #fff;
+    box-shadow: none;
+  }
+</style>
+
+<script>
+  // Filtros del índice: estado (próximo/anterior) y tema, combinables.
+  const zona = document.querySelector<HTMLElement>('[data-webinar-list]');
+  if (zona) {
+    const items = Array.from(zona.querySelectorAll<HTMLElement>('[data-webinar-item]'));
+    const vacio = zona.querySelector<HTMLElement>('[data-webinar-empty]');
+    let estado = 'todos';
+    let tema = 'todos';
+
+    const aplicar = () => {
+      let visibles = 0;
+      for (const item of items) {
+        const coincideEstado = estado === 'todos' || item.dataset.status === estado;
+        const temas = (item.dataset.topics ?? '').split('|');
+        const coincideTema = tema === 'todos' || temas.includes(tema);
+        const ver = coincideEstado && coincideTema;
+        item.hidden = !ver;
+        if (ver) visibles++;
+      }
+      if (vacio) vacio.hidden = visibles > 0;
+    };
+
+    zona.querySelectorAll<HTMLButtonElement>('[data-filter-status]').forEach((boton) => {
+      boton.addEventListener('click', () => {
+        estado = boton.dataset.filterStatus!;
+        zona.querySelectorAll<HTMLButtonElement>('[data-filter-status]').forEach((b) => {
+          const on = b === boton;
+          b.classList.toggle('is-on', on);
+          b.setAttribute('aria-selected', String(on));
+        });
+        aplicar();
+      });
+    });
+
+    zona.querySelectorAll<HTMLButtonElement>('[data-filter-topic]').forEach((boton) => {
+      boton.addEventListener('click', () => {
+        tema = boton.dataset.filterTopic!;
+        zona.querySelectorAll<HTMLButtonElement>('[data-filter-topic]').forEach((b) => {
+          const on = b === boton;
+          b.classList.toggle('is-on', on);
+          b.setAttribute('aria-pressed', String(on));
+        });
+        aplicar();
+      });
+    });
+
+    aplicar();
+  }
+</script>

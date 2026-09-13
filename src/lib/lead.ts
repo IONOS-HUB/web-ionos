@@ -12,7 +12,15 @@ export interface LeadPayload {
   nota_detalle: string | null;
   pagina_origen: string;
   fecha_envio: string;
-  canal: 'formulario' | 'chat-ionic';
+  canal: 'formulario' | 'chat-ionic' | 'webinar';
+  /** Sólo en registros de webinar: el resto de canales no los envía. */
+  webinar_slug?: string;
+  webinar_titulo?: string;
+  webinar_fecha?: string;
+  nombre_persona?: string;
+  empresa?: string;
+  area?: string;
+  cargo?: string;
 }
 
 export type LeadResult = 'ok' | 'sin-canal' | 'error';

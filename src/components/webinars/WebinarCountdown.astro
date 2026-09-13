@@ -1,0 +1,101 @@
+---
+/**
+ * Cuenta atrás hasta el inicio. Se pinta ya con el valor correcto desde el servidor y el script sólo
+ * la mantiene al día, así no hay salto ni hueco mientras carga el JavaScript.
+ */
+interface Props {
+  startsAt: string;
+  /** `dark` para el campo cobalto, `light` sobre lienzo blanco */
+  tone?: 'dark' | 'light';
+  class?: string;
+}
+const { startsAt, tone = 'dark', class: className = '' } = Astro.props;
+
+const restante = Math.max(0, new Date(startsAt).getTime() - Date.now());
+const partes = [
+  { clave: 'dias', etiqueta: 'días', valor: Math.floor(restante / 86400000) },
+  { clave: 'horas', etiqueta: 'horas', valor: Math.floor(restante / 3600000) % 24 },
+  { clave: 'minutos', etiqueta: 'min', valor: Math.floor(restante / 60000) % 60 },
+  { clave: 'segundos', etiqueta: 'seg', valor: Math.floor(restante / 1000) % 60 },
+];
+---
+
+<div
+  class:list={['cd flex items-stretch gap-2', className]}
+  data-countdown
+  data-starts-at={startsAt}
+  role="timer"
+  aria-label="Tiempo restante para el webinar"
+>
+  {
+    partes.map((p) => (
+      <div class:list={['cd-cell', tone === 'dark' ? 'cd-dark' : 'cd-light']}>
+        <span class="tnum cd-value" data-cd={p.clave}>
+          {String(p.valor).padStart(2, '0')}
+        </span>
+        <span class="cd-label">{p.etiqueta}</span>
+      </div>
+    ))
+  }
+</div>
+
+<style>
+  .cd-cell {
+    display: flex;
+    min-width: 3.85rem;
+    flex-direction: column;
+    align-items: center;
+    gap: 0.1rem;
+    border-radius: 1rem;
+    padding: 0.6rem 0.5rem 0.5rem;
+  }
+  .cd-dark {
+    background: rgb(255 255 255 / 0.14);
+    box-shadow: inset 0 0 0 1px rgb(255 255 255 / 0.18);
+    color: #fff;
+  }
+  .cd-light {
+    background: var(--color-ice-3);
+    box-shadow: inset 0 0 0 1px var(--color-ice-2);
+    color: var(--color-ink);
+  }
+  .cd-value {
+    font-size: 1.55rem;
+    font-weight: 600;
+    line-height: 1;
+    letter-spacing: -0.03em;
+  }
+  .cd-label {
+    font-size: 0.68rem;
+    font-weight: 600;
+    letter-spacing: 0.06em;
+    text-transform: uppercase;
+    opacity: 0.7;
+  }
+</style>
+
+<script>
+  // Un solo intervalo para todas las cuentas atrás de la página.
+  const relojes = document.querySelectorAll<HTMLElement>('[data-countdown]');
+  if (relojes.length) {
+    const pintar = () => {
+      const ahora = Date.now();
+      for (const reloj of relojes) {
+        const restante = Math.max(0, new Date(reloj.dataset.startsAt!).getTime() - ahora);
+        const valores: Record<string, number> = {
+          dias: Math.floor(restante / 86400000),
+          horas: Math.floor(restante / 3600000) % 24,
+          minutos: Math.floor(restante / 60000) % 60,
+          segundos: Math.floor(restante / 1000) % 60,
+        };
+        for (const [clave, valor] of Object.entries(valores)) {
+          const celda = reloj.querySelector<HTMLElement>(`[data-cd="${clave}"]`);
+          const texto = String(valor).padStart(2, '0');
+          if (celda && celda.textContent !== texto) celda.textContent = texto;
+        }
+      }
+    };
+    pintar();
+    window.setInterval(pintar, 1000);
+  }
+</script>

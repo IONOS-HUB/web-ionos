@@ -1,0 +1,74 @@
+---
+/**
+ * Tarjeta de una edición en el índice. Es una ventanilla en miniatura: cabecera con la fecha en
+ * cobalto (o noche, si ya pasó), cuerpo blanco con el contenido y pie con los organizadores.
+ */
+import Icon from '../Icon.astro';
+import { formatWebinarShort, formatWebinarTime, isUpcoming, type Webinar } from '../../data/webinars';
+
+interface Props {
+  webinar: Webinar;
+}
+const { webinar } = Astro.props;
+const proximo = isUpcoming(webinar);
+const fecha = formatWebinarShort(webinar.startsAt);
+const hora = formatWebinarTime(webinar.startsAt);
+---
+
+<article
+  class="wcard group flex h-full min-w-0 flex-col overflow-hidden rounded-[1.5rem] border border-line bg-canvas shadow-lift"
+  data-webinar-card
+  data-status={proximo ? 'proximo' : 'pasado'}
+  data-topics={webinar.topics.join('|')}
+>
+  <header class:list={['flex items-center gap-3 px-5 py-3.5 text-white', proximo ? 'bg-cobalt' : 'bg-night']}>
+    <span class="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-white/15">
+      <Icon name="calendar" size={17} />
+    </span>
+    <span class="min-w-0 leading-tight">
+      <span class="tnum block text-[0.95rem] font-semibold">{fecha}</span>
+      <span class="tnum block text-[0.78rem] text-white/70">{proximo ? `${hora} · ${webinar.timezone}` : `Edición ${webinar.edition}`}</span>
+    </span>
+    <span class:list={['ml-auto shrink-0 rounded-full px-2.5 py-1 text-[0.7rem] font-semibold uppercase tracking-wide', proximo ? 'bg-white text-cobalt-ink' : 'bg-night-2 text-night-text']}>
+      {proximo ? 'Registro abierto' : 'Ya emitido'}
+    </span>
+  </header>
+
+  <div class="flex flex-1 flex-col p-5">
+    <h3 class="display-tight text-[1.35rem] font-semibold leading-tight text-ink">
+      <a href={`/webinars/${webinar.slug}`} class="after:absolute after:inset-0 hover:text-cobalt-ink">{webinar.title}</a>
+    </h3>
+    <p class="mt-2.5 line-clamp-3 text-[0.98rem] leading-relaxed text-ink-2">{webinar.summary}</p>
+
+    <ul class="mt-4 flex flex-wrap gap-1.5">
+      {webinar.topics.map((t) => <li class="chip text-[0.8rem]">{t}</li>)}
+    </ul>
+
+    <p class="mt-5 flex items-center gap-2 text-[0.88rem] font-semibold text-cobalt-ink">
+      {proximo ? 'Reservar mi lugar' : 'Ver qué se trató'}
+      <Icon name="arrow-right" size={15} class="transition-transform duration-500 ease-[var(--ease-out-expo)] group-hover:translate-x-1" />
+    </p>
+  </div>
+
+  <footer class="flex items-center gap-2 border-t border-line-soft bg-ice-3 px-5 py-3 text-[0.8rem] text-ink-3">
+    {webinar.hosts.join(' × ')}
+  </footer>
+</article>
+
+<style>
+  .wcard {
+    position: relative;
+    transition: transform 0.6s var(--ease-out-expo), box-shadow 0.6s var(--ease-out-expo);
+  }
+  @media (hover: hover) {
+    .wcard:hover {
+      transform: translateY(-4px);
+    }
+  }
+  .line-clamp-3 {
+    display: -webkit-box;
+    -webkit-box-orient: vertical;
+    -webkit-line-clamp: 3;
+    overflow: hidden;
+  }
+</style>

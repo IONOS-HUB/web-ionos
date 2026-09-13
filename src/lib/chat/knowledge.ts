@@ -7,6 +7,7 @@ import { pillars } from '../../data/pillars';
 import { successCases } from '../../data/cases';
 import { faqs } from '../../data/site-content';
 import { team } from '../../data/team';
+import { sortedWebinars, formatWebinarDate, formatWebinarTime } from '../../data/webinars';
 import { SITE, WHATSAPP_DISPLAY, CALENDAR_URL } from '../site';
 
 const pillarBlock = pillars
@@ -31,6 +32,23 @@ const caseBlock = successCases
 
 const faqBlock = faqs.map((f) => `P: ${f.q}\nR: ${f.a}`).join('\n');
 
+/**
+ * Sólo los webinars que aún no han ocurrido: si el agente anuncia uno pasado, queda mal.
+ * Al pasar la fecha, esta sección desaparece sola en el siguiente despliegue.
+ */
+const proximosWebinars = sortedWebinars().proximos;
+const webinarBlock = proximosWebinars.length
+  ? `## Webinars abiertos (${SITE.url}/webinars)
+
+${proximosWebinars
+  .map(
+    (w) =>
+      `- "${w.title}" (${SITE.url}/webinars/${w.slug}): ${formatWebinarDate(w.startsAt, { year: true })} a las ${formatWebinarTime(w.startsAt)} (${w.timezone}). ${w.format}, ${w.price.toLowerCase()}. Organizan ${w.hosts.join(' y ')}. ${w.summary} Charlas: ${w.sessions.map((s) => `${s.title} (${s.host})`).join('; ')}. Para asistir hay que registrarse en esa página; el enlace de acceso se reparte por la comunidad de WhatsApp del evento.`,
+  )
+  .join('\n')}
+`
+  : '';
+
 const teamBlock = team.map((m) => `- ${m.name}, ${m.role}. ${m.expertise}`).join('\n');
 
 export const KNOWLEDGE = `# IonosHub
@@ -47,7 +65,7 @@ Credenciales: Meta Tech Provider, partner de Zapier, partner de Anthropic (Claud
 
 ${pillarBlock}
 
-## Casos reales (${SITE.url}/casos-de-exito)
+${webinarBlock}## Casos reales (${SITE.url}/casos-de-exito)
 
 ${caseBlock}
 

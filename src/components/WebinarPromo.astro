@@ -1,0 +1,215 @@
+---
+/**
+ * Aviso del próximo webinar. Se arma solo desde `src/data/webinars.ts`: si no hay ninguna edición
+ * futura, este componente no emite nada, así que publicar o dejar de publicar no toca el layout.
+ *
+ * Reglas de aparición, pensadas para no encimarse con nada:
+ *  - Nunca en /webinars (ahí ya está el evento) ni mientras el aviso de cookies siga abierto.
+ *  - A los 12 segundos o al 35 % de scroll, lo que ocurra antes, y una sola vez por sesión.
+ *  - Si se cierra, no vuelve a salir para esa edición (queda anotado en el navegador).
+ *  - En móvil se apoya encima de la columna de botones flotantes, igual que el panel del chat.
+ */
+import Icon from './Icon.astro';
+import { nextWebinar, formatWebinarDate, formatWebinarTime } from '../data/webinars';
+
+const webinar = nextWebinar();
+---
+
+{
+  webinar && (
+    <aside
+      class="wp"
+      role="complementary"
+      aria-label="Próximo webinar de IonosHub"
+      hidden
+      data-webinar-promo
+      data-slug={webinar.slug}
+      data-path={`/webinars/${webinar.slug}`}
+    >
+      <div class="wp-head">
+        <span class="wp-avatar" aria-hidden="true">
+          <Icon name="calendar" size={16} />
+        </span>
+        <span class="min-w-0 leading-tight">
+          <span class="block text-[0.9rem] font-semibold">Webinar gratuito</span>
+          <span class="tnum block text-[0.76rem] text-white/70 first-letter:uppercase">
+            {formatWebinarDate(webinar.startsAt)} · {formatWebinarTime(webinar.startsAt)}
+          </span>
+        </span>
+        <button type="button" class="wp-close" aria-label="Cerrar aviso" data-webinar-promo-close>
+          <Icon name="close" size={16} />
+        </button>
+      </div>
+
+      <div class="wp-body">
+        <p class="text-[1.02rem] font-semibold leading-tight text-ink">{webinar.title}</p>
+        <p class="mt-1.5 text-[0.9rem] leading-relaxed text-ink-2">{webinar.tagline}</p>
+        <p class="mt-3 text-[0.78rem] font-semibold uppercase tracking-wide text-ink-3">
+          {webinar.hosts.join(' × ')}
+        </p>
+        <a href={`/webinars/${webinar.slug}#registro`} class="btn btn-primary mt-4 w-full !min-h-11 text-[0.92rem]" data-webinar-promo-cta>
+          Reservar mi lugar
+          <Icon name="arrow-right" size={16} />
+        </a>
+      </div>
+    </aside>
+  )
+}
+
+<style>
+  .wp {
+    position: fixed;
+    z-index: 55;
+    right: 0.75rem;
+    /* Por encima de la columna entera (WhatsApp + chat), no sólo del primer botón. */
+    bottom: 11rem;
+    left: 0.75rem;
+    overflow: hidden;
+    border-radius: 1.5rem;
+    border: 1px solid var(--color-line);
+    background: var(--color-canvas);
+    box-shadow: var(--shadow-phone);
+  }
+  .wp:not([hidden]) {
+    display: block;
+    animation: wp-in 0.6s var(--ease-out-expo) both;
+  }
+  /* Entra como un mensaje que llega a la bandeja: sube, aparece y asienta. */
+  @keyframes wp-in {
+    from {
+      opacity: 0;
+      transform: translateY(18px) scale(0.97);
+    }
+  }
+  @media (min-width: 640px) {
+    .wp {
+      right: auto;
+      bottom: 1.5rem;
+      left: 1.5rem;
+      width: 22.5rem;
+    }
+  }
+
+  .wp-head {
+    display: flex;
+    align-items: center;
+    gap: 0.7rem;
+    padding: 0.75rem 0.9rem;
+    background: linear-gradient(135deg, var(--color-cobalt-glow), var(--color-cobalt) 45%, var(--color-cobalt-deep));
+    color: #fff;
+  }
+  .wp-avatar {
+    display: flex;
+    flex-shrink: 0;
+    align-items: center;
+    justify-content: center;
+    width: 2.1rem;
+    height: 2.1rem;
+    border-radius: 999px;
+    background: rgb(255 255 255 / 0.16);
+    box-shadow: inset 0 0 0 1px rgb(255 255 255 / 0.25);
+  }
+  .wp-close {
+    display: flex;
+    flex-shrink: 0;
+    align-items: center;
+    justify-content: center;
+    width: 2rem;
+    height: 2rem;
+    margin-left: auto;
+    border-radius: 999px;
+    color: rgb(255 255 255 / 0.75);
+    transition: background-color 0.25s, color 0.25s;
+  }
+  .wp-close:hover {
+    background: rgb(255 255 255 / 0.15);
+    color: #fff;
+  }
+
+  .wp-body {
+    padding: 1rem 1.1rem 1.1rem;
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    .wp:not([hidden]) {
+      animation: none;
+    }
+  }
+</style>
+
+<script>
+  const promo = document.querySelector<HTMLElement>('[data-webinar-promo]');
+  if (promo) {
+    const slug = promo.dataset.slug ?? '';
+    const DESCARTADO = 'ionoshub-webinar-promo';
+    const VISTO = 'ionoshub-webinar-promo-sesion';
+
+    const leer = (almacen: Storage, clave: string) => {
+      try {
+        return almacen.getItem(clave);
+      } catch {
+        return null;
+      }
+    };
+    const guardar = (almacen: Storage, clave: string, valor: string) => {
+      try {
+        almacen.setItem(clave, valor);
+      } catch {}
+    };
+
+    const enSuPagina = location.pathname.startsWith('/webinars');
+    const yaDescartado = leer(localStorage, DESCARTADO) === slug;
+    const yaVisto = leer(sessionStorage, VISTO) === slug;
+
+    if (!enSuPagina && !yaDescartado && !yaVisto) {
+      let mostrado = false;
+
+      const mostrar = () => {
+        if (mostrado) return;
+        // Con el aviso de cookies abierto se espera: dos interrupciones a la vez no se hacen.
+        if (document.documentElement.classList.contains('cc-open')) return;
+        mostrado = true;
+        limpiar();
+        promo.hidden = false;
+        guardar(sessionStorage, VISTO, slug);
+        (window as unknown as { gtag?: (...a: unknown[]) => void }).gtag?.('event', 'webinar_promo_view', {
+          webinar: slug,
+          page_path: location.pathname,
+        });
+      };
+
+      const porScroll = () => {
+        const alto = document.documentElement.scrollHeight - window.innerHeight;
+        if (alto > 0 && window.scrollY / alto >= 0.35) mostrar();
+      };
+
+      const temporizador = window.setTimeout(mostrar, 12000);
+      const reintento = window.setInterval(() => {
+        // Si el aviso de cookies bloqueó el primer intento, se reintenta al cerrarse.
+        if (mostrado) return;
+        if (!document.documentElement.classList.contains('cc-open') && window.scrollY > 0) porScroll();
+      }, 2000);
+
+      function limpiar() {
+        window.clearTimeout(temporizador);
+        window.clearInterval(reintento);
+        window.removeEventListener('scroll', porScroll);
+      }
+
+      window.addEventListener('scroll', porScroll, { passive: true });
+
+      promo.querySelector('[data-webinar-promo-close]')?.addEventListener('click', () => {
+        promo.hidden = true;
+        guardar(localStorage, DESCARTADO, slug);
+      });
+
+      promo.querySelector('[data-webinar-promo-cta]')?.addEventListener('click', () => {
+        guardar(localStorage, DESCARTADO, slug);
+        (window as unknown as { gtag?: (...a: unknown[]) => void }).gtag?.('event', 'webinar_promo_click', {
+          webinar: slug,
+          page_path: location.pathname,
+        });
+      });
+    }
+  }
+</script>

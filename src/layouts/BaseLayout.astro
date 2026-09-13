@@ -6,6 +6,7 @@ import WhatsAppFloat from '../components/WhatsAppFloat.astro';
 import CookieConsent from '../components/CookieConsent.astro';
 import ChatWidget from '../components/ChatWidget.astro';
 import ChatLauncher from '../components/ChatLauncher.astro';
+import WebinarPromo from '../components/WebinarPromo.astro';
 import { SITE, DEFAULT_WA_MESSAGE, WHATSAPP_NUMBER } from '../lib/site';
 
 interface Props {
@@ -114,6 +115,7 @@ const orgJsonLd = {
       <WhatsAppFloat message={waMessage} />
     </div>
     {chatUi && <ChatWidget />}
+    <WebinarPromo />
     <CookieConsent gaId={gaId} />
     <script src="../scripts/motion.ts"></script>
   </body>

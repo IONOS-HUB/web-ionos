@@ -147,7 +147,17 @@ export type LeadCheck = 'ok' | 'demasiados' | 'repetido';
  * así que abrir otra ventana, otro navegador o el modo incógnito no la esquiva: cuenta la IP y el
  * contacto, no la sesión del navegador.
  */
-export async function allowLead(ip: string, correo: string, telefono: string): Promise<LeadCheck> {
+export async function allowLead(
+  ip: string,
+  correo: string,
+  telefono: string,
+  /**
+   * Ámbito del freno. Pedir un diagnóstico y registrarse a un webinar son intenciones distintas:
+   * con ámbitos separados, quien hace las dos cosas el mismo día no se bloquea a sí mismo.
+   * Para webinars conviene pasar `webinar:<slug>`, así cada edición lleva su propia cuenta.
+   */
+  scope = 'lead',
+): Promise<LeadCheck> {
   const dia = Math.floor(Date.now() / (DAY_SECONDS * 1000));
 
   // Primero el duplicado: si es el mismo contacto de hoy no llega al CRM, y tampoco gasta el cupo
@@ -155,8 +165,8 @@ export async function allowLead(ip: string, correo: string, telefono: string): P
   const correoNorm = correo.trim().toLowerCase();
   const telefonoNorm = telefono.replace(/\D/g, '').slice(-9);
   const claves = [
-    correoNorm ? `lead:c:${await huella(correoNorm)}:${dia}` : null,
-    telefonoNorm.length >= 7 ? `lead:t:${await huella(telefonoNorm)}:${dia}` : null,
+    correoNorm ? `${scope}:c:${await huella(correoNorm)}:${dia}` : null,
+    telefonoNorm.length >= 7 ? `${scope}:t:${await huella(telefonoNorm)}:${dia}` : null,
   ].filter((k): k is string => Boolean(k));
 
   for (const clave of claves) {
@@ -164,10 +174,10 @@ export async function allowLead(ip: string, correo: string, telefono: string): P
     if (repetido === true) return 'repetido';
   }
 
-  const porIp = await contar(`lead:ip:${ip}:${dia}`, DAY_SECONDS);
+  const porIp = await contar(`${scope}:ip:${ip}:${dia}`, DAY_SECONDS);
   if (porIp === null) {
     // Sin Redis: al menos se frena dentro de la instancia.
-    const bucket = bucketFor(`lead:${ip}`, DAY_SECONDS * 1000);
+    const bucket = bucketFor(`${scope}:${ip}`, DAY_SECONDS * 1000);
     if (bucket.leads >= LEAD_LIMITS.perIpPerDay) return 'demasiados';
     bucket.leads += 1;
     return 'ok';
