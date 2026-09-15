@@ -53,7 +53,10 @@ const eventJsonLd = {
     url: new URL(`/webinars/${webinar.slug}`, SITE.url).href,
   },
   organizer: webinar.hosts.map((name) => ({ '@type': 'Organization', name })),
-  performer: webinar.hosts.map((name) => ({ '@type': 'Organization', name })),
+  performer: webinar.sessions
+    .filter((s) => s.speaker)
+    .map((s) => ({ '@type': 'Person', name: s.speaker, jobTitle: s.speakerRole })),
+  image: webinar.promoImage ? new URL(webinar.promoImage.src, SITE.url).href : undefined,
   isAccessibleForFree: true,
   offers: {
     '@type': 'Offer',
@@ -70,6 +73,7 @@ const eventJsonLd = {
   title={webinar.metaTitle}
   description={webinar.metaDescription}
   path={`/webinars/${webinar.slug}`}
+  ogImage={webinar.promoImage?.src}
   ogType="article"
   waMessage={wa}
 >
@@ -132,7 +136,7 @@ const eventJsonLd = {
             </span>
             <span class="min-w-0 leading-tight">
               <span class="block text-[0.98rem] font-semibold text-ink">{abierto ? 'Reserva tu lugar' : 'Edición finalizada'}</span>
-              <span class="block text-[0.8rem] text-ink-3">{abierto ? 'Un registro, las dos ponencias' : 'El registro ya está cerrado'}</span>
+              <span class="block text-[0.8rem] text-ink-3">{abierto ? 'En línea · te enviamos el acceso por WhatsApp' : 'El registro ya está cerrado'}</span>
             </span>
           </div>
 
@@ -278,7 +282,7 @@ const eventJsonLd = {
     otras.length > 0 && (
       <section class="wrap py-16 lg:py-24">
         <h2 class="display-tight text-[clamp(1.75rem,3vw,2.5rem)] font-semibold text-ink" data-reveal>Otras ediciones</h2>
-        <ul class="mt-8 grid gap-6 sm:grid-cols-2 lg:grid-cols-3">
+        <ul class="mx-auto mt-8 grid max-w-5xl gap-6 sm:grid-cols-2">
           {otras.map((w, i) => (
             <li data-reveal data-reveal-delay={Math.min(i, 3) * 70}>
               <WebinarCard webinar={w} />

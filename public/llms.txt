@@ -27,7 +27,8 @@ Credenciales: Meta Tech Provider (conexiones oficiales por API), partner de Zapi
 ## Webinars
 
 - [Webinars](https://ionoshub.net/webinars): formación en vivo, en línea y gratuita, sobre IA aplicada a empresas. Se anuncian aquí las próximas ediciones y quedan archivadas las anteriores.
-- [Derecho e IA, y Claude para empresarios](https://ionoshub.net/webinars/ia-en-tu-trabajo): webinar académico gratuito y virtual del 24 de septiembre de 2026 a las 19:00 (GMT-5, Ecuador), en vivo por YouTube. Dos ponencias: "Derecho e inteligencia artificial: nuevos desafíos", con el abogado Luis Alejandro Vásquez (modera Tomás Alvarado), y "Claude para empresarios: nuevos desafíos", con Cristhian Recalde (modera Santiago Guerra). Organizan Academia Debate & Sociedad, IonosHub y Cyberprevention. Registro abierto.
+- [Derecho e inteligencia artificial: nuevos desafíos](https://ionoshub.net/webinars/derecho-e-inteligencia-artificial): webinar académico gratuito y en línea el 22 de septiembre de 2026 a las 19:00 (GMT-5, Ecuador), en vivo por YouTube. Con Luis Alejandro Vásquez (abogado en constitucional y digital); modera Tomás Alvarado. Organizan Academia Debate & Sociedad, IonosHub y Cyberprevention. Registro abierto.
+- [Claude para empresarios: nuevos desafíos](https://ionoshub.net/webinars/claude-para-empresarios): webinar académico gratuito y en línea el 24 de septiembre de 2026 a las 19:00 (GMT-5, Ecuador), en vivo por YouTube. Con Cristhian Recalde (ingeniero en tecnologías de la información); modera Santiago Guerra. Organizan Academia Debate & Sociedad, IonosHub y Cyberprevention. Registro abierto.
 
 ## Blog
 

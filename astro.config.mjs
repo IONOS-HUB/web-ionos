@@ -22,6 +22,7 @@ const legacyRedirects = {
   '/investigacion-de-mercados': '/servicios/automatizaciones',
   '/roi-calculator': '/servicios/inteligencia-artificial',
   '/transformacion-digital': '/#ecosistema',
+  '/webinars/ia-en-tu-trabajo': '/webinars',
 };
 
 export default defineConfig({

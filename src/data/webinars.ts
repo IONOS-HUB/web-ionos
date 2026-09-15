@@ -74,41 +74,87 @@ export interface Webinar {
   metaDescription: string;
 }
 
+const ORGANIZER_LOGOS = [
+  { src: '/imgs/webinars/academia-debate-sociedad.png', alt: 'Academia Debate & Sociedad', width: 1024, height: 335 },
+  { src: '/imgs/logo.webp', alt: 'IonosHub', width: 320, height: 97 },
+  { src: '/imgs/webinars/cyberprevention.jpg', alt: 'Cyberprevention', width: 518, height: 518 },
+];
+
+const HOSTS = ['Academia Debate & Sociedad', 'IonosHub', 'Cyberprevention'];
+
 export const webinars: Webinar[] = [
   {
-    slug: 'ia-en-tu-trabajo',
+    slug: 'derecho-e-inteligencia-artificial',
     edition: 1,
-    title: 'Derecho e inteligencia artificial, y Claude para empresarios',
-    tagline: 'Dos ponencias académicas en una tarde: primero los desafíos legales, después la IA aplicada al negocio.',
+    title: 'Derecho e inteligencia artificial: nuevos desafíos',
+    tagline: 'Los vacíos legales que abre la IA, en una ponencia académica en vivo.',
     summary:
-      'Webinar académico en modalidad virtual, organizado por Academia Debate & Sociedad, IonosHub y Cyberprevention. Dos ponencias con sus moderadores: los nuevos desafíos que la inteligencia artificial plantea al derecho, y cómo un empresario puede usar Claude en su operación.',
-    startsAt: '2026-09-24T19:00:00-05:00',
+      'Webinar académico en línea, organizado por Academia Debate & Sociedad, IonosHub y Cyberprevention. Luis Alejandro Vásquez, abogado en constitucional y digital, explica los nuevos desafíos que la inteligencia artificial plantea al derecho. Modera Tomás Alvarado.',
+    startsAt: '2026-09-22T19:00:00-05:00',
     timezone: 'GMT-5 · Ecuador',
-    hosts: ['Academia Debate & Sociedad', 'IonosHub', 'Cyberprevention'],
-    format: 'Webinar académico, en vivo por YouTube',
+    hosts: HOSTS,
+    format: 'En línea y en vivo por YouTube',
     price: 'Gratuito',
-    topics: ['Inteligencia artificial', 'Derecho', 'Empresas'],
+    topics: ['Inteligencia artificial', 'Derecho'],
     audience: [
       'Abogados y estudiantes de derecho que ven llegar la IA a su profesión',
-      'Dueños y administradores de empresas que quieren usar IA sin meterse en problemas',
       'Profesionales responsables de datos, cumplimiento o seguridad de la información',
+      'Empresas que quieren adoptar IA sin meterse en problemas legales',
     ],
     takeaways: [
       'Qué desafíos plantea la inteligencia artificial al derecho y dónde están hoy los vacíos',
-      'Qué puede hacer un empresario con Claude en el trabajo diario de su negocio',
-      'Cómo adoptar estas herramientas sin exponer la información de la empresa',
+      'Cómo se está pensando el marco legal frente a estas herramientas',
+      'Qué debe tener en cuenta quien ya usa IA en su trabajo',
     ],
     sessions: [
       {
-        label: 'Ponencia 1',
+        label: 'Ponencia',
         title: 'Derecho e inteligencia artificial: nuevos desafíos',
         host: 'Academia Debate & Sociedad',
         speaker: 'Luis Alejandro Vásquez',
         speakerRole: 'Abogado en Constitucional y Digital',
         moderator: 'Tomás Alvarado',
       },
+    ],
+    promoImage: {
+      src: '/imgs/webinars/1.png',
+      alt: 'Cartel del webinar "Derecho e inteligencia artificial: nuevos desafíos", con Luis Alejandro Vásquez y Tomás Alvarado',
+      width: 1080,
+      height: 1350,
+    },
+    organizerLogos: ORGANIZER_LOGOS,
+    whatsappCommunity: 'https://chat.whatsapp.com/IPTNct7Pli891HPG2b77Zj?mode=gi_t',
+    registrationOpen: true,
+    metaTitle: 'Webinar gratuito: derecho e inteligencia artificial | 22 de septiembre',
+    metaDescription:
+      'Webinar académico gratuito y en línea, 22 de septiembre de 2026 a las 19:00. Derecho e inteligencia artificial: nuevos desafíos, con Luis Alejandro Vásquez. Modera Tomás Alvarado. Organizan Academia Debate & Sociedad, IonosHub y Cyberprevention.',
+  },
+  {
+    slug: 'claude-para-empresarios',
+    edition: 2,
+    title: 'Claude para empresarios: nuevos desafíos',
+    tagline: 'Cómo un empresario puede usar Claude en la operación de su negocio.',
+    summary:
+      'Webinar académico en línea, organizado por Academia Debate & Sociedad, IonosHub y Cyberprevention. Cristhian Recalde, ingeniero en tecnologías de la información, muestra cómo un empresario puede usar Claude en el trabajo diario. Modera Santiago Guerra.',
+    startsAt: '2026-09-24T19:00:00-05:00',
+    timezone: 'GMT-5 · Ecuador',
+    hosts: HOSTS,
+    format: 'En línea y en vivo por YouTube',
+    price: 'Gratuito',
+    topics: ['Inteligencia artificial', 'Empresas'],
+    audience: [
+      'Dueños y administradores de empresas que quieren usar IA en su operación',
+      'Equipos de operaciones, marketing o atención que ya están probando estas herramientas',
+      'Profesionales responsables de datos o seguridad de la información',
+    ],
+    takeaways: [
+      'Qué puede hacer un empresario con Claude en el trabajo diario de su negocio',
+      'Cómo adoptar estas herramientas sin exponer la información de la empresa',
+      'Por dónde empezar si todavía no las usa en la operación',
+    ],
+    sessions: [
       {
-        label: 'Ponencia 2',
+        label: 'Ponencia',
         title: 'Claude para empresarios: nuevos desafíos',
         host: 'IonosHub',
         speaker: 'Cristhian Recalde',
@@ -116,27 +162,18 @@ export const webinars: Webinar[] = [
         moderator: 'Santiago Guerra',
       },
     ],
-    /**
-     * Arte de la primera ponencia, recortado por encima del bloque de fecha: el original lleva
-     * impresa la fecha antigua (15 de septiembre) y el aviso muestra la buena justo debajo, así que
-     * verlas juntas confundiría. Cuando llegue el arte corregido, se apunta aquí el archivo entero.
-     */
     promoImage: {
-      src: '/imgs/webinars/derecho-e-ia-popup.jpg',
-      alt: 'Arte del webinar "Derecho e inteligencia artificial: nuevos desafíos", con el abogado Luis Alejandro Vásquez',
+      src: '/imgs/webinars/2.png',
+      alt: 'Cartel del webinar "Claude para empresarios: nuevos desafíos", con Cristhian Recalde y Santiago Guerra',
       width: 1080,
-      height: 840,
+      height: 1350,
     },
-    organizerLogos: [
-      { src: '/imgs/webinars/academia-debate-sociedad.png', alt: 'Academia Debate & Sociedad', width: 1024, height: 335 },
-      { src: '/imgs/logo.webp', alt: 'IonosHub', width: 320, height: 97 },
-      { src: '/imgs/webinars/cyberprevention.jpg', alt: 'Cyberprevention', width: 518, height: 518 },
-    ],
+    organizerLogos: ORGANIZER_LOGOS,
     whatsappCommunity: 'https://chat.whatsapp.com/IPTNct7Pli891HPG2b77Zj?mode=gi_t',
     registrationOpen: true,
-    metaTitle: 'Webinar gratuito: derecho e IA, y Claude para empresarios | 24 de septiembre',
+    metaTitle: 'Webinar gratuito: Claude para empresarios | 24 de septiembre',
     metaDescription:
-      'Webinar académico gratuito y virtual, 24 de septiembre de 2026 a las 19:00. Dos ponencias: los nuevos desafíos del derecho ante la inteligencia artificial, con Luis Alejandro Vásquez, y Claude para empresarios, con Cristhian Recalde. Organizan Academia Debate & Sociedad, IonosHub y Cyberprevention.',
+      'Webinar académico gratuito y en línea, 24 de septiembre de 2026 a las 19:00. Claude para empresarios: nuevos desafíos, con Cristhian Recalde. Modera Santiago Guerra. Organizan Academia Debate & Sociedad, IonosHub y Cyberprevention.',
   },
 ];
 

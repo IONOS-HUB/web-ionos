@@ -1,9 +1,10 @@
 ---
 /**
- * Tarjeta de una edición en el índice. Es una ventanilla en miniatura: cabecera con la fecha en
- * cobalto (o noche, si ya pasó), cuerpo blanco con el contenido y pie con los organizadores.
+ * Tarjeta de una edición en el índice. El cartel va de banner; debajo, fecha, título, cuenta
+ * atrás y el enlace al formulario de registro.
  */
 import Icon from '../Icon.astro';
+import WebinarCountdown from './WebinarCountdown.astro';
 import { formatWebinarShort, formatWebinarTime, isUpcoming, type Webinar } from '../../data/webinars';
 
 interface Props {
@@ -13,14 +14,32 @@ const { webinar } = Astro.props;
 const proximo = isUpcoming(webinar);
 const fecha = formatWebinarShort(webinar.startsAt);
 const hora = formatWebinarTime(webinar.startsAt);
+const href = `/webinars/${webinar.slug}${proximo ? '#registro' : ''}`;
+const cartel = webinar.promoImage;
 ---
 
 <article
-  class="wcard group flex h-full min-w-0 flex-col overflow-hidden rounded-[1.5rem] border border-line bg-canvas shadow-lift"
+  class="wcard group flex h-full min-w-0 flex-col overflow-hidden rounded-3xl border border-line bg-canvas shadow-lift"
   data-webinar-card
   data-status={proximo ? 'proximo' : 'pasado'}
   data-topics={webinar.topics.join('|')}
 >
+  {
+    cartel && (
+      <div class="relative h-50 overflow-hidden bg-ice-3 sm:h-60">
+        <img
+          src={cartel.src}
+          alt={cartel.alt}
+          width={cartel.width}
+          height={cartel.height}
+          loading="lazy"
+          decoding="async"
+          class="h-full w-full object-cover object-top transition-transform duration-700 ease-[var(--ease-out-expo)] group-hover:scale-[1.02]"
+        />
+      </div>
+    )
+  }
+
   <header class:list={['flex items-center gap-3 px-5 py-3.5 text-white', proximo ? 'bg-cobalt' : 'bg-night']}>
     <span class="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-white/15">
       <Icon name="calendar" size={17} />
@@ -36,9 +55,19 @@ const hora = formatWebinarTime(webinar.startsAt);
 
   <div class="flex flex-1 flex-col p-5">
     <h3 class="display-tight text-[1.35rem] font-semibold leading-tight text-ink">
-      <a href={`/webinars/${webinar.slug}`} class="after:absolute after:inset-0 hover:text-cobalt-ink">{webinar.title}</a>
+      <a href={href} class="after:absolute after:inset-0 hover:text-cobalt-ink">{webinar.title}</a>
     </h3>
-    <p class="mt-2.5 line-clamp-3 text-[0.98rem] leading-relaxed text-ink-2">{webinar.summary}</p>
+    {
+      !cartel && (
+        <p class="mt-2.5 line-clamp-3 text-[0.98rem] leading-relaxed text-ink-2">{webinar.summary}</p>
+      )
+    }
+
+    {
+      proximo && (
+        <WebinarCountdown startsAt={webinar.startsAt} tone="light" compact class="mt-4 justify-start" />
+      )
+    }
 
     <ul class="mt-4 flex flex-wrap gap-1.5">
       {webinar.topics.map((t) => <li class="chip text-[0.8rem]">{t}</li>)}

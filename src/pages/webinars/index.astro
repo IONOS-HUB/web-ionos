@@ -9,7 +9,7 @@ import Icon from '../../components/Icon.astro';
 import WebinarCard from '../../components/webinars/WebinarCard.astro';
 import WebinarCountdown from '../../components/webinars/WebinarCountdown.astro';
 import Contact from '../../components/home/Contact.astro';
-import { sortedWebinars, allTopics, formatWebinarDate, formatWebinarTime, webinars } from '../../data/webinars';
+import { sortedWebinars, allTopics, formatWebinarDate, formatWebinarTime, formatWebinarShort, webinars } from '../../data/webinars';
 import { SITE } from '../../lib/site';
 
 const { proximos, pasados } = sortedWebinars();
@@ -95,17 +95,25 @@ const listaJsonLd = {
               <div class="min-w-0 lg:col-span-5">
                 <WebinarCountdown startsAt={destacado.startsAt} class="justify-start lg:justify-end" />
                 <ul class="mt-6 flex flex-col gap-2.5">
-                  {destacado.sessions.map((s) => (
-                    <li class="flex items-start gap-3 rounded-[1.25rem] bg-white/10 px-4 py-3">
-                      <span class="mt-0.5 shrink-0 text-[0.72rem] font-semibold uppercase tracking-wide text-white/55">
-                        {s.label}
-                      </span>
-                      <span class="min-w-0">
-                        <span class="block text-[0.98rem] font-semibold leading-tight">{s.title}</span>
-                        <span class="block text-[0.85rem] text-white/65">{s.speaker ?? s.host}</span>
-                      </span>
-                    </li>
-                  ))}
+                  {proximos.map((w, i) => {
+                    const sesion = w.sessions[0];
+                    return (
+                      <li>
+                        <a href={`/webinars/${w.slug}#registro`} class="flex items-start gap-3 rounded-[1.25rem] bg-white/10 px-4 py-3 hover:bg-white/15">
+                          <span class="mt-0.5 shrink-0 text-[0.72rem] font-semibold uppercase tracking-wide text-white/55">
+                            {proximos.length > 1 ? `Ponencia ${i + 1}` : (sesion?.label ?? 'Ponencia')}
+                          </span>
+                          <span class="min-w-0">
+                            <span class="block text-[0.98rem] font-semibold leading-tight">{w.title}</span>
+                            <span class="block text-[0.85rem] text-white/65">
+                              {sesion?.speaker ?? w.hosts[0]}
+                              <span class="tnum text-white/50"> · {formatWebinarShort(w.startsAt)} · {formatWebinarTime(w.startsAt)}</span>
+                            </span>
+                          </span>
+                        </a>
+                      </li>
+                    );
+                  })}
                 </ul>
               </div>
             </div>
@@ -144,7 +152,7 @@ const listaJsonLd = {
         )
       }
 
-      <ul class="mt-8 grid gap-6 sm:grid-cols-2 lg:grid-cols-3" data-webinar-grid>
+      <ul class="mx-auto mt-8 grid max-w-5xl gap-6 sm:grid-cols-2" data-webinar-grid>
         {[...proximos, ...pasados].map((w, i) => (
           <li data-reveal data-reveal-delay={Math.min(i, 4) * 60} data-webinar-item data-status={w.slug && (proximos.includes(w) ? 'proximo' : 'pasado')} data-topics={w.topics.join('|')}>
             <WebinarCard webinar={w} />
