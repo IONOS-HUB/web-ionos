@@ -52,6 +52,10 @@ export interface Webinar {
    * Cartel del pop-up de promoción. Cuadrado (1080×1080) o vertical 4:5 (1080×1350), WebP y por
    * debajo de 300 KB. Deja el texto importante en el 80 % central: en pantallas bajas la imagen se
    * recorta por arriba y por abajo. Sin esta propiedad, el pop-up sale en versión de sólo texto.
+   *
+   * El original (PNG o JPG de diseño) va a `originales/webinars/`, NUNCA a `public/`: el aviso vive
+   * en BaseLayout, así que un cartel pesado se descarga en todas las páginas del sitio. `npm run
+   * webinar:imgs` genera desde el original tanto este WebP como el `ogImage`.
    */
   promoImage?: {
     src: string;
@@ -59,6 +63,11 @@ export interface Webinar {
     width: number;
     height: number;
   };
+  /**
+   * Cartel en 1200×630 para las tarjetas de redes. El cartel vertical no sirve: WhatsApp, LinkedIn y
+   * X lo recortan por el centro y se comen el título y la fecha. Sin esto se usa `promoImage`.
+   */
+  ogImage?: string;
   /** Logos de quien organiza. Sin esto, la página los nombra sólo con texto. */
   organizerLogos?: { src: string; alt: string; width: number; height: number }[];
   /** Comunidad de WhatsApp donde se manda el enlace de acceso */
@@ -117,11 +126,12 @@ export const webinars: Webinar[] = [
       },
     ],
     promoImage: {
-      src: '/imgs/webinars/1.png',
+      src: '/imgs/webinars/1.webp',
       alt: 'Cartel del webinar "Derecho e inteligencia artificial: nuevos desafíos", con Luis Alejandro Vásquez y Tomás Alvarado',
       width: 1080,
       height: 1350,
     },
+    ogImage: '/imgs/webinars/1-og.webp',
     organizerLogos: ORGANIZER_LOGOS,
     whatsappCommunity: 'https://chat.whatsapp.com/IPTNct7Pli891HPG2b77Zj?mode=gi_t',
     registrationOpen: true,
@@ -163,11 +173,12 @@ export const webinars: Webinar[] = [
       },
     ],
     promoImage: {
-      src: '/imgs/webinars/2.png',
+      src: '/imgs/webinars/2.webp',
       alt: 'Cartel del webinar "Claude para empresarios: nuevos desafíos", con Cristhian Recalde y Santiago Guerra',
       width: 1080,
       height: 1350,
     },
+    ogImage: '/imgs/webinars/2-og.webp',
     organizerLogos: ORGANIZER_LOGOS,
     whatsappCommunity: 'https://chat.whatsapp.com/IPTNct7Pli891HPG2b77Zj?mode=gi_t',
     registrationOpen: true,

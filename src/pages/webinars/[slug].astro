@@ -73,7 +73,7 @@ const eventJsonLd = {
   title={webinar.metaTitle}
   description={webinar.metaDescription}
   path={`/webinars/${webinar.slug}`}
-  ogImage={webinar.promoImage?.src}
+  ogImage={webinar.ogImage ?? webinar.promoImage?.src}
   ogType="article"
   waMessage={wa}
 >

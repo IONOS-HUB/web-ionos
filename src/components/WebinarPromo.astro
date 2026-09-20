@@ -18,7 +18,16 @@
 import Icon from './Icon.astro';
 import { nextWebinar, formatWebinarDate, formatWebinarTime } from '../data/webinars';
 
-const webinar = nextWebinar();
+/**
+ * En /webinars no se emite NADA. Antes la supresión era sólo en JS: el marcado y el cartel llegaban
+ * igual al navegador, así que esa página descargaba los dos carteles sin llegar a mostrarlos.
+ *
+ * El `<img>` del cartel lleva `loading="lazy"` y no es opcional: el diálogo nace cerrado, pero una
+ * imagen dentro de algo con `display: none` se descarga igual, y este componente está en todas las
+ * páginas del sitio.
+ */
+const enWebinars = Astro.url.pathname.startsWith('/webinars');
+const webinar = enWebinars ? undefined : nextWebinar();
 const cartel = webinar?.promoImage;
 ---
 
@@ -29,7 +38,7 @@ const cartel = webinar?.promoImage;
         {cartel ? (
           <img
             class="wp-img"
-            src={cartel.src}
+            data-src={cartel.src}
             alt={cartel.alt}
             width={cartel.width}
             height={cartel.height}
@@ -258,6 +267,17 @@ const cartel = webinar?.promoImage;
     if (!enSuPagina && !yaDescartado && !yaVisto) {
       let mostrado = false;
 
+      /**
+       * El cartel entra por `data-src`, no por `src`. Ni `loading="lazy"` evita la descarga de una
+       * imagen que está dentro de un `<dialog>` cerrado, y este componente vive en todas las páginas:
+       * con `src` en el HTML, cada visita pagaba el cartel aunque nunca llegara a ver el aviso.
+       * Se pide al primer scroll o poco antes del temporizador, así que llega a tiempo.
+       */
+      const cartelImg = promo.querySelector<HTMLImageElement>('img[data-src]');
+      const precargar = () => {
+        if (cartelImg && !cartelImg.getAttribute('src')) cartelImg.src = cartelImg.dataset.src ?? '';
+      };
+
       const cerrar = (recordar = true) => {
         if (promo.open) promo.close();
         raiz.classList.remove('wp-open');
@@ -269,6 +289,7 @@ const cartel = webinar?.promoImage;
         // Con el aviso de cookies abierto se espera: dos interrupciones a la vez no se hacen.
         if (raiz.classList.contains('cc-open')) return;
         mostrado = true;
+        precargar();
         limpiar();
         promo.showModal();
         raiz.classList.add('wp-open');
@@ -280,10 +301,13 @@ const cartel = webinar?.promoImage;
       };
 
       const porScroll = () => {
+        precargar();
         const alto = document.documentElement.scrollHeight - window.innerHeight;
         if (alto > 0 && window.scrollY / alto >= 0.3) mostrar();
       };
 
+      // Quien no hace scroll llega por el temporizador: el cartel se pide 1,5 s antes de mostrarlo.
+      const precarga = window.setTimeout(precargar, 6500);
       const temporizador = window.setTimeout(mostrar, 8000);
       const reintento = window.setInterval(() => {
         // Si el aviso de cookies bloqueó el primer intento, se reintenta al cerrarse.
@@ -292,6 +316,7 @@ const cartel = webinar?.promoImage;
       }, 2000);
 
       function limpiar() {
+        window.clearTimeout(precarga);
         window.clearTimeout(temporizador);
         window.clearInterval(reintento);
         window.removeEventListener('scroll', porScroll);

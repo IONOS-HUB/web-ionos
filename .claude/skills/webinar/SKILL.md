@@ -22,7 +22,8 @@ Estos son obligatorios. Pregunta **sólo por los que falten**, en un único mens
 | `sessions` | Una entrada por ponencia: `label`, `title`, `host` y, cuando estén confirmados, `speaker`, `speakerRole`, `moderator` y `detail` | ver el archivo |
 | `topics` | 2 o 3 etiquetas para filtrar en el índice | `['Inteligencia artificial', 'Marco legal']` |
 | `whatsappCommunity` | Enlace del grupo donde se reparte el acceso | `https://chat.whatsapp.com/…` |
-| `promoImage` | Cartel del pop-up: 1080×1080 o 1080×1350, en `public/imgs/webinars/`. Si no lo tienen, genera el provisional con `npm run webinar:cartel <slug>` | ver `docs/WEBINARS.md` |
+| `promoImage` | Cartel del pop-up: 1080×1080 o 1080×1350. El original de diseño (PNG o JPG) va a `originales/webinars/`, **nunca a `public/`**; luego `npm run webinar:imgs` genera el `.webp` y el `-og.webp`. Si no tienen cartel, genera el provisional con `npm run webinar:cartel <slug>` | ver `docs/WEBINARS.md` |
+| `ogImage` | El `-og.webp` de 1200×630 que produjo `npm run webinar:imgs`. Sin él, las tarjetas de redes recortan el cartel vertical por el centro y se comen título y fecha | `/imgs/webinars/<n>-og.webp` |
 
 Si falta la fecha, pregunta antes de escribir nada: de ella salen la cuenta atrás, el estado y el
 `Event` de datos estructurados. Si falta el enlace del grupo, se puede publicar sin él (la pantalla

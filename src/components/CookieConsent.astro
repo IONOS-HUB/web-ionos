@@ -13,22 +13,31 @@ interface Props {
 const { gaId } = Astro.props;
 ---
 
+<!--
+  No es un `dialog`: es una región no modal. Un `role="dialog"` obliga a atrapar el foco y a cerrar con
+  Escape, y este aviso no hace ni debe hacer ninguna de las dos en la primera visita (Escape equivaldría a
+  consentir en silencio). En móvil es una barra compacta: la versión anterior medía 348 px y sepultaba los
+  dos CTA del hero, que caen entre 513 y 629 px en 375x812.
+-->
 <div
-  class="cc fixed inset-x-4 bottom-4 z-[90] mx-auto max-w-lg rounded-[1.5rem] border border-line bg-canvas p-5 shadow-phone sm:left-6 sm:right-auto sm:bottom-6 sm:mx-0 sm:p-6"
-  role="dialog"
+  class="cc fixed inset-x-0 bottom-0 z-[90] border-t border-line bg-canvas p-3.5 shadow-phone sm:inset-x-auto sm:bottom-6 sm:left-6 sm:max-w-lg sm:rounded-[1.5rem] sm:border sm:p-6"
+  role="region"
   aria-labelledby="cc-title"
-  aria-describedby="cc-text"
   hidden
   data-cookie-consent
 >
   <div class="flex items-start gap-3">
-    <span class="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-ice text-cobalt-ink"><Icon name="shield" size={18} /></span>
+    <span class="hidden h-9 w-9 shrink-0 items-center justify-center rounded-full bg-ice text-cobalt-ink sm:flex"><Icon name="shield" size={18} /></span>
     <div class="min-w-0">
-      <p id="cc-title" class="text-[1.05rem] font-semibold leading-tight text-ink">Tu privacidad, tu decisión.</p>
-      <p id="cc-text" class="mt-1.5 text-[0.92rem] leading-relaxed text-ink-2">
-        Usamos cookies necesarias para que el sitio funcione y, sólo si lo permites, Google Analytics para saber qué
-        páginas ayudan más y qué acciones se completan. Nunca vendemos tus datos.
-        <a href="/politica-de-privacidad" class="font-semibold text-cobalt-ink underline">Política de privacidad</a>
+      <p class="hidden text-[1.05rem] font-semibold leading-tight text-ink sm:block">Tu privacidad, tu decisión.</p>
+      <!--
+        En móvil el texto va a dos líneas y el detalle vive en "Personalizar" y en la política: cada
+        línea de más empuja la barra hacia arriba y se come los CTA de la página.
+      -->
+      <p id="cc-title" class="text-[0.82rem] leading-snug text-ink-2 sm:mt-1.5 sm:text-[0.92rem] sm:leading-relaxed">
+        Cookies para que el sitio funcione y, si lo permites, analítica.{' '}
+        <span class="hidden sm:inline">Así sabemos qué páginas ayudan más. Nunca vendemos tus datos.{' '}</span>
+        <a href="/politica-de-privacidad" class="font-semibold text-cobalt-ink underline underline-offset-2">Política de privacidad</a>
       </p>
     </div>
   </div>
@@ -50,11 +59,18 @@ const { gaId } = Astro.props;
     </label>
   </div>
 
-  <div class="mt-4 flex flex-wrap gap-2">
-    <button type="button" class="btn btn-primary !min-h-11 !px-5 text-[0.95rem]" data-cc-accept>Aceptar todo</button>
-    <button type="button" class="btn btn-ghost !min-h-11 !px-5 text-[0.95rem]" data-cc-necessary>Sólo necesarias</button>
-    <button type="button" class="btn btn-ghost !min-h-11 !px-5 text-[0.95rem]" data-cc-customize>Personalizar</button>
-    <button type="button" class="btn btn-primary !min-h-11 !px-5 text-[0.95rem]" data-cc-save hidden>Guardar preferencias</button>
+  <!--
+    Dos botones y dos enlaces, no cuatro botones: "Personalizar" pasa a enlace para que el punto de
+    decisión quede en dos opciones y la barra quepa en una fila de 375 px.
+  -->
+  <div class="mt-2.5 flex flex-wrap items-center gap-x-2 gap-y-1 sm:mt-4">
+    <button type="button" class="btn btn-primary !min-h-11 !px-4 text-[0.95rem] sm:!px-5" data-cc-accept>Aceptar</button>
+    <button type="button" class="btn btn-ghost !min-h-11 !px-4 text-[0.95rem] sm:!px-5" data-cc-necessary>Sólo necesarias</button>
+    <button type="button" class="btn btn-primary !min-h-11 !px-4 text-[0.95rem] sm:!px-5" data-cc-save hidden>Guardar preferencias</button>
+    <button
+      type="button"
+      class="ml-auto inline-flex min-h-11 items-center px-1 text-[0.82rem] font-semibold text-cobalt-ink underline underline-offset-2"
+      data-cc-customize>Personalizar</button>
   </div>
 </div>
 
@@ -105,6 +121,11 @@ const { gaId } = Astro.props;
     :global(html.cc-open [data-float-stack]) {
       translate: 0 var(--cc-shift, 0px);
       transition: translate 0.5s var(--ease-out-expo);
+    }
+    /* Nada del documento queda inalcanzable bajo la barra. Es `padding-bottom`: el documento crece por
+       abajo y no mueve nada de lo ya pintado, así que no cuenta como CLS (a diferencia de tocar `bottom`). */
+    :global(html.cc-open body) {
+      padding-bottom: var(--cc-height, 0px);
     }
   }
 </style>
@@ -158,6 +179,7 @@ const { gaId } = Astro.props;
     const setLift = (h) => {
       root.style.setProperty('--cc-lift', `${Math.round(h) + 44}px`);
       root.style.setProperty('--cc-shift', `-${Math.round(h) + 20}px`);
+      root.style.setProperty('--cc-height', `${Math.round(h)}px`);
     };
     if ('ResizeObserver' in window) {
       new ResizeObserver((entries) => {
@@ -165,9 +187,13 @@ const { gaId } = Astro.props;
         if (!box.hidden && h) setLift(h);
       }).observe(box);
     }
-    const lift = () => {
-      if (!('ResizeObserver' in window)) requestAnimationFrame(() => setLift(box.offsetHeight));
-    };
+    /**
+     * La medida inicial se toma siempre, no sólo cuando falta ResizeObserver: hay navegadores donde
+     * `ResizeObserver` existe pero no entrega callbacks, y entonces --cc-shift se quedaba sin fijar y
+     * los botones flotantes no subían. El observer sigue, pero para los cambios posteriores
+     * (al desplegar "Personalizar"), no para el primero.
+     */
+    const lift = () => requestAnimationFrame(() => setLift(box.offsetHeight));
 
     const save = (analytics) => {
       try {
@@ -176,7 +202,13 @@ const { gaId } = Astro.props;
       apply(analytics);
       box.hidden = true;
       root.classList.remove('cc-open');
+      // El aviso se oculta con el foco dentro: sin esto el foco vuelve al body y se pierde el sitio.
+      if (opener) opener.focus();
+      opener = null;
     };
+
+    // Quién abrió el aviso desde el pie, para devolverle el foco al cerrar con Escape.
+    let opener = null;
 
     // `focus` sólo cuando lo abre la persona desde el pie: en la primera visita no se roba el foco
     // (y se evita un reflow forzado en plena carga).
@@ -204,7 +236,22 @@ const { gaId } = Astro.props;
     saveBtn.addEventListener('click', () => save(analyticsInput.checked));
 
     // Reapertura desde el pie ("Preferencias de cookies")
-    document.querySelectorAll('[data-cookie-prefs]').forEach((b) => b.addEventListener('click', () => open(true)));
+    document.querySelectorAll('[data-cookie-prefs]').forEach((b) =>
+      b.addEventListener('click', () => {
+        opener = b;
+        open(true);
+      }),
+    );
+
+    // Escape cierra sólo cuando ya hay una elección guardada, es decir cuando lo reabrió la persona desde
+    // el pie. En la primera visita no se cierra: irse con Escape equivaldría a consentir en silencio.
+    document.addEventListener('keydown', (e) => {
+      if (e.key !== 'Escape' || box.hidden || !read()) return;
+      box.hidden = true;
+      root.classList.remove('cc-open');
+      if (opener) opener.focus();
+      opener = null;
+    });
 
     const saved = read();
     if (saved) apply(!!saved.analytics);

@@ -13,6 +13,7 @@
     "check": "astro check",
     "images": "node scripts/responsive-images.mjs",
     "webinar:cartel": "node scripts/webinar-placeholder.mjs",
+    "webinar:imgs": "node scripts/webinar-images.mjs",
     "paises": "node scripts/generar-paises.mjs"
   },
   "dependencies": {
