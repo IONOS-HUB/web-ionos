@@ -8,6 +8,8 @@ import MediaGallery from '../../components/MediaGallery.astro';
 import AgentStory from '../../components/AgentStory.astro';
 import ClientLogo from '../../components/ClientLogo.astro';
 import Photo from '../../components/Photo.astro';
+import NicheSelector from '../../components/NicheSelector.astro';
+import { niches } from '../../data/niches';
 import { pillars, type Pillar } from '../../data/pillars';
 import { coverageGallery, landingsGallery, systemsGallery } from '../../data/photos';
 import { getCaseBySlug } from '../../data/cases';
@@ -67,8 +69,12 @@ const serviceJsonLd = {
         </div>
       </div>
 
+      <!--
+        En IA la ventanilla no es una sola: el visitante elige su sector y la demostración cambia con
+        él. El pilar es arquitectura interna; quien llega de pauta llega con un sector, no con un pilar.
+      -->
       <div class="text-ink lg:col-span-5" data-reveal data-reveal-delay="140">
-        <PillarDemo pillar={pillar.id} />
+        {pillar.id === 'ia' ? <NicheSelector /> : <PillarDemo pillar={pillar.id} />}
       </div>
     </div>
   </section>
@@ -102,6 +108,58 @@ const serviceJsonLd = {
       </ul>
     </div>
   </section>
+
+  <!--
+    Trabajo real · IA: el mismo agente, entrenado para cada sector. Filas editoriales, no una retícula
+    de tarjetas iguales: lo que distingue a un nicho de otro es la línea roja, y eso se lee, no se ojea.
+  -->
+  {
+    pillar.id === 'ia' && (
+      <section class="bg-ice-3 py-20 lg:py-28">
+        <div class="wrap">
+          <div class="max-w-3xl" data-reveal>
+            <h2 class="display-tight text-[clamp(2rem,4.2vw,3.25rem)] font-semibold text-ink">El mismo agente, con el oficio de tu sector.</h2>
+            <p class="mt-5 text-[clamp(1.05rem,1.4vw,1.25rem)] leading-relaxed text-ink-2">
+              IONIC no cambia de saludo y ya: cambia de vocabulario, de trato, de lo que hace y, sobre todo, de lo que se
+              niega a hacer. Una recepción de clínica no habla como una anfitriona de salón, y ninguna de las dos debe
+              prometer lo que no le toca.
+            </p>
+          </div>
+          <ul class="mt-12 divide-y divide-line border-y border-line lg:mt-16">
+            {niches.map((n, i) => (
+              <li data-reveal data-reveal-delay={i * 60}>
+                <a href={n.route} class="group grid gap-4 py-8 lg:grid-cols-12 lg:gap-10 lg:py-10">
+                  <div class="lg:col-span-4">
+                    <p class="flex items-center gap-3 text-[1.35rem] font-semibold text-ink group-hover:text-cobalt">
+                      <span class="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-cobalt text-white">
+                        <Icon name={n.icon} size={20} />
+                      </span>
+                      {n.label}
+                    </p>
+                    {n.proof.clientLogo && (
+                      <span class="mt-5 flex items-center gap-3">
+                        <ClientLogo src={n.proof.clientLogo} alt="" size="lg" />
+                        <span class="text-[0.82rem] leading-tight text-ink-3">{n.proof.clientName}</span>
+                      </span>
+                    )}
+                  </div>
+                  <div class="lg:col-span-5">
+                    <p class="text-[1.02rem] leading-relaxed text-ink-2">{n.tagline}</p>
+                    <p class="mt-4 text-[0.82rem] font-semibold uppercase tracking-wide text-ink-3">Lo que no hace</p>
+                    <p class="mt-1.5 text-[1.02rem] leading-snug text-ink">{n.redLines[0]}.</p>
+                  </div>
+                  <p class="inline-flex items-start gap-2 text-[0.95rem] font-semibold text-cobalt-ink lg:col-span-3 lg:justify-end">
+                    Ver IA para {n.short.toLowerCase()}
+                    <Icon name="arrow-right" size={16} class="mt-0.5 transition-transform duration-500 ease-[var(--ease-out-expo)] group-hover:translate-x-1" />
+                  </p>
+                </a>
+              </li>
+            ))}
+          </ul>
+        </div>
+      </section>
+    )
+  }
 
   <!-- Trabajo real · Marketing: cobertura de eventos (fotos) y landing pages (capturas) -->
   {

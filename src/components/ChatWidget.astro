@@ -12,8 +12,17 @@
 import Icon from './Icon.astro';
 import { GREETING } from '../lib/chat/copy';
 import { waLink, CALENDAR_URL } from '../lib/site';
+import { nicheFromPath } from '../data/niches';
 
-const sugerencias = ['¿Qué hacen exactamente?', '¿Cómo atiende llamadas la IA?', 'Quiero agendar'];
+/**
+ * En una página de sector, IONIC habla en el registro de ese sector y siembra sus preguntas. El
+ * sector se resuelve en el servidor desde la ruta y viaja como `data-nicho`: el navegador manda el
+ * identificador, pero `/api/chat` sólo acepta los conocidos, así que no puede inventarse uno.
+ */
+const nicho = nicheFromPath(Astro.url.pathname);
+const sugerencias = nicho
+  ? [...nicho.chatPrompts, 'Quiero agendar']
+  : ['¿Qué hacen exactamente?', '¿Cómo atiende llamadas la IA?', 'Quiero agendar'];
 ---
 
 <div
@@ -23,6 +32,7 @@ const sugerencias = ['¿Qué hacen exactamente?', '¿Cómo atiende llamadas la I
   aria-labelledby="cw-title"
   hidden
   data-chat-panel
+  data-nicho={nicho?.id}
 >
   <header class="cw-head">
     <span class="cw-head-avatar" aria-hidden="true">
@@ -649,7 +659,7 @@ const sugerencias = ['¿Qué hacen exactamente?', '¿Cómo atiende llamadas la I
         const res = await fetch('/api/chat', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ message: text, token, history }),
+          body: JSON.stringify({ message: text, token, history, nicho: panel.dataset.nicho }),
         });
         const data = (await res.json()) as {
           reply?: string;

@@ -4,11 +4,36 @@
  */
 import { KNOWLEDGE, INTERESTS } from './knowledge';
 import { LIMITS } from './limits';
+import type { Niche } from '../../data/niches';
+
+/**
+ * Ajuste de tono por sector. Cambia CÓMO habla IONIC, nunca qué es ni qué sabe: sigue siendo el
+ * asistente de IonosHub que resuelve dudas y cierra el diagnóstico. No se convierte en la recepción
+ * de la clínica del visitante; habla como hablaría el agente que le venderíamos, que es la
+ * demostración que justifica la página del sector.
+ */
+function nicheBlock(niche: Niche): string {
+  return `
+## Sector de la página que está leyendo
+
+La persona está en la página de IonosHub sobre ${niche.label} (${niche.route}). Ajusta tu registro a ese sector:
+
+- Trato: ${niche.persona.treatment}.
+- Voz: ${niche.persona.voice}
+- Usa el vocabulario del sector: ${niche.persona.vocabulary.join('; ')}.
+- El agente que vendemos para este sector hace: ${niche.jobs.join('; ')}.
+- Y no hace, nunca: ${niche.redLines.join('; ')}.
+
+Esto cambia tu tono y tus ejemplos, no tu identidad ni tus datos. Sigues siendo IONIC, el asistente de
+IonosHub: no atiendes el negocio del visitante ni agendas sus citas, le explicas qué haría su agente y
+le cierras el diagnóstico. Si pregunta por otro sector, lo atiendes igual de bien y le pasas su página.
+`;
+}
 
 export const OFF_SCOPE_REPLY =
   'Sólo puedo ayudarte con IonosHub y lo que hacemos: inteligencia artificial, automatizaciones, marketing y software a medida. ¿Te cuento cómo aplicaría alguno a tu negocio?';
 
-export function systemInstruction(remaining: number, lead: Record<string, string>): string {
+export function systemInstruction(remaining: number, lead: Record<string, string>, niche?: Niche): string {
   const campos: [string, string][] = [
     ['nombre del negocio o de la persona (te basta UNO; si ya tienes uno, jamás pidas el otro)', lead.nombre_negocio_o_persona ?? ''],
     ['qué le interesa resolver primero', lead.servicio_interes ?? ''],
@@ -20,10 +45,10 @@ export function systemInstruction(remaining: number, lead: Record<string, string
   const paso = siguiente
     ? `El siguiente dato que debes pedir es: ${siguiente[0]}. No preguntes por los que ya tienes y no sigas hasta tenerlo.`
     : 'Ya tienes los cuatro datos. Resume en una frase lo que tienes y pide que lo confirme con el botón "Confirmar y enviar" que aparece debajo del chat. No digas que ya lo enviaste.';
-  return baseInstruction(remaining, capturado, paso);
+  return baseInstruction(remaining, capturado, paso, niche);
 }
 
-function baseInstruction(remaining: number, capturado: string, paso: string): string {
+function baseInstruction(remaining: number, capturado: string, paso: string, niche?: Niche): string {
   return `Eres IONIC, el asistente de IonosHub en su sitio web. Hablas español de Ecuador, tuteas y eres cercano, claro y directo.
 
 ## Tu objetivo
@@ -70,6 +95,7 @@ A esta persona le quedan ${remaining} mensajes. Si quedan 4 o menos, prioriza ce
 ## Formato de salida
 Devuelves SIEMPRE un JSON con: respuesta (lo que ve la persona), intencion (duda, captura, confirmacion, fuera_de_alcance o cierre), lead (los datos que llevas capturados, cadena vacía en lo que aún no tengas) y listo_para_enviar (booleano).
 
+${niche ? nicheBlock(niche) : ''}
 ## INFORMACIÓN VERIFICADA
 
 ${KNOWLEDGE}

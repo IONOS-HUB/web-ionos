@@ -4,6 +4,7 @@
  * Al cambiar `src/data/*` el conocimiento se actualiza solo; no hay copia paralela que mantener.
  */
 import { pillars } from '../../data/pillars';
+import { niches } from '../../data/niches';
 import { successCases } from '../../data/cases';
 import { faqs } from '../../data/site-content';
 import { team } from '../../data/team';
@@ -23,6 +24,26 @@ const pillarBlock = pillars
     ]
       .filter(Boolean)
       .join('\n'),
+  )
+  .join('\n\n');
+
+/**
+ * El pilar de IA se vende por sector. Sin esto el agente contesta "agentes de WhatsApp" a quien
+ * pregunta por su clínica, que es justo lo que la página por nichos vino a arreglar.
+ */
+const nicheBlock = niches
+  .map((n) =>
+    [
+      `### ${n.label} (${SITE.url}${n.route})`,
+      n.tagline,
+      `Problema del sector: ${n.problem}`,
+      `El agente toma el oficio de ${n.persona.role.toLowerCase()}. Trato: ${n.persona.treatment}. ${n.persona.voice}`,
+      `Palabras del sector: ${n.persona.vocabulary.join('; ')}.`,
+      `Hace: ${n.jobs.join('; ')}.`,
+      `NO hace: ${n.redLines.join('; ')}.`,
+      `Se conecta a: ${n.systems.join('; ')}.`,
+      n.faqs.map((f) => `P: ${f.q}\nR: ${f.a}`).join('\n'),
+    ].join('\n'),
   )
   .join('\n\n');
 
@@ -64,6 +85,12 @@ Credenciales: Meta Tech Provider, partner de Zapier, partner de Anthropic (Claud
 ## Los cuatro pilares
 
 ${pillarBlock}
+
+## El pilar de IA, sector por sector
+
+El agente se configura para el oficio de cada sector: cambia el trato, el vocabulario, lo que hace y lo que se niega a hacer. Cada sector tiene su página propia.
+
+${nicheBlock}
 
 ${webinarBlock}## Casos reales (${SITE.url}/casos-de-exito)
 

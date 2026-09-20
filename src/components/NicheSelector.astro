@@ -1,0 +1,91 @@
+---
+/**
+ * Selector de sector del eje de IA. Cambia la ventanilla de demostración en vivo: el visitante ve su
+ * propio negocio antes de leer una sola línea de catálogo.
+ *
+ * Va sobre el campo cobalto del hero, así que el estado encendido es campo blanco entero
+ * (`chip-on-cobalt` de DESIGN.md) y el apagado, borde sobre el azul. Nada de subrayados de acento.
+ *
+ * Pestañas ARIA de verdad, con tabindex móvil y flechas: una sola parada de tabulación para los
+ * cuatro sectores, que es lo que espera quien navega por teclado.
+ *
+ * Sin React a propósito: son ~40 líneas de JS que Astro incrusta en el HTML.
+ */
+import Icon from './Icon.astro';
+import NicheDemo from './demos/NicheDemo.astro';
+import { niches } from '../data/niches';
+---
+
+<div class="flex flex-col gap-4" data-niche-selector>
+  <div class="flex flex-wrap gap-2" role="tablist" aria-label="Elige tu sector">
+    {
+      niches.map((n, i) => (
+        <button
+          type="button"
+          role="tab"
+          id={`nicho-tab-${n.id}`}
+          aria-controls={`nicho-panel-${n.id}`}
+          aria-selected={i === 0 ? 'true' : 'false'}
+          tabindex={i === 0 ? 0 : -1}
+          data-niche-tab={n.id}
+          class="inline-flex min-h-11 items-center gap-2 rounded-full border px-4 text-[0.95rem] font-semibold transition-colors duration-300 aria-selected:border-canvas aria-selected:bg-canvas aria-selected:text-cobalt-ink border-white/35 text-ice hover:bg-white/10"
+        >
+          <Icon name={n.icon} size={18} />
+          {n.short}
+        </button>
+      ))
+    }
+  </div>
+
+  {
+    niches.map((n, i) => (
+      <div role="tabpanel" id={`nicho-panel-${n.id}`} aria-labelledby={`nicho-tab-${n.id}`} hidden={i !== 0} data-niche-panel={n.id}>
+        <NicheDemo niche={n} />
+        <p class="mt-3 flex flex-wrap items-baseline gap-x-2 gap-y-1 text-[0.82rem] text-ice">
+          <span class="font-semibold text-white">{n.persona.role}</span>
+          <span aria-hidden="true">·</span>
+          <span>{n.persona.treatment}</span>
+          <a href={n.route} class="ml-auto inline-flex min-h-11 items-center gap-1.5 font-semibold text-white underline underline-offset-4">
+            IA para {n.short.toLowerCase()}
+            <Icon name="arrow-right" size={16} />
+          </a>
+        </p>
+      </div>
+    ))
+  }
+</div>
+
+<script>
+  const caja = document.querySelector<HTMLElement>('[data-niche-selector]');
+  if (caja) {
+    const tabs = [...caja.querySelectorAll<HTMLButtonElement>('[data-niche-tab]')];
+    const paneles = [...caja.querySelectorAll<HTMLElement>('[data-niche-panel]')];
+
+    const activar = (id: string, mover = true) => {
+      tabs.forEach((t) => {
+        const on = t.dataset.nicheTab === id;
+        t.setAttribute('aria-selected', String(on));
+        t.tabIndex = on ? 0 : -1;
+        if (on && mover) t.focus();
+      });
+      paneles.forEach((p) => {
+        p.hidden = p.dataset.nichePanel !== id;
+      });
+    };
+
+    tabs.forEach((t) => t.addEventListener('click', () => activar(t.dataset.nicheTab ?? '', false)));
+
+    caja.querySelector('[role="tablist"]')?.addEventListener('keydown', (e) => {
+      const ev = e as KeyboardEvent;
+      const i = tabs.findIndex((t) => t.getAttribute('aria-selected') === 'true');
+      let siguiente = -1;
+      if (ev.key === 'ArrowRight') siguiente = (i + 1) % tabs.length;
+      else if (ev.key === 'ArrowLeft') siguiente = (i - 1 + tabs.length) % tabs.length;
+      else if (ev.key === 'Home') siguiente = 0;
+      else if (ev.key === 'End') siguiente = tabs.length - 1;
+      if (siguiente < 0) return;
+      ev.preventDefault();
+      activar(tabs[siguiente].dataset.nicheTab ?? '');
+    });
+  }
+</script>

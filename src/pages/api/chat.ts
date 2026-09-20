@@ -1,5 +1,6 @@
 import type { APIRoute } from 'astro';
 import { systemInstruction, RESPONSE_SCHEMA } from '../../lib/chat/prompt';
+import { nicheById } from '../../data/niches';
 import { normalizeInterest } from '../../lib/chat/knowledge';
 import { FALLBACK_REPLY, LIMIT_REACHED_REPLY, RATE_LIMITED_REPLY, SENSITIVE_REPLY, CLOSED_REPLY } from '../../lib/chat/copy';
 import {
@@ -187,7 +188,7 @@ export const POST: APIRoute = async ({ request }) => {
   const raw = await request.text();
   if (raw.length > LIMITS.maxBodyBytes) return json({ error: 'cuerpo_demasiado_grande' }, 413);
 
-  let body: { message?: unknown; token?: unknown; history?: unknown };
+  let body: { message?: unknown; token?: unknown; history?: unknown; nicho?: unknown };
   try {
     body = JSON.parse(raw);
   } catch {
@@ -239,7 +240,11 @@ export const POST: APIRoute = async ({ request }) => {
     console.log('[api/chat] turnos=', contents.length, JSON.stringify(contents.map((c) => `${c.role}: ${c.parts[0].text.slice(0, 40)}`), null, 1));
   }
 
-  const answer = await askGemini(systemInstruction(remaining, draft), contents, apiKey, model);
+  // El sector llega del navegador y se valida contra la lista conocida: sólo ajusta el tono, y un
+  // valor inventado se ignora en vez de colarse en la instrucción del sistema.
+  const niche = typeof body.nicho === 'string' ? nicheById(body.nicho) : undefined;
+
+  const answer = await askGemini(systemInstruction(remaining, draft, niche), contents, apiKey, model);
   if (!answer) {
     // Aunque el modelo falle se devuelve sesión firmada: el siguiente intento continúa la misma
     // conversación en vez de abrir una nueva (que contaría contra el límite por IP).

@@ -1,0 +1,247 @@
+---
+/**
+ * Página de IA por sector. Una ruta por nicho, con su propia metadata y su propio JSON-LD: el
+ * visitante llega buscando "agente de IA para clínicas", no "pilar de inteligencia artificial".
+ *
+ * Todo el contenido sale de `src/data/niches.ts`. Si aquí hace falta escribir copy a mano, el dato
+ * está mal puesto: debe vivir en el nicho para que también lo vean el selector, `llms.txt` y IONIC.
+ */
+import BaseLayout from '../../../layouts/BaseLayout.astro';
+import Icon from '../../../components/Icon.astro';
+import FAQ from '../../../components/home/FAQ.astro';
+import Contact from '../../../components/home/Contact.astro';
+import ClientLogo from '../../../components/ClientLogo.astro';
+import NicheDemo from '../../../components/demos/NicheDemo.astro';
+import { niches, type Niche } from '../../../data/niches';
+import { getCaseBySlug } from '../../../data/cases';
+import { pillarById } from '../../../data/pillars';
+import { waLink, SITE } from '../../../lib/site';
+
+export function getStaticPaths() {
+  return niches.map((n) => ({ params: { nicho: n.slug }, props: { niche: n } }));
+}
+
+interface Props {
+  niche: Niche;
+}
+const { niche } = Astro.props;
+const ia = pillarById('ia');
+const caso = niche.proof.caseSlug ? getCaseBySlug(niche.proof.caseSlug) : undefined;
+const otros = niches.filter((n) => n.id !== niche.id);
+
+const serviceJsonLd = {
+  '@context': 'https://schema.org',
+  '@type': 'Service',
+  name: `${ia.title} para ${niche.label.toLowerCase()}`,
+  description: niche.metaDescription,
+  serviceType: 'Agente de inteligencia artificial',
+  audience: { '@type': 'BusinessAudience', name: niche.label },
+  provider: { '@type': 'Organization', name: 'IonosHub', url: SITE.url },
+  areaServed: 'EC',
+  url: new URL(niche.route, SITE.url).href,
+};
+---
+
+<BaseLayout title={niche.metaTitle} description={niche.metaDescription} path={niche.route} waMessage={niche.waMessage}>
+  <Fragment slot="head">
+    <script type="application/ld+json" set:html={JSON.stringify(serviceJsonLd)} />
+  </Fragment>
+
+  <!-- Portada del sector -->
+  <section class="relative overflow-hidden bg-cobalt text-white">
+    <div class="pointer-events-none absolute -right-40 -top-40 h-[28rem] w-[28rem] rounded-full bg-cobalt-glow/30 blur-3xl" aria-hidden="true"></div>
+    <div class="wrap relative grid gap-12 py-16 lg:grid-cols-12 lg:items-center lg:py-24">
+      <div class="lg:col-span-7">
+        <nav aria-label="Ruta" class="text-[0.95rem] text-ice" data-reveal>
+          <a href="/" class="hover:text-white">Inicio</a>
+          <span class="mx-2 opacity-60">/</span>
+          <a href={ia.route} class="hover:text-white">IA</a>
+          <span class="mx-2 opacity-60">/</span>
+          <span class="text-white">{niche.short}</span>
+        </nav>
+        <h1 class="display-tight mt-5 text-[clamp(2.4rem,5vw,4.2rem)] font-semibold" data-reveal data-reveal-delay="60">{niche.h1}</h1>
+        <p class="mt-5 max-w-2xl text-[clamp(1.15rem,1.7vw,1.5rem)] leading-relaxed text-ice" data-reveal data-reveal-delay="120">{niche.tagline}</p>
+        <p class="mt-4 max-w-2xl text-[1.02rem] leading-relaxed text-white/85" data-reveal data-reveal-delay="160">{niche.problem}</p>
+        <div class="mt-8 flex flex-col gap-3 sm:flex-row" data-reveal data-reveal-delay="220">
+          <a href="#contacto" class="btn btn-on-dark">
+            Agendar diagnóstico gratis
+            <Icon name="arrow-right" size={18} />
+          </a>
+          <a href={waLink(niche.waMessage)} target="_blank" rel="noopener noreferrer" class="btn border border-white/40 text-white hover:bg-white/10">
+            <Icon name="whatsapp" size={18} />
+            Preguntar por WhatsApp
+          </a>
+        </div>
+      </div>
+
+      <div class="text-ink lg:col-span-5" data-reveal data-reveal-delay="140">
+        <NicheDemo niche={niche} />
+      </div>
+    </div>
+  </section>
+
+  <!--
+    Cómo habla. Es la sección que justifica que este sector tenga página propia: el saludo va en una
+    burbuja de verdad, porque el tono se demuestra oyéndolo, no describiéndolo.
+  -->
+  <section class="wrap py-20 lg:py-28">
+    <div class="grid gap-12 lg:grid-cols-12 lg:gap-16">
+      <div class="lg:col-span-5" data-reveal>
+        <h2 class="display-tight text-[clamp(2rem,4.2vw,3.25rem)] font-semibold text-ink">Cómo habla.</h2>
+        <p class="mt-5 text-[clamp(1.05rem,1.4vw,1.25rem)] leading-relaxed text-ink-2">
+          El agente toma el oficio de {niche.persona.role.toLowerCase()}. {niche.persona.voice}
+        </p>
+        <p class="mt-8 text-[0.82rem] font-semibold uppercase tracking-wide text-ink-3">Así abre una conversación</p>
+        <p class="bubble-out mt-3 inline-block max-w-md px-4 py-2.5 text-[1.02rem] leading-snug">{niche.persona.opening}</p>
+      </div>
+      <dl class="divide-y divide-line lg:col-span-7">
+        <div class="flex flex-col gap-1 py-5 sm:flex-row sm:gap-8" data-reveal>
+          <dt class="text-[0.82rem] font-semibold uppercase tracking-wide text-ink-3 sm:w-40 sm:shrink-0">Trato</dt>
+          <dd class="text-[1.15rem] leading-snug text-ink">{niche.persona.treatment}</dd>
+        </div>
+        <div class="flex flex-col gap-1 py-5 sm:flex-row sm:gap-8" data-reveal data-reveal-delay="60">
+          <dt class="text-[0.82rem] font-semibold uppercase tracking-wide text-ink-3 sm:w-40 sm:shrink-0">Palabras</dt>
+          <dd class="flex flex-wrap gap-2">
+            {niche.persona.vocabulary.map((v) => <span class="chip">{v}</span>)}
+          </dd>
+        </div>
+        <div class="flex flex-col gap-1 py-5 sm:flex-row sm:gap-8" data-reveal data-reveal-delay="120">
+          <dt class="text-[0.82rem] font-semibold uppercase tracking-wide text-ink-3 sm:w-40 sm:shrink-0">Se conecta a</dt>
+          <dd class="text-[1.15rem] leading-snug text-ink">{niche.systems.join(' · ')}</dd>
+        </div>
+      </dl>
+    </div>
+  </section>
+
+  <!-- Qué hace -->
+  <section class="bg-ice-3 py-20 lg:py-28">
+    <div class="wrap grid gap-12 lg:grid-cols-12 lg:gap-16">
+      <div class="lg:col-span-5" data-reveal>
+        <h2 class="display-tight text-[clamp(2rem,4.2vw,3.25rem)] font-semibold text-ink">Qué hace en tu operación.</h2>
+        <p class="mt-5 text-[clamp(1.05rem,1.4vw,1.25rem)] leading-relaxed text-ink-2">
+          El alcance exacto se define contigo en el diagnóstico. Esto es lo que ya hace en un negocio como el tuyo.
+        </p>
+      </div>
+      <ul class="divide-y divide-line lg:col-span-7">
+        {
+          niche.jobs.map((job, i) => (
+            <li class="flex items-start gap-4 py-5" data-reveal data-reveal-delay={i * 50}>
+              <span class="mt-0.5 flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-cobalt text-white">
+                <Icon name="check" size={16} />
+              </span>
+              <p class="text-[1.15rem] leading-snug text-ink">{job}</p>
+            </li>
+          ))
+        }
+      </ul>
+    </div>
+  </section>
+
+  <!--
+    Lo que no hace, en banda noche. No es letra pequeña: para quien compra esto (una administradora de
+    clínica, un rector) los límites son la primera objeción, no la última, y merecen el peso visual
+    que el sistema reserva para la prueba.
+  -->
+  <section class="bg-night py-20 text-white lg:py-28">
+    <div class="wrap grid gap-12 lg:grid-cols-12 lg:gap-16">
+      <div class="lg:col-span-5" data-reveal>
+        <h2 class="display-tight text-[clamp(2rem,4.2vw,3.25rem)] font-semibold">Lo que no hace, nunca.</h2>
+        <p class="mt-5 text-[clamp(1.05rem,1.4vw,1.25rem)] leading-relaxed text-night-text">
+          Un agente que promete de más te mete en un problema. Estos límites van escritos en su configuración, no en su
+          buena voluntad: aunque el cliente insista, no los cruza.
+        </p>
+      </div>
+      <ul class="divide-y divide-night-line border-y border-night-line lg:col-span-7">
+        {
+          niche.redLines.map((line, i) => (
+            <li class="flex items-start gap-4 py-5" data-reveal data-reveal-delay={i * 50}>
+              <span class="mt-0.5 flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-night-2 text-white">
+                <Icon name="close" size={16} />
+              </span>
+              <p class="text-[1.15rem] leading-snug">{line}</p>
+            </li>
+          ))
+        }
+      </ul>
+    </div>
+  </section>
+
+  <!-- Prueba: caso real si lo hay; si no, el cliente del sector y la demostración etiquetada de arriba -->
+  {
+    (caso || niche.proof.clientLogo) && (
+      <section class="wrap py-20 lg:py-28">
+        <div class="grid gap-10 lg:grid-cols-12 lg:gap-16">
+          <div class="lg:col-span-5" data-reveal>
+            <h2 class="display-tight text-[clamp(2rem,4.2vw,3.25rem)] font-semibold text-ink">
+              {caso ? 'Ya funciona en este sector.' : 'Clientes de este sector.'}
+            </h2>
+            {niche.proof.clientLogo && (
+              <span class="mt-8 flex items-center gap-4">
+                <ClientLogo src={niche.proof.clientLogo} alt="" size="lg" />
+                <span class="text-[1.02rem] leading-tight text-ink-2">{niche.proof.clientName}</span>
+              </span>
+            )}
+            {!caso && (
+              <p class="mt-6 max-w-lg text-[1.02rem] leading-relaxed text-ink-3">
+                La conversación de arriba es una demostración con un negocio ficticio, y así está etiquetada. Los
+                resultados de nuestros clientes de este sector los revisamos contigo en el diagnóstico, con su permiso.
+              </p>
+            )}
+          </div>
+          {caso && (
+            <dl class="grid gap-6 sm:grid-cols-3 lg:col-span-7" data-reveal data-reveal-delay="80">
+              {[
+                ['Reto', caso.challenge],
+                ['Solución', caso.solution],
+                ['Resultado', caso.result],
+              ].map(([t, d]) => (
+                <div>
+                  <dt class="text-[0.82rem] font-semibold uppercase tracking-wide text-ink-3">{t}</dt>
+                  <dd class="mt-2 text-[1.02rem] leading-relaxed text-ink-2">{d}</dd>
+                </div>
+              ))}
+            </dl>
+          )}
+        </div>
+      </section>
+    )
+  }
+
+  <FAQ items={niche.faqs} title={`Dudas de ${niche.label.toLowerCase()}.`} />
+
+  <!-- Otros sectores -->
+  <section class="wrap pb-20 lg:pb-28">
+    <p class="text-[0.95rem] font-semibold uppercase tracking-wide text-ink-3" data-reveal>El mismo agente, otro oficio</p>
+    <ul class="mt-5 grid gap-4 sm:grid-cols-3">
+      {
+        otros.map((n, i) => (
+          <li data-reveal data-reveal-delay={i * 60}>
+            <a href={n.route} class="group flex h-full flex-col justify-between gap-6 rounded-[1.25rem] border border-line p-6 transition-colors hover:border-cobalt">
+              <div>
+                <p class="flex items-center gap-3 text-[1.15rem] font-semibold text-ink group-hover:text-cobalt">
+                  <span class="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-ice text-cobalt-ink">
+                    <Icon name={n.icon} size={18} />
+                  </span>
+                  {n.label}
+                </p>
+                <p class="mt-3 text-[0.95rem] text-ink-2">{n.tagline}</p>
+              </div>
+              <span class="inline-flex items-center gap-2 text-[0.95rem] font-semibold text-cobalt-ink">
+                Ver sector
+                <Icon name="arrow-right" size={16} class="transition-transform duration-500 ease-[var(--ease-out-expo)] group-hover:translate-x-1" />
+              </span>
+            </a>
+          </li>
+        ))
+      }
+    </ul>
+    <p class="mt-8" data-reveal>
+      <a href={ia.route} class="inline-flex items-center gap-2 text-[1.02rem] font-semibold text-cobalt-ink">
+        Ver todo el pilar de inteligencia artificial
+        <Icon name="arrow-right" size={18} />
+      </a>
+    </p>
+  </section>
+
+  <Contact defaultInterest="ia" waMessage={niche.waMessage} title={`Agenda tu diagnóstico para ${niche.label.toLowerCase()}.`} />
+</BaseLayout>
