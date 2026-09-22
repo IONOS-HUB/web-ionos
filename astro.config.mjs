@@ -27,6 +27,14 @@ const legacyRedirects = {
 
 export default defineConfig({
   site: 'https://ionoshub.net',
+  /**
+   * Una URL por página, sin barra final. Sin esto, `/equipo` y `/equipo/` respondían 200 las dos y
+   * el sitemap listaba la versión CON barra mientras el canónico de esa misma página apuntaba a la
+   * versión SIN barra: cada URL del sitemap se declaraba duplicada de otra, y Search Console las
+   * dejó todas en "Descubierta: actualmente sin indexar". Con 'never', el sitemap sale sin barra y el
+   * adapter de Vercel responde 308 de `/x/` a `/x`, igual que ya hacen enlaces, canónicos y 301.
+   */
+  trailingSlash: 'never',
   output: 'static',
   adapter: vercel(),
   integrations: [react(), sitemap({ filter: (page) => !page.includes('/api/') })],
