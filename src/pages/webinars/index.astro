@@ -3,6 +3,11 @@
  * Índice de webinars: el próximo en grande, el resto en rejilla, con filtros por estado y por tema.
  * Los filtros son vanilla sobre atributos de datos; con una sola edición siguen teniendo sentido
  * porque "Anteriores" muestra su propio estado vacío en vez de una rejilla rota.
+ *
+ * El estado de cada edición se fija al compilar, pero el navegador lo corrige con
+ * `src/scripts/webinar-vigencia.ts`: si el destacado ya empezó, se muestra el siguiente próximo (hay
+ * uno pintado por cada edición futura, ocultos salvo el primero) o ninguno, y la rejilla y los
+ * filtros leen el estado ya corregido de cada tarjeta.
  */
 import BaseLayout from '../../layouts/BaseLayout.astro';
 import Icon from '../../components/Icon.astro';
@@ -13,9 +18,7 @@ import { sortedWebinars, allTopics, formatWebinarDate, formatWebinarTime, format
 import { SITE } from '../../lib/site';
 
 const { proximos, pasados } = sortedWebinars();
-const [destacado, ...siguientes] = proximos;
 const temas = allTopics();
-const restantes = [...siguientes, ...pasados];
 const wa = 'Hola IonosHub, quiero saber más sobre sus webinars.';
 
 const listaJsonLd = {
@@ -52,8 +55,17 @@ const listaJsonLd = {
     </div>
 
     {
-      destacado && (
-        <article class="mt-12 overflow-hidden rounded-[1.75rem] bg-cobalt text-white shadow-lift lg:mt-16" data-reveal data-reveal-delay="80">
+      proximos.map((destacado, d) => (
+        <article
+          class="mt-12 overflow-hidden rounded-[1.75rem] bg-cobalt text-white shadow-lift lg:mt-16"
+          data-reveal
+          data-reveal-delay="80"
+          data-webinar-destacado
+          data-vigencia
+          data-starts-at={destacado.startsAt}
+          data-status="proximo"
+          hidden={d > 0}
+        >
           <div class="relative">
             <div class="wb-mesh" aria-hidden="true" />
             <div class="relative grid gap-10 p-7 sm:p-10 lg:grid-cols-12 lg:items-center lg:gap-12 lg:p-14">
@@ -98,7 +110,7 @@ const listaJsonLd = {
                   {proximos.map((w, i) => {
                     const sesion = w.sessions[0];
                     return (
-                      <li>
+                      <li data-vigencia data-starts-at={w.startsAt} data-status="proximo" data-solo="proximo">
                         <a href={`/webinars/${w.slug}#registro`} class="flex items-start gap-3 rounded-[1.25rem] bg-white/10 px-4 py-3 hover:bg-white/15">
                           <span class="mt-0.5 shrink-0 text-[0.72rem] font-semibold uppercase tracking-wide text-white/55">
                             {proximos.length > 1 ? `Ponencia ${i + 1}` : (sesion?.label ?? 'Ponencia')}
@@ -119,7 +131,7 @@ const listaJsonLd = {
             </div>
           </div>
         </article>
-      )
+      ))
     }
   </section>
 
@@ -154,19 +166,19 @@ const listaJsonLd = {
 
       <ul class="mx-auto mt-8 grid max-w-5xl gap-6 sm:grid-cols-2" data-webinar-grid>
         {[...proximos, ...pasados].map((w, i) => (
-          <li data-reveal data-reveal-delay={Math.min(i, 4) * 60} data-webinar-item data-status={w.slug && (proximos.includes(w) ? 'proximo' : 'pasado')} data-topics={w.topics.join('|')}>
+          <li data-reveal data-reveal-delay={Math.min(i, 4) * 60} data-webinar-item data-topics={w.topics.join('|')}>
             <WebinarCard webinar={w} />
           </li>
         ))}
       </ul>
 
-      <p class="mt-10 hidden rounded-[1.25rem] border border-line bg-canvas px-6 py-8 text-center text-[1.02rem] text-ink-2" data-webinar-empty>
+      <p class="mt-10 rounded-[1.25rem] border border-line bg-canvas px-6 py-8 text-center text-[1.02rem] text-ink-2" data-webinar-empty hidden>
         Todavía no hay ediciones con ese filtro. Mientras tanto, puedes ver las demás o escribirnos para proponer un
         tema.
       </p>
 
       {
-        restantes.length === 0 && pasados.length === 0 && (
+        proximos.length <= 1 && pasados.length === 0 && (
           <p class="mt-8 text-[1.02rem] text-ink-3">
             Esta es la primera edición. Las siguientes se publicarán aquí y quedarán disponibles para consulta.
           </p>
@@ -227,6 +239,17 @@ const listaJsonLd = {
 </style>
 
 <script>
+  import '../../scripts/webinar-vigencia';
+
+  // Destacado: el primer próximo que siga vigente. Si ya no queda ninguno, no se muestra nada.
+  const destacados = Array.from(document.querySelectorAll<HTMLElement>('[data-webinar-destacado]'));
+  const elegirDestacado = () => {
+    const vigente = destacados.find((a) => a.dataset.status === 'proximo');
+    for (const a of destacados) a.hidden = a !== vigente;
+  };
+  elegirDestacado();
+  document.addEventListener('webinars:vigencia', elegirDestacado);
+
   // Filtros del índice: estado (próximo/anterior) y tema, combinables.
   const zona = document.querySelector<HTMLElement>('[data-webinar-list]');
   if (zona) {
@@ -238,7 +261,9 @@ const listaJsonLd = {
     const aplicar = () => {
       let visibles = 0;
       for (const item of items) {
-        const coincideEstado = estado === 'todos' || item.dataset.status === estado;
+        // El estado se lee de la tarjeta: es el que corrige el navegador cuando llega la fecha.
+        const estadoItem = item.querySelector<HTMLElement>('[data-webinar-card]')?.dataset.status;
+        const coincideEstado = estado === 'todos' || estadoItem === estado;
         const temas = (item.dataset.topics ?? '').split('|');
         const coincideTema = tema === 'todos' || temas.includes(tema);
         const ver = coincideEstado && coincideTema;
@@ -273,5 +298,6 @@ const listaJsonLd = {
     });
 
     aplicar();
+    document.addEventListener('webinars:vigencia', aplicar);
   }
 </script>

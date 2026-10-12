@@ -2,6 +2,10 @@
 /**
  * Tarjeta de una edición en el índice. El cartel va de banner; debajo, fecha, título, cuenta
  * atrás y el enlace al formulario de registro.
+ *
+ * Si al compilar la edición aún es futura, la tarjeta lleva también su versión de "ya emitido"
+ * (oculta) y `src/scripts/webinar-vigencia.ts` cambia de una a otra en el navegador cuando llega la
+ * hora, aunque no haya habido un despliegue desde entonces.
  */
 import Icon from '../Icon.astro';
 import WebinarCountdown from './WebinarCountdown.astro';
@@ -14,13 +18,16 @@ const { webinar } = Astro.props;
 const proximo = isUpcoming(webinar);
 const fecha = formatWebinarShort(webinar.startsAt);
 const hora = formatWebinarTime(webinar.startsAt);
-const href = `/webinars/${webinar.slug}${proximo ? '#registro' : ''}`;
+const hrefPasado = `/webinars/${webinar.slug}`;
+const href = proximo ? `${hrefPasado}#registro` : hrefPasado;
 const cartel = webinar.promoImage;
 ---
 
 <article
   class="wcard group flex h-full min-w-0 flex-col overflow-hidden rounded-3xl border border-line bg-canvas shadow-lift"
   data-webinar-card
+  data-vigencia
+  data-starts-at={webinar.startsAt}
   data-status={proximo ? 'proximo' : 'pasado'}
   data-topics={webinar.topics.join('|')}
 >
@@ -40,22 +47,38 @@ const cartel = webinar.promoImage;
     )
   }
 
-  <header class:list={['flex items-center gap-3 px-5 py-3.5 text-white', proximo ? 'bg-cobalt' : 'bg-night']}>
+  {
+    proximo && (
+      <header class="flex items-center gap-3 bg-cobalt px-5 py-3.5 text-white" data-solo="proximo">
+        <span class="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-white/15">
+          <Icon name="calendar" size={17} />
+        </span>
+        <span class="min-w-0 leading-tight">
+          <span class="tnum block text-[0.95rem] font-semibold">{fecha}</span>
+          <span class="tnum block text-[0.78rem] text-white/70">{hora} · {webinar.timezone}</span>
+        </span>
+        <span class="ml-auto shrink-0 rounded-full bg-white px-2.5 py-1 text-[0.7rem] font-semibold uppercase tracking-wide text-cobalt-ink">
+          Registro abierto
+        </span>
+      </header>
+    )
+  }
+  <header class="flex items-center gap-3 bg-night px-5 py-3.5 text-white" data-solo="pasado" hidden={proximo}>
     <span class="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-white/15">
       <Icon name="calendar" size={17} />
     </span>
     <span class="min-w-0 leading-tight">
       <span class="tnum block text-[0.95rem] font-semibold">{fecha}</span>
-      <span class="tnum block text-[0.78rem] text-white/70">{proximo ? `${hora} · ${webinar.timezone}` : `Edición ${webinar.edition}`}</span>
+      <span class="tnum block text-[0.78rem] text-white/70">Edición {webinar.edition}</span>
     </span>
-    <span class:list={['ml-auto shrink-0 rounded-full px-2.5 py-1 text-[0.7rem] font-semibold uppercase tracking-wide', proximo ? 'bg-white text-cobalt-ink' : 'bg-night-2 text-night-text']}>
-      {proximo ? 'Registro abierto' : 'Ya emitido'}
+    <span class="ml-auto shrink-0 rounded-full bg-night-2 px-2.5 py-1 text-[0.7rem] font-semibold uppercase tracking-wide text-night-text">
+      Ya emitido
     </span>
   </header>
 
   <div class="flex flex-1 flex-col p-5">
     <h3 class="display-tight text-[1.35rem] font-semibold leading-tight text-ink">
-      <a href={href} class="after:absolute after:inset-0 hover:text-cobalt-ink">{webinar.title}</a>
+      <a href={href} data-href-pasado={proximo ? hrefPasado : undefined} class="after:absolute after:inset-0 hover:text-cobalt-ink">{webinar.title}</a>
     </h3>
     {
       !cartel && (
@@ -65,7 +88,9 @@ const cartel = webinar.promoImage;
 
     {
       proximo && (
-        <WebinarCountdown startsAt={webinar.startsAt} tone="light" compact class="mt-4 justify-start" />
+        <div class="mt-4" data-solo="proximo">
+          <WebinarCountdown startsAt={webinar.startsAt} tone="light" compact class="justify-start" />
+        </div>
       )
     }
 
@@ -74,7 +99,8 @@ const cartel = webinar.promoImage;
     </ul>
 
     <p class="mt-5 flex items-center gap-2 text-[0.88rem] font-semibold text-cobalt-ink">
-      {proximo ? 'Reservar mi lugar' : 'Ver qué se trató'}
+      {proximo && <span data-solo="proximo">Reservar mi lugar</span>}
+      <span data-solo="pasado" hidden={proximo}>Ver qué se trató</span>
       <Icon name="arrow-right" size={15} class="transition-transform duration-500 ease-[var(--ease-out-expo)] group-hover:translate-x-1" />
     </p>
   </div>
@@ -101,3 +127,7 @@ const cartel = webinar.promoImage;
     overflow: hidden;
   }
 </style>
+
+<script>
+  import '../../scripts/webinar-vigencia';
+</script>
