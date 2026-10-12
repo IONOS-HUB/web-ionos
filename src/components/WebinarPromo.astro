@@ -14,6 +14,9 @@
  *  - Nunca en /webinars (ahí ya está el evento) ni mientras el aviso de cookies siga abierto.
  *  - A los 8 segundos o al 30 % de scroll, lo que ocurra antes, y una sola vez por sesión.
  *  - Si se cierra, no vuelve a salir para esa edición (queda anotado en el navegador).
+ *  - Nunca después de la hora de inicio. El sitio es estático: `nextWebinar()` se evalúa al
+ *    compilar, y sin un despliegue posterior el HTML seguiría anunciando un evento ya pasado. Por
+ *    eso la fecha viaja en `data-starts-at` y el navegador la vuelve a comprobar.
  */
 import Icon from './Icon.astro';
 import { nextWebinar, formatWebinarDate, formatWebinarTime } from '../data/webinars';
@@ -33,7 +36,7 @@ const cartel = webinar?.promoImage;
 
 {
   webinar && (
-    <dialog class="wp" aria-labelledby="wp-titulo" data-webinar-promo data-slug={webinar.slug}>
+    <dialog class="wp" aria-labelledby="wp-titulo" data-webinar-promo data-slug={webinar.slug} data-starts-at={webinar.startsAt}>
       <a class="wp-link" href={`/webinars/${webinar.slug}#registro`} data-webinar-promo-cta>
         {cartel ? (
           <img
@@ -241,7 +244,10 @@ const cartel = webinar?.promoImage;
 
 <script>
   const promo = document.querySelector<HTMLDialogElement>('[data-webinar-promo]');
-  if (promo) {
+  // Un evento que ya empezó no se promociona aunque el HTML compilado aún lo traiga.
+  const inicio = new Date(promo?.dataset.startsAt ?? '').getTime();
+  if (promo && !(inicio > Date.now())) promo.remove();
+  else if (promo) {
     const slug = promo.dataset.slug ?? '';
     const DESCARTADO = 'ionoshub-webinar-promo';
     const VISTO = 'ionoshub-webinar-promo-sesion';
