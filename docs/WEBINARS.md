@@ -25,8 +25,14 @@ Para hacerlo con ayuda, usa la skill `/webinar` (ver el final de este documento)
   `BaseLayout`. Si no hay ninguna edición futura, no emite nada.
   Como el sitio es estático, esa decisión se toma al compilar; por eso el pop-up lleva la fecha
   en `data-starts-at` y el navegador lo retira si el evento ya empezó, aunque no haya habido un
-  despliegue desde entonces. (El índice y la página del evento sí necesitan un despliegue para
-  pasar la edición al histórico.)
+  despliegue desde entonces.
+- **Lo mismo vale para el índice y la página de cada edición.** Cuando una edición es futura al
+  compilar, su tarjeta y su página llevan también la versión de "ya emitido" (oculta), y
+  `src/scripts/webinar-vigencia.ts` cambia de una a otra en el navegador al llegar la hora: la
+  tarjeta pasa a "Ya emitido", el formulario se sustituye por "Edición finalizada", el destacado
+  del índice salta al siguiente próximo (o desaparece) y el filtro "Próximos" lo tiene en cuenta.
+  El marcado es `data-vigencia` + `data-starts-at` en la raíz y `data-solo="proximo" | "pasado"`
+  dentro. Un despliegue sigue siendo lo ideal: actualiza los datos estructurados y el agente IONIC.
 
 ## El cartel del pop-up
 

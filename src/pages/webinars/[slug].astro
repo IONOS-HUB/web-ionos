@@ -5,6 +5,10 @@
  *
  * Anatomía: campo de cobalto con la identidad del evento y la ventanilla de registro encima, agenda
  * como ventanilla de filas, qué te llevas, para quién es y quién lo da.
+ *
+ * Si al compilar el registro está abierto, la página lleva también la versión de "edición
+ * finalizada" (oculta) y `src/scripts/webinar-vigencia.ts` la cambia en el navegador cuando llega
+ * la hora: sin un despliegue posterior, el formulario seguiría abierto para un evento ya pasado.
  */
 import BaseLayout from '../../layouts/BaseLayout.astro';
 import Icon from '../../components/Icon.astro';
@@ -80,7 +84,12 @@ const eventJsonLd = {
   <script type="application/ld+json" slot="head" set:html={JSON.stringify(eventJsonLd)} />
 
   <!-- Campo de cobalto: identidad del evento y, encima, la ventanilla de registro. -->
-  <section class="relative overflow-hidden bg-cobalt text-white">
+  <section
+    class="relative overflow-hidden bg-cobalt text-white"
+    data-vigencia
+    data-starts-at={webinar.startsAt}
+    data-status={proximo ? 'proximo' : 'pasado'}
+  >
     <div class="wb-mesh" aria-hidden="true"></div>
 
     <div class="wrap relative grid gap-10 py-14 lg:grid-cols-12 lg:gap-12 lg:py-20">
@@ -125,42 +134,58 @@ const eventJsonLd = {
           </div>
         </dl>
 
-        {proximo && <WebinarCountdown startsAt={webinar.startsAt} class="mt-8" />}
+        {
+          proximo && (
+            <div class="mt-8" data-solo="proximo">
+              <WebinarCountdown startsAt={webinar.startsAt} />
+            </div>
+          )
+        }
       </div>
 
       <div class="min-w-0 lg:col-span-6 xl:col-span-5" data-reveal data-reveal-delay="120">
         <div class="overflow-hidden rounded-[1.75rem] border border-line bg-canvas text-ink shadow-phone" id="registro">
           <div class="flex items-center gap-3 border-b border-line-soft bg-ice-3 px-6 py-4">
             <span class="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-cobalt text-white">
-              <Icon name={abierto ? 'users' : 'check'} size={17} />
+              {abierto && <span class="contents" data-solo="proximo"><Icon name="users" size={17} /></span>}
+              <span class="contents" data-solo="pasado" hidden={abierto}><Icon name="check" size={17} /></span>
             </span>
-            <span class="min-w-0 leading-tight">
-              <span class="block text-[0.98rem] font-semibold text-ink">{abierto ? 'Reserva tu lugar' : 'Edición finalizada'}</span>
-              <span class="block text-[0.8rem] text-ink-3">{abierto ? 'En línea · te enviamos el acceso por WhatsApp' : 'El registro ya está cerrado'}</span>
+            {
+              abierto && (
+                <span class="min-w-0 leading-tight" data-solo="proximo">
+                  <span class="block text-[0.98rem] font-semibold text-ink">Reserva tu lugar</span>
+                  <span class="block text-[0.8rem] text-ink-3">En línea · te enviamos el acceso por WhatsApp</span>
+                </span>
+              )
+            }
+            <span class="min-w-0 leading-tight" data-solo="pasado" hidden={abierto}>
+              <span class="block text-[0.98rem] font-semibold text-ink">Edición finalizada</span>
+              <span class="block text-[0.8rem] text-ink-3">El registro ya está cerrado</span>
             </span>
           </div>
 
           <div class="p-6 sm:p-7">
             {
-              abierto ? (
-                <WebinarForm client:visible slug={webinar.slug} titulo={webinar.title} comunidad={webinar.whatsappCommunity} />
-              ) : (
-                <div class="flex flex-col gap-4">
-                  <p class="text-[1.02rem] leading-relaxed text-ink-2">
-                    Esta edición ya se emitió. Déjanos tu contacto y te avisamos de la próxima, o escríbenos si
-                    quieres aplicar lo que se trató en tu negocio.
-                  </p>
-                  <a href="/#contacto" class="btn btn-primary w-full">
-                    Avísenme del próximo
-                    <Icon name="arrow-right" size={18} />
-                  </a>
-                  <a href={waLink(wa)} target="_blank" rel="noopener noreferrer" class="btn btn-ghost w-full">
-                    <Icon name="whatsapp" size={18} />
-                    Escribir por WhatsApp
-                  </a>
+              abierto && (
+                <div data-solo="proximo">
+                  <WebinarForm client:visible slug={webinar.slug} titulo={webinar.title} comunidad={webinar.whatsappCommunity} />
                 </div>
               )
             }
+            <div class="flex flex-col gap-4" data-solo="pasado" hidden={abierto}>
+              <p class="text-[1.02rem] leading-relaxed text-ink-2">
+                Esta edición ya se emitió. Déjanos tu contacto y te avisamos de la próxima, o escríbenos si
+                quieres aplicar lo que se trató en tu negocio.
+              </p>
+              <a href="/#contacto" class="btn btn-primary w-full">
+                Avísenme del próximo
+                <Icon name="arrow-right" size={18} />
+              </a>
+              <a href={waLink(wa)} target="_blank" rel="noopener noreferrer" class="btn btn-ghost w-full">
+                <Icon name="whatsapp" size={18} />
+                Escribir por WhatsApp
+              </a>
+            </div>
           </div>
         </div>
       </div>
@@ -168,7 +193,12 @@ const eventJsonLd = {
   </section>
 
   <!-- Agenda como ventanilla: una fila por sesión. -->
-  <section class="wrap py-16 lg:py-24">
+  <section
+    class="wrap py-16 lg:py-24"
+    data-vigencia
+    data-starts-at={webinar.startsAt}
+    data-status={proximo ? 'proximo' : 'pasado'}
+  >
     <div class="grid gap-10 lg:grid-cols-12 lg:gap-14">
       <div class="min-w-0 lg:col-span-5" data-reveal>
         <h2 class="display-tight text-[clamp(2rem,4.2vw,3.25rem)] font-semibold text-ink">
@@ -178,7 +208,7 @@ const eventJsonLd = {
 
         {
           abierto && (
-            <a href="#registro" class="btn btn-primary mt-8">
+            <a href="#registro" class="btn btn-primary mt-8" data-solo="proximo">
               Reservar mi lugar
               <Icon name="arrow-right" size={18} />
             </a>
@@ -352,3 +382,7 @@ const eventJsonLd = {
       radial-gradient(30rem 22rem at 4% 108%, rgb(10 71 160 / 0.55), transparent 72%);
   }
 </style>
+
+<script>
+  import '../../scripts/webinar-vigencia';
+</script>
