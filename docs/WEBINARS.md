@@ -23,6 +23,10 @@ Para hacerlo con ayuda, usa la skill `/webinar` (ver el final de este documento)
   que no hay salto mientras carga el JavaScript.
 - **El pop-up** (`src/components/WebinarPromo.astro`) lee el próximo webinar y se monta en
   `BaseLayout`. Si no hay ninguna edición futura, no emite nada.
+  Como el sitio es estático, esa decisión se toma al compilar; por eso el pop-up lleva la fecha
+  en `data-starts-at` y el navegador lo retira si el evento ya empezó, aunque no haya habido un
+  despliegue desde entonces. (El índice y la página del evento sí necesitan un despliegue para
+  pasar la edición al histórico.)
 
 ## El cartel del pop-up
 
