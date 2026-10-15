@@ -1,0 +1,16 @@
+---
+/**
+ * Agenda · Para tu negocio. Página de registro "speed to lead" general: el formulario con la reputación
+ * al lado (equipo, casos reales, partners, logos y testimonios si existen). El texto y el formulario
+ * salen de `src/data/landings.ts`; el lead llega a GHL por `/api/speed-to-lead` con `variante: general`.
+ */
+import BaseLayout from '../../layouts/BaseLayout.astro';
+import RegistroGeneral from '../../components/landing/RegistroGeneral.astro';
+import { getLanding } from '../../data/landings';
+
+const landing = getLanding('general');
+---
+
+<BaseLayout title={landing.metaTitle} description={landing.metaDescription} path={landing.route} waMessage={landing.waMessage} noindex landing>
+  <RegistroGeneral landing={landing} />
+</BaseLayout>

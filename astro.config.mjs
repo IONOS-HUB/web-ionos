@@ -37,7 +37,7 @@ export default defineConfig({
   trailingSlash: 'never',
   output: 'static',
   adapter: vercel(),
-  integrations: [react(), sitemap({ filter: (page) => !page.includes('/api/') })],
+  integrations: [react(), sitemap({ filter: (page) => !page.includes('/api/') && !page.includes('/speed-to-lead') })],
   redirects: legacyRedirects,
   build: { inlineStylesheets: 'always' },
   vite: {

@@ -18,6 +18,11 @@ interface Props {
   ogType?: 'website' | 'article';
   waMessage?: string;
   noindex?: boolean;
+  /**
+   * Página de formulario (`/speed-to-lead`): sin chat ni pop-up de webinar, que competirían con el
+   * formulario. La navegación y el pie son los de siempre.
+   */
+  landing?: boolean;
 }
 
 const {
@@ -28,6 +33,7 @@ const {
   ogType = 'website',
   waMessage = DEFAULT_WA_MESSAGE,
   noindex = false,
+  landing = false,
 } = Astro.props;
 
 const fullTitle = title.includes('IonosHub') ? title : `${title} | IonosHub`;
@@ -41,7 +47,7 @@ const bingVerification = import.meta.env.PUBLIC_BING_SITE_VERIFICATION as string
 
 // El chat va visible salvo que se apague con PUBLIC_CHAT_UI=0 (oculta la burbuja).
 // Para cortar también el endpoint, CHAT_ENABLED=0 en Vercel.
-const chatUi = import.meta.env.PUBLIC_CHAT_UI !== '0';
+const chatUi = import.meta.env.PUBLIC_CHAT_UI !== '0' && !landing;
 
 const orgJsonLd = {
   '@context': 'https://schema.org',
@@ -115,7 +121,7 @@ const orgJsonLd = {
       <WhatsAppFloat message={waMessage} />
     </div>
     {chatUi && <ChatWidget />}
-    <WebinarPromo />
+    {!landing && <WebinarPromo />}
     <CookieConsent gaId={gaId} />
     <script src="../scripts/motion.ts"></script>
   </body>

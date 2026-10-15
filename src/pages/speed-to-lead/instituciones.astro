@@ -1,0 +1,18 @@
+---
+/**
+ * Agenda · Instituciones educativas. Página de registro "speed to lead" del nicho `institutos`: sólo el
+ * formulario, sin testimonios, sobre fondo motion o video (public/videos/landings/instituciones.*).
+ * El texto sale de `src/data/landings.ts`; el lead llega a GHL con `variante: instituciones`.
+ */
+import BaseLayout from '../../layouts/BaseLayout.astro';
+import RegistroNicho from '../../components/landing/RegistroNicho.astro';
+import { getLanding } from '../../data/landings';
+import { nicheById } from '../../data/niches';
+
+const landing = getLanding('instituciones');
+const niche = nicheById('institutos')!;
+---
+
+<BaseLayout title={landing.metaTitle} description={landing.metaDescription} path={landing.route} waMessage={landing.waMessage} noindex landing>
+  <RegistroNicho landing={landing} niche={niche} />
+</BaseLayout>

@@ -1,0 +1,151 @@
+---
+/**
+ * Página de registro general: una sola pantalla con el formulario y, a su lado, la reputación que lo
+ * respalda. Es la versión humanizada: los cofundadores con foto, tres casos reales con su cifra, los
+ * partners, los testimonios (si existen) y la franja de logos de clientes. Todo es prueba real que ya
+ * existe en `src/data/`; nada se inventa para rellenar (PRODUCT.md).
+ */
+import Icon from '../Icon.astro';
+import ClientLogo from '../ClientLogo.astro';
+import FormWindow from './FormWindow.astro';
+import { team } from '../../data/team';
+import { successCases } from '../../data/cases';
+import { clients, partners } from '../../data/site-content';
+import { testimonials } from '../../data/testimonials';
+import type { LandingVariant } from '../../data/landings';
+
+interface Props {
+  landing: LandingVariant;
+}
+const { landing } = Astro.props;
+const founders = team.filter((m) => m.area === 'Dirección');
+const casos = ['zona-gamers', 'daniela-vidal', 'pawau']
+  .map((slug) => successCases.find((c) => c.slug === slug))
+  .filter((c): c is (typeof successCases)[number] => Boolean(c));
+const loop = [...clients, ...clients];
+---
+
+<section class="relative overflow-hidden bg-cobalt text-white">
+  <div class="pointer-events-none absolute inset-0" aria-hidden="true">
+    <div class="absolute -right-40 -top-40 h-[28rem] w-[28rem] rounded-full bg-cobalt-glow/30 blur-3xl"></div>
+    <div class="absolute -bottom-48 -left-24 h-[26rem] w-[26rem] rounded-full bg-cobalt-ink/60 blur-3xl"></div>
+  </div>
+
+  <!-- Móvil: titular → formulario → reputación. Escritorio: titular y reputación a la izquierda, formulario a la derecha. -->
+  <div class="wrap relative grid gap-8 py-12 lg:min-h-[calc(100dvh-4.5rem)] lg:grid-cols-12 lg:grid-rows-[1fr_auto_auto_1fr] lg:gap-x-14 lg:gap-y-0 lg:py-16">
+    <div class="min-w-0 lg:col-span-7 lg:row-start-2">
+      <h1 class="display-tight text-[clamp(2.2rem,4.2vw,3.6rem)] font-semibold" data-reveal>
+        {landing.h1}
+        <span class="block text-ice">{landing.h1Accent}</span>
+      </h1>
+      <p class="mt-5 max-w-2xl text-[clamp(1.02rem,1.4vw,1.2rem)] leading-relaxed text-white/85" data-reveal data-reveal-delay="60">
+        {landing.lead}
+      </p>
+    </div>
+
+    <div class="min-w-0 lg:col-span-5 lg:col-start-8 lg:row-span-4 lg:row-start-1 lg:self-center" data-reveal data-reveal-delay="100">
+      <FormWindow landing={landing} />
+      <ul class="mt-5 flex flex-col gap-2.5">
+        {
+          landing.promises.map((p) => (
+            <li class="flex items-start gap-2.5 text-[0.95rem] text-white">
+              <span class="mt-0.5 flex h-6 w-6 shrink-0 items-center justify-center rounded-full bg-white/15">
+                <Icon name="check" size={13} />
+              </span>
+              {p}
+            </li>
+          ))
+        }
+      </ul>
+    </div>
+
+    <div class="min-w-0 lg:col-span-7 lg:row-start-3">
+      <!-- La cara humana: quién revisa la solicitud. -->
+      <div class="flex items-center gap-4 rounded-[1.25rem] lg:mt-7 border border-white/20 bg-white/10 p-4" data-reveal data-reveal-delay="120">
+        <ul class="flex shrink-0 -space-x-3" aria-hidden="true">
+          {
+            founders.map((m) => (
+              <li>
+                <img src={m.photo} alt="" width="56" height="56" decoding="async" class="h-14 w-14 rounded-full border-2 border-cobalt object-cover object-top" />
+              </li>
+            ))
+          }
+        </ul>
+        <p class="text-[0.95rem] leading-snug text-ice">
+          <span class="font-semibold text-white">{founders.map((m) => m.name.split(' ')[0]).join(' y ')}</span>, cofundadores de
+          IonosHub, revisan cada solicitud y llevan el diagnóstico en persona.
+        </p>
+      </div>
+
+      <!-- Reputación: casos reales con su cifra. -->
+      <ul class="mt-4 grid gap-3 sm:grid-cols-3" data-reveal data-reveal-delay="180">
+        {
+          casos.map((c) => (
+            <li class="flex items-center gap-4 rounded-[1.25rem] border border-white/20 bg-white/10 p-4 sm:flex-col sm:items-start sm:gap-3">
+              {c.logo && <ClientLogo src={c.logo} alt={c.client} size="sm" class="!border-transparent" />}
+              <div>
+                <p class="tnum text-[1.15rem] font-semibold leading-tight text-white">{c.highlight}</p>
+                <p class="mt-1 text-[0.82rem] leading-snug text-ice sm:mt-3">
+                  {c.client} · {c.industry}
+                </p>
+              </div>
+            </li>
+          ))
+        }
+      </ul>
+
+      {
+        testimonials.length > 0 && (
+          <ul class="mt-4 grid gap-3 sm:grid-cols-2" data-reveal data-reveal-delay="220">
+            {testimonials.slice(0, 2).map((t) => (
+              <li class="rounded-[1.25rem] border border-white/20 bg-white/10 p-4">
+                <blockquote class="text-[0.95rem] leading-relaxed text-white">“{t.quote}”</blockquote>
+                <div class="mt-3 flex items-center gap-3">
+                  {t.photo && <img src={t.photo} alt="" width="36" height="36" loading="lazy" decoding="async" class="h-9 w-9 rounded-full object-cover" />}
+                  <p class="text-[0.82rem] leading-tight text-ice">
+                    <span class="block font-semibold text-white">{t.name}</span>
+                    {t.role} · {t.company}
+                  </p>
+                </div>
+              </li>
+            ))}
+          </ul>
+        )
+      }
+
+      <ul class="mt-6 flex flex-wrap gap-2" aria-label="Partners y credenciales" data-reveal data-reveal-delay="260">
+        {
+          partners.map((p, i) => (
+            <li
+              class:list={[
+                'inline-flex items-center gap-2 rounded-full px-3.5 py-1.5 text-[0.85rem] font-semibold',
+                i === 0 ? 'bg-canvas text-cobalt-ink' : 'border border-white/30 text-white',
+              ]}
+            >
+              <Icon name="shield" size={15} />
+              {p.name} · {p.credential}
+            </li>
+          ))
+        }
+      </ul>
+    </div>
+  </div>
+</section>
+
+<!-- Franja de logos de clientes reales: cierra la reputación sin alargar la página. -->
+<section class="border-b border-line-soft py-10">
+  <div class="wrap">
+    <p class="text-center text-[0.85rem] font-semibold uppercase tracking-wide text-ink-3">Negocios que ya trabajan con IonosHub</p>
+    <div class="marquee mt-6 overflow-hidden [mask-image:linear-gradient(to_right,transparent,black_12%,black_88%,transparent)]">
+      <ul class="marquee-track flex w-max items-center gap-4 pr-4">
+        {
+          loop.map((c) => (
+            <li class="shrink-0">
+              <ClientLogo src={c.src} alt={c.alt} size="md" class="!border-line-soft !bg-ice-3" />
+            </li>
+          ))
+        }
+      </ul>
+    </div>
+  </div>
+</section>

@@ -1,0 +1,18 @@
+---
+/**
+ * Agenda · Clínicas y consultorios. Página de registro "speed to lead" del nicho `clinicas`: sólo el
+ * formulario, sin testimonios, sobre fondo motion o video (public/videos/landings/clinicas.*).
+ * El texto sale de `src/data/landings.ts`; el lead llega a GHL con `variante: clinicas`.
+ */
+import BaseLayout from '../../layouts/BaseLayout.astro';
+import RegistroNicho from '../../components/landing/RegistroNicho.astro';
+import { getLanding } from '../../data/landings';
+import { nicheById } from '../../data/niches';
+
+const landing = getLanding('clinicas');
+const niche = nicheById('clinicas')!;
+---
+
+<BaseLayout title={landing.metaTitle} description={landing.metaDescription} path={landing.route} waMessage={landing.waMessage} noindex landing>
+  <RegistroNicho landing={landing} niche={niche} />
+</BaseLayout>

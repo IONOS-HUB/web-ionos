@@ -1,0 +1,25 @@
+---
+/** Ventanilla del formulario de registro: cabecera hielo con disco cobalto y el formulario de la variante. */
+import Icon from '../Icon.astro';
+import SpeedToLeadForm from '../islands/SpeedToLeadForm.tsx';
+import { waLink } from '../../lib/site';
+import type { LandingVariant } from '../../data/landings';
+
+interface Props {
+  landing: LandingVariant;
+  class?: string;
+}
+const { landing, class: className = '' } = Astro.props;
+---
+
+<div id="formulario" class:list={['scroll-mt-24 overflow-hidden rounded-[1.75rem] border border-line bg-canvas text-ink shadow-lift', className]}>
+  <div class="flex items-center gap-3 border-b border-line-soft bg-ice-3 px-6 py-4 sm:px-8">
+    <span class="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-cobalt text-white">
+      <Icon name="calendar" size={18} />
+    </span>
+    <p class="text-[1.05rem] font-semibold leading-tight text-ink">{landing.form.title}</p>
+  </div>
+  <div class="p-6 sm:p-8">
+    <SpeedToLeadForm client:load variante={landing.id} form={landing.form} waHref={waLink(landing.waMessage)} />
+  </div>
+</div>

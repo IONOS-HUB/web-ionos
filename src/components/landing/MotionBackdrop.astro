@@ -1,0 +1,131 @@
+---
+/**
+ * Fondo de la portada de las landings de nicho. Si existe el video en `public/videos/landings`, se pinta
+ * a sangre bajo un velo noche→cobalto que mantiene el contraste AA del texto blanco. Si no existe (o
+ * mientras carga), el fondo es motion en CSS: halos cobalto que derivan despacio sobre noche y una
+ * retícula fina que se desvanece. Todo azul (The One Hue Rule).
+ *
+ * El video no se descarga con `prefers-reduced-motion`, `?nomotion=1` ni con ahorro de datos: el script
+ * sólo le pone `src` con motion permitida. En esos casos queda el póster o el fondo CSS.
+ */
+import { existsSync } from 'node:fs';
+import { join } from 'node:path';
+import type { LandingVariant } from '../../data/landings';
+
+interface Props {
+  background?: LandingVariant['background'];
+}
+const { background } = Astro.props;
+
+// Las rutas se comprueban al construir: un video que todavía no se ha subido no deja un <video> roto.
+const enPublic = (ruta?: string) => (ruta && existsSync(join(process.cwd(), 'public', ruta)) ? ruta : undefined);
+const mp4 = enPublic(background?.video?.mp4);
+const webm = enPublic(background?.video?.webm);
+const poster = enPublic(background?.poster);
+const hayVideo = Boolean(mp4 || webm);
+---
+
+<div class="backdrop pointer-events-none absolute inset-0 overflow-hidden bg-night" aria-hidden="true">
+  <div class="orb orb-a"></div>
+  <div class="orb orb-b"></div>
+  <div class="orb orb-c"></div>
+  <div class="grid-lines absolute inset-0"></div>
+  {
+    poster && !hayVideo && <img src={poster} alt="" class="absolute inset-0 h-full w-full object-cover" decoding="async" fetchpriority="high" />
+  }
+  {
+    hayVideo && (
+      <video class="absolute inset-0 h-full w-full object-cover" muted loop playsinline preload="none" poster={poster} data-backdrop-video>
+        {webm && <source data-src={webm} type="video/webm" />}
+        {mp4 && <source data-src={mp4} type="video/mp4" />}
+      </video>
+    )
+  }
+  <!-- Velo: oscurece a la izquierda (donde va el texto) y deja respirar el fondo a la derecha. -->
+  <div class="absolute inset-0 bg-[linear-gradient(100deg,rgb(11_27_51/0.94)_0%,rgb(11_27_51/0.82)_45%,rgb(8_58_122/0.55)_100%)]"></div>
+  <div class="absolute inset-x-0 bottom-0 h-32 bg-gradient-to-b from-transparent to-night/60"></div>
+</div>
+
+<style>
+  .orb {
+    position: absolute;
+    border-radius: 999px;
+    filter: blur(64px);
+    will-change: transform;
+  }
+  .orb-a {
+    width: 34rem;
+    height: 34rem;
+    right: -8rem;
+    top: -10rem;
+    background: rgb(63 134 230 / 0.45);
+  }
+  .orb-b {
+    width: 28rem;
+    height: 28rem;
+    left: 30%;
+    bottom: -14rem;
+    background: rgb(14 95 203 / 0.5);
+  }
+  .orb-c {
+    width: 18rem;
+    height: 18rem;
+    right: 28%;
+    top: 40%;
+    background: rgb(184 203 232 / 0.18);
+  }
+  .grid-lines {
+    background-image:
+      linear-gradient(to right, rgb(184 203 232 / 0.07) 1px, transparent 1px),
+      linear-gradient(to bottom, rgb(184 203 232 / 0.07) 1px, transparent 1px);
+    background-size: 3.5rem 3.5rem;
+    mask-image: radial-gradient(ellipse 70% 60% at 70% 40%, black, transparent);
+  }
+  :global(html.motion-ready) .orb-a {
+    animation: drift-a 22s ease-in-out infinite alternate;
+  }
+  :global(html.motion-ready) .orb-b {
+    animation: drift-b 28s ease-in-out infinite alternate;
+  }
+  :global(html.motion-ready) .orb-c {
+    animation: drift-c 18s ease-in-out infinite alternate;
+  }
+  :global(html.motion-ready) .grid-lines {
+    animation: grid-pan 40s linear infinite;
+  }
+  @keyframes drift-a {
+    to {
+      transform: translate3d(-6rem, 5rem, 0) scale(1.12);
+    }
+  }
+  @keyframes drift-b {
+    to {
+      transform: translate3d(8rem, -4rem, 0) scale(0.9);
+    }
+  }
+  @keyframes drift-c {
+    to {
+      transform: translate3d(-4rem, -6rem, 0) scale(1.25);
+    }
+  }
+  @keyframes grid-pan {
+    to {
+      background-position: 3.5rem 3.5rem;
+    }
+  }
+</style>
+
+<script>
+  // El video sólo se descarga con motion permitida y sin ahorro de datos; si no, queda el fondo CSS o el póster.
+  // Misma condición que `motion.ts` (no depende del orden en que se ejecuten los dos módulos).
+  const reducido =
+    window.matchMedia('(prefers-reduced-motion: reduce)').matches || new URLSearchParams(location.search).has('nomotion');
+  const ahorro = (navigator as unknown as { connection?: { saveData?: boolean } }).connection?.saveData;
+  if (!reducido && !ahorro) {
+    document.querySelectorAll<HTMLVideoElement>('[data-backdrop-video]').forEach((video) => {
+      video.querySelectorAll<HTMLSourceElement>('source[data-src]').forEach((s) => (s.src = s.dataset.src!));
+      video.load();
+      video.play().catch(() => {});
+    });
+  }
+</script>
