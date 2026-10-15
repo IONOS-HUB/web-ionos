@@ -72,6 +72,17 @@ export default function SpeedToLeadForm({ variante, form, waHref }: Props) {
     if (!data.calificacion) e.calificacion = 'Elige una opción.';
     if (!consentimiento) e.consentimiento = 'Necesitamos tu permiso para contactarte.';
     setErrores(e);
+    // Lleva el foco al primer campo con error, en el orden en que se ven.
+    const orden: [keyof typeof e, string][] = [
+      ['nombre', 'stl-nombre'],
+      ['telefono', 'stl-telefono'],
+      ['correo', 'stl-correo'],
+      ['organizacion', 'stl-org'],
+      ['calificacion', 'stl-calificacion'],
+      ['consentimiento', 'stl-consentimiento'],
+    ];
+    const primero = orden.find(([k]) => e[k]);
+    if (primero) document.getElementById(primero[1])?.focus();
     return Object.keys(e).length === 0;
   };
 
@@ -106,6 +117,8 @@ export default function SpeedToLeadForm({ variante, form, waHref }: Props) {
         return;
       }
       setEstado('listo');
+      // La cabecera de la ventanilla (fuera de la isla) deja de pedir y confirma.
+      document.querySelector<HTMLElement>('[data-form-title]')?.replaceChildren('Solicitud recibida');
       // Conversión principal de la landing para GA4; sólo si GA está cargado.
       (window as unknown as { gtag?: (...a: unknown[]) => void }).gtag?.('event', 'generate_lead', {
         method: 'speed_to_lead',
@@ -297,7 +310,9 @@ export default function SpeedToLeadForm({ variante, form, waHref }: Props) {
             if (e.target.checked) setErrores((x) => ({ ...x, consentimiento: '' }));
           }}
           className="mt-1 h-4.5 w-4.5 shrink-0 accent-cobalt"
+          id="stl-consentimiento"
           aria-invalid={!!errores.consentimiento}
+          aria-describedby={errores.consentimiento ? 'stl-consentimiento-err' : undefined}
         />
         <span>
           Acepto que IonosHub me contacte por WhatsApp, llamada o correo sobre esta solicitud.{' '}
@@ -307,7 +322,11 @@ export default function SpeedToLeadForm({ variante, form, waHref }: Props) {
           .
         </span>
       </label>
-      {errores.consentimiento && <p className="text-sm text-red-600">{errores.consentimiento}</p>}
+      {errores.consentimiento && (
+        <p id="stl-consentimiento-err" className="-mt-2 text-sm text-red-600">
+          {errores.consentimiento}
+        </p>
+      )}
 
       {errores.general && (
         <p className="rounded-2xl border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-700" role="alert">

@@ -17,7 +17,7 @@ const { landing, class: className = '' } = Astro.props;
     <span class="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-cobalt text-white">
       <Icon name="calendar" size={18} />
     </span>
-    <p class="text-[1.05rem] font-semibold leading-tight text-ink">{landing.form.title}</p>
+    <p class="text-[1.05rem] font-semibold leading-tight text-ink" data-form-title aria-live="polite">{landing.form.title}</p>
   </div>
   <div class="p-6 sm:p-8">
     <SpeedToLeadForm client:load variante={landing.id} form={landing.form} waHref={waLink(landing.waMessage)} />

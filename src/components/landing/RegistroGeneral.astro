@@ -60,60 +60,61 @@ const loop = [...clients, ...clients];
     </div>
 
     <div class="min-w-0 lg:col-span-7 lg:row-start-3">
-      <!-- La cara humana: quién revisa la solicitud. -->
-      <div class="flex items-center gap-4 rounded-[1.25rem] lg:mt-7 border border-white/20 bg-white/10 p-4" data-reveal data-reveal-delay="120">
-        <ul class="flex shrink-0 -space-x-3" aria-hidden="true">
+      <!-- Reputación en un solo panel: quién atiende, qué ya logramos y, si existen, lo que dicen los clientes. -->
+      <div class="divide-y divide-white/15 rounded-[1.5rem] border border-white/20 lg:mt-8" data-reveal data-reveal-delay="120">
+        <div class="flex items-center gap-4 p-5">
+          <ul class="flex shrink-0 -space-x-3" aria-hidden="true">
+            {
+              founders.map((m) => (
+                <li>
+                  <img src={m.photo} alt="" width="56" height="56" decoding="async" class="h-14 w-14 rounded-full border-2 border-cobalt object-cover object-top" />
+                </li>
+              ))
+            }
+          </ul>
+          <p class="text-[0.98rem] leading-snug text-ice">
+            <span class="font-semibold text-white">{founders.map((m) => m.name.split(' ')[0]).join(' y ')}</span>, cofundadores de
+            IonosHub, revisan cada solicitud y llevan el diagnóstico en persona.
+          </p>
+        </div>
+
+        <ul class="grid divide-y divide-white/15 sm:grid-cols-3 sm:divide-x sm:divide-y-0" aria-label="Casos reales">
           {
-            founders.map((m) => (
-              <li>
-                <img src={m.photo} alt="" width="56" height="56" decoding="async" class="h-14 w-14 rounded-full border-2 border-cobalt object-cover object-top" />
+            casos.map((c) => (
+              <li class="flex items-center gap-4 p-5 sm:flex-col sm:items-start sm:gap-3">
+                {c.logo && <ClientLogo src={c.logo} alt={c.client} size="sm" class="!border-transparent" />}
+                <div>
+                  <p class="tnum text-[1.2rem] font-semibold leading-tight text-white">{c.highlight}</p>
+                  <p class="mt-1 text-[0.82rem] leading-snug text-ice sm:mt-2">
+                    {c.client} · {c.industry}
+                  </p>
+                </div>
               </li>
             ))
           }
         </ul>
-        <p class="text-[0.95rem] leading-snug text-ice">
-          <span class="font-semibold text-white">{founders.map((m) => m.name.split(' ')[0]).join(' y ')}</span>, cofundadores de
-          IonosHub, revisan cada solicitud y llevan el diagnóstico en persona.
-        </p>
+
+        {
+          testimonials.length > 0 && (
+            <ul class="grid divide-y divide-white/15 sm:grid-cols-2 sm:divide-x sm:divide-y-0" aria-label="Testimonios">
+              {testimonials.slice(0, 2).map((t) => (
+                <li class="p-5">
+                  <blockquote class="text-[0.98rem] leading-relaxed text-white">“{t.quote}”</blockquote>
+                  <div class="mt-3 flex items-center gap-3">
+                    {t.photo && <img src={t.photo} alt="" width="36" height="36" loading="lazy" decoding="async" class="h-9 w-9 rounded-full object-cover" />}
+                    <p class="text-[0.82rem] leading-tight text-ice">
+                      <span class="block font-semibold text-white">{t.name}</span>
+                      {t.role} · {t.company}
+                    </p>
+                  </div>
+                </li>
+              ))}
+            </ul>
+          )
+        }
       </div>
 
-      <!-- Reputación: casos reales con su cifra. -->
-      <ul class="mt-4 grid gap-3 sm:grid-cols-3" data-reveal data-reveal-delay="180">
-        {
-          casos.map((c) => (
-            <li class="flex items-center gap-4 rounded-[1.25rem] border border-white/20 bg-white/10 p-4 sm:flex-col sm:items-start sm:gap-3">
-              {c.logo && <ClientLogo src={c.logo} alt={c.client} size="sm" class="!border-transparent" />}
-              <div>
-                <p class="tnum text-[1.15rem] font-semibold leading-tight text-white">{c.highlight}</p>
-                <p class="mt-1 text-[0.82rem] leading-snug text-ice sm:mt-3">
-                  {c.client} · {c.industry}
-                </p>
-              </div>
-            </li>
-          ))
-        }
-      </ul>
-
-      {
-        testimonials.length > 0 && (
-          <ul class="mt-4 grid gap-3 sm:grid-cols-2" data-reveal data-reveal-delay="220">
-            {testimonials.slice(0, 2).map((t) => (
-              <li class="rounded-[1.25rem] border border-white/20 bg-white/10 p-4">
-                <blockquote class="text-[0.95rem] leading-relaxed text-white">“{t.quote}”</blockquote>
-                <div class="mt-3 flex items-center gap-3">
-                  {t.photo && <img src={t.photo} alt="" width="36" height="36" loading="lazy" decoding="async" class="h-9 w-9 rounded-full object-cover" />}
-                  <p class="text-[0.82rem] leading-tight text-ice">
-                    <span class="block font-semibold text-white">{t.name}</span>
-                    {t.role} · {t.company}
-                  </p>
-                </div>
-              </li>
-            ))}
-          </ul>
-        )
-      }
-
-      <ul class="mt-6 flex flex-wrap gap-2" aria-label="Partners y credenciales" data-reveal data-reveal-delay="260">
+      <ul class="mt-5 flex flex-wrap gap-2" aria-label="Partners y credenciales" data-reveal data-reveal-delay="200">
         {
           partners.map((p, i) => (
             <li
