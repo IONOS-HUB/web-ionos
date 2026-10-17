@@ -10,10 +10,10 @@
 
 Cada una es una página de registro de una sola pantalla: el formulario es todo el contenido (`components/landing/RegistroGeneral.astro`, `RegistroNicho.astro`, ventanilla en `FormWindow.astro`). En móvil el formulario va justo después del titular.
 
-Cada una es una página dedicada en `src/pages/speed-to-lead/` y se llega desde el submenú **Agenda** de la navegación (escritorio y móvil). Llevan la navegación y el pie normales, pero no el chat ni el pop-up de webinar. Son `noindex` y no están en el sitemap.
+Son sólo para tráfico de pauta: se accede por URL directa y **ningún enlace del sitio apunta a ellas**. No llevan navegación, pie, chat ni pop-up de webinar (sólo el logo sin enlace, el formulario y el botón flotante de WhatsApp). Son `noindex` y no están en el sitemap. No las bloquees en `robots.txt`: Google Ads y Meta necesitan rastrearlas para aprobar los anuncios, y el `noindex` sólo se respeta si el rastreador puede leer la página.
 Para la pauta, usa la URL con UTMs, p. ej. `https://ionoshub.net/speed-to-lead/clinicas?utm_source=meta&utm_campaign=clinicas-oct`.
 
-El contenido de cada variante es un objeto en `src/data/landings.ts` (entrada del submenú, titular, promesas, etiquetas del formulario, pregunta de calificación, fondo, mensaje de WhatsApp, meta). Para añadir una: el objeto ahí, su archivo en `src/pages/speed-to-lead/` y su id en `LandingId`.
+El contenido de cada variante es un objeto en `src/data/landings.ts` (titular, promesas, etiquetas del formulario, pregunta de calificación, fondo, mensaje de WhatsApp, meta). Para añadir una: el objeto ahí, su archivo en `src/pages/speed-to-lead/` y su id en `LandingId`.
 
 ## Videos de fondo (instituciones y clínicas)
 

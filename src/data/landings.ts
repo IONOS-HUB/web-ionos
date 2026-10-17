@@ -1,18 +1,17 @@
 import type { NicheId } from './niches';
-import type { IconName } from '../components/Icon.astro';
 
 /**
  * Landings "speed to lead": páginas cuyo único objetivo es el formulario. Una variante = un objeto, y
- * de aquí salen el submenú "Agenda" de la navegación, la pregunta de calificación del formulario, el
- * fondo y la etiqueta con la que el lead llega a GHL (`variante`). Cada variante tiene su propia página
- * en `src/pages/speed-to-lead/` (añadir una variante = un objeto aquí + su archivo de página).
+ * de aquí salen el titular, la pregunta de calificación del formulario, el fondo y la etiqueta con la
+ * que el lead llega a GHL (`variante`). Cada variante tiene su propia página en `src/pages/speed-to-lead/`
+ * (añadir una variante = un objeto aquí + su archivo de página).
  *
  * - `general` es la versión humanizada: equipo, casos reales, logos y testimonios (si existen).
  * - Las de nicho no llevan testimonios: el léxico, lo que el agente hace y sus líneas rojas salen de
  *   `niches.ts` para no duplicar copy, y el fondo es un video motion (o su versión en CSS).
  *
- * Son `noindex` y no están en el sitemap: el tráfico llega de campañas y del menú, y las páginas que
- * posicionan por sector son `/servicios/inteligencia-artificial/<slug>`.
+ * Son sólo para pauta: ningún enlace del sitio apunta a ellas, son `noindex` y no están en el sitemap.
+ * Las páginas que posicionan por sector son `/servicios/inteligencia-artificial/<slug>`.
  */
 
 export type LandingId = 'general' | 'instituciones' | 'clinicas';
@@ -23,8 +22,6 @@ export interface LandingVariant {
   slug: string;
   route: string;
   nicheId?: NicheId;
-  /** Entrada del submenú "Agenda" de la navegación */
-  menu: { label: string; hint: string; icon: IconName };
   h1: string;
   /** Segunda línea del h1, pintada en el tono de acento */
   h1Accent: string;
@@ -54,7 +51,6 @@ export const landings: LandingVariant[] = [
     id: 'general',
     slug: '',
     route: '/speed-to-lead',
-    menu: { label: 'Para tu negocio', hint: 'Diagnóstico gratuito con un cofundador', icon: 'calendar' },
     h1: 'Cuéntanos qué frena a tu negocio.',
     h1Accent: 'Te llama una persona, no un bot.',
     lead: 'Deja tus datos y un cofundador de IonosHub te contacta para agendar un diagnóstico gratuito de 30 minutos. Sales con un plan concreto de IA, automatización o marketing para tu negocio.',
@@ -92,7 +88,6 @@ export const landings: LandingVariant[] = [
     slug: 'instituciones',
     route: '/speed-to-lead/instituciones',
     nicheId: 'institutos',
-    menu: { label: 'Instituciones educativas', hint: 'Demostración de IA para matrículas', icon: 'birrete' },
     h1: 'Tu secretaría, abierta cuando los representantes preguntan.',
     h1Accent: 'Incluso el fin de semana.',
     lead: 'Un agente de IA que informa cupos, horarios y requisitos, acompaña la matrícula y agenda la visita al campus, conectado a tu sistema académico. Déjanos tus datos y te mostramos cómo funcionaría en tu institución.',
@@ -129,7 +124,6 @@ export const landings: LandingVariant[] = [
     slug: 'clinicas',
     route: '/speed-to-lead/clinicas',
     nicheId: 'clinicas',
-    menu: { label: 'Clínicas y consultorios', hint: 'Demostración de IA que contesta y agenda', icon: 'estetoscopio' },
     h1: 'Ninguna llamada de un paciente sin contestar.',
     h1Accent: 'Ni a las once de la noche.',
     lead: 'Una IA de voz y de WhatsApp que agenda en la agenda real del especialista, confirma el día antes y recibe la orden del paciente. Sin diagnosticar nunca. Déjanos tus datos y te mostramos cómo sonaría en tu consultorio.',

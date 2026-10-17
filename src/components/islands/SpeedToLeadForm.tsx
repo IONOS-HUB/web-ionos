@@ -316,7 +316,7 @@ export default function SpeedToLeadForm({ variante, form, waHref }: Props) {
         />
         <span>
           Acepto que IonosHub me contacte por WhatsApp, llamada o correo sobre esta solicitud.{' '}
-          <a href="/politica-de-privacidad" className="font-semibold text-cobalt-ink underline">
+          <a href="/politica-de-privacidad" target="_blank" rel="noopener" className="font-semibold text-cobalt-ink underline">
             Cómo tratamos tus datos
           </a>
           .

@@ -1,14 +1,10 @@
 ---
 import Icon from './Icon.astro';
 import { NAV, NAV_SERVICES } from '../lib/site';
-import { landings } from '../data/landings';
 
 const current = Astro.url.pathname;
 const isActive = (href: string) => current === href || (href !== '/' && current.startsWith(href));
 const servicesActive = current.startsWith('/servicios/');
-// La general (`/speed-to-lead`) es prefijo de las otras dos: se compara exacto.
-const agendaActive = current.startsWith('/speed-to-lead');
-const isLanding = (href: string) => current === href;
 ---
 
 <header class="sticky top-0 z-50 border-b border-line-soft bg-canvas/85 backdrop-blur-md supports-[backdrop-filter]:bg-canvas/75">
@@ -57,61 +53,6 @@ const isLanding = (href: string) => current === href;
             Ver cómo se conectan los cuatro pilares
             <Icon name="arrow-right" size={16} />
           </a>
-          <!-- Las páginas de registro por tipo de negocio, también desde Servicios. -->
-          <p class="border-t border-line-soft px-3 pb-1 pt-3 text-[0.72rem] font-semibold uppercase tracking-wide text-ink-3">Agenda por tipo de negocio</p>
-          <ul>
-            {
-              landings.map((l) => (
-                <li>
-                  <a
-                    href={l.route}
-                    class:list={['flex items-center gap-3 rounded-[0.75rem] px-3 py-2 text-[0.9rem] font-semibold transition-colors', isLanding(l.route) ? 'bg-ice text-cobalt-ink' : 'text-ink hover:bg-ice-3']}
-                    aria-current={isLanding(l.route) ? 'page' : undefined}
-                  >
-                    <Icon name={l.menu.icon} size={16} class="shrink-0 text-cobalt-ink" />
-                    {l.menu.label}
-                  </a>
-                </li>
-              ))
-            }
-          </ul>
-        </div>
-      </li>
-      <!-- Agenda: una página dedicada por tipo de negocio (src/data/landings.ts). -->
-      <li class="menu relative" data-menu>
-        <button
-          type="button"
-          class:list={[
-            'flex items-center gap-1.5 whitespace-nowrap rounded-full px-3.5 py-2 text-[0.95rem] font-medium transition-colors duration-300',
-            agendaActive ? 'bg-ice text-cobalt-ink' : 'text-ink-2 hover:bg-ice-3 hover:text-ink',
-          ]}
-          aria-expanded="false"
-          aria-controls="menu-agenda"
-          aria-haspopup="true"
-        >
-          Agenda
-          <Icon name="plus" size={14} class="menu-caret transition-transform duration-400 ease-[var(--ease-out-expo)]" />
-        </button>
-        <div id="menu-agenda" class="menu-panel absolute left-0 top-[calc(100%+0.75rem)] w-[22rem] rounded-[1.5rem] border border-line bg-canvas p-2 shadow-lift">
-          <ul>
-            {
-              landings.map((l) => (
-                <li>
-                  <a
-                    href={l.route}
-                    class:list={['group flex items-center gap-3.5 rounded-[1rem] px-3 py-3 transition-colors', isLanding(l.route) ? 'bg-ice' : 'hover:bg-ice-3']}
-                    aria-current={isLanding(l.route) ? 'page' : undefined}
-                  >
-                    <span class="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-ice text-cobalt-ink transition-colors group-hover:bg-cobalt group-hover:text-white"><Icon name={l.menu.icon} size={18} /></span>
-                    <span class="min-w-0 leading-tight">
-                      <span class="block text-[0.95rem] font-semibold text-ink">{l.menu.label}</span>
-                      <span class="block truncate text-[0.82rem] text-ink-3">{l.menu.hint}</span>
-                    </span>
-                  </a>
-                </li>
-              ))
-            }
-          </ul>
         </div>
       </li>
       {
@@ -147,7 +88,7 @@ const isLanding = (href: string) => current === href;
         <Icon name="menu" size={24} class="menu-open" />
         <Icon name="close" size={24} class="menu-close hidden" />
       </summary>
-      <div class="absolute right-0 top-[calc(100%+0.75rem)] max-h-[calc(100dvh-6rem)] w-[min(92vw,22rem)] overflow-y-auto rounded-card border border-line bg-canvas p-3 shadow-lift">
+      <div class="absolute right-0 top-[calc(100%+0.75rem)] w-[min(92vw,22rem)] rounded-card border border-line bg-canvas p-3 shadow-lift">
         <p class="px-4 pb-1 pt-2 text-[0.78rem] font-semibold uppercase tracking-wide text-ink-3">Servicios</p>
         <ul class="flex flex-col">
           {
@@ -162,25 +103,6 @@ const isLanding = (href: string) => current === href;
                 >
                   <Icon name={s.icon} size={18} class="shrink-0 text-cobalt-ink" />
                   {s.label}
-                </a>
-              </li>
-            ))
-          }
-        </ul>
-        <p class="mt-2 border-t border-line-soft px-4 pb-1 pt-4 text-[0.78rem] font-semibold uppercase tracking-wide text-ink-3">Agenda</p>
-        <ul class="flex flex-col">
-          {
-            landings.map((l) => (
-              <li>
-                <a
-                  href={l.route}
-                  class:list={[
-                    'flex items-center gap-3 rounded-xl px-4 py-2.5 text-base font-medium',
-                    isLanding(l.route) ? 'bg-ice text-cobalt-ink' : 'text-ink hover:bg-ice-3',
-                  ]}
-                >
-                  <Icon name={l.menu.icon} size={18} class="shrink-0 text-cobalt-ink" />
-                  {l.menu.label}
                 </a>
               </li>
             ))
@@ -268,7 +190,7 @@ const isLanding = (href: string) => current === href;
     menu.querySelectorAll('a').forEach((a) => a.addEventListener('click', () => (menu.open = false)));
   }
 
-  // Desplegables (servicios y agenda): clic para táctil y teclado; Escape y clic fuera lo cierran.
+  // Desplegable de servicios: clic para táctil y teclado; Escape y clic fuera lo cierran.
   document.querySelectorAll<HTMLElement>('[data-menu]').forEach((wrap) => {
     const btn = wrap.querySelector<HTMLButtonElement>('button')!;
     const set = (open: boolean) => {

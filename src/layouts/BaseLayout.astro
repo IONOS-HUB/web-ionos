@@ -19,8 +19,8 @@ interface Props {
   waMessage?: string;
   noindex?: boolean;
   /**
-   * Página de formulario (`/speed-to-lead`): sin chat ni pop-up de webinar, que competirían con el
-   * formulario. La navegación y el pie son los de siempre.
+   * Landing de pauta (`/speed-to-lead`): sin navegación, pie, chat ni pop-up de webinar. Llega tráfico
+   * pagado y la página no ofrece más salida que el formulario y WhatsApp.
    */
   landing?: boolean;
 }
@@ -110,11 +110,11 @@ const orgJsonLd = {
     >
       Saltar al contenido
     </a>
-    <Nav />
+    {!landing && <Nav />}
     <main id="contenido" class="flex-1">
       <slot />
     </main>
-    <Footer />
+    {!landing && <Footer />}
     <!-- Columna de acciones flotantes: el chat encima, WhatsApp abajo. El aviso de cookies la sube en móvil. -->
     <div class="fixed bottom-5 right-5 z-40 flex flex-col items-end gap-3 sm:bottom-6 sm:right-6" data-float-stack>
       {chatUi && <ChatLauncher />}
