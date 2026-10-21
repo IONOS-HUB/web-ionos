@@ -1,9 +1,13 @@
 ---
 /**
- * Fondo de la portada de las landings de nicho. Si existe el video en `public/videos/landings`, se pinta
- * a sangre bajo un velo noche→cobalto que mantiene el contraste AA del texto blanco. Si no existe (o
- * mientras carga), el fondo es motion en CSS: halos cobalto que derivan despacio sobre noche y una
- * retícula fina que se desvanece. Todo azul (The One Hue Rule).
+ * Campo animado de las landings: el bloque de color sobre el que flota el formulario. Dos tonos:
+ * - `night` (nichos): si existe el video en `public/videos/landings`, se pinta a sangre bajo un velo
+ *   noche→cobalto; si no existe (o mientras carga), halos cobalto que derivan sobre noche.
+ * - `cobalt` (general): el campo de marca, con halos `cobalt-glow` y `cobalt-ink` que derivan.
+ * Encima, una retícula fina que se desvanece. Todo azul (The One Hue Rule).
+ *
+ * El contenedor lo pone quien lo usa (posición, radio y `overflow-clip`); esto sólo pinta el fondo.
+ * Una sola instancia por página: el script de abajo arranca cada video que encuentre.
  *
  * El video no se descarga con `prefers-reduced-motion`, `?nomotion=1` ni con ahorro de datos: el script
  * sólo le pone `src` con motion permitida. En esos casos queda el póster o el fondo CSS.
@@ -14,8 +18,9 @@ import type { LandingVariant } from '../../data/landings';
 
 interface Props {
   background?: LandingVariant['background'];
+  tone?: 'night' | 'cobalt';
 }
-const { background } = Astro.props;
+const { background, tone = 'night' } = Astro.props;
 
 // Las rutas se comprueban al construir: un video que todavía no se ha subido no deja un <video> roto.
 const enPublic = (ruta?: string) => (ruta && existsSync(join(process.cwd(), 'public', ruta)) ? ruta : undefined);
@@ -25,7 +30,7 @@ const poster = enPublic(background?.poster);
 const hayVideo = Boolean(mp4 || webm);
 ---
 
-<div class="backdrop pointer-events-none absolute inset-0 overflow-hidden bg-night" aria-hidden="true">
+<div class:list={['backdrop pointer-events-none absolute inset-0 overflow-clip', tone === 'cobalt' ? 'tone-cobalt bg-cobalt' : 'bg-night']} aria-hidden="true">
   <div class="orb orb-a"></div>
   <div class="orb orb-b"></div>
   <div class="orb orb-c"></div>
@@ -41,9 +46,15 @@ const hayVideo = Boolean(mp4 || webm);
       </video>
     )
   }
-  <!-- Velo: oscurece a la izquierda (donde va el texto) y deja respirar el fondo a la derecha. -->
-  <div class="absolute inset-0 bg-[linear-gradient(100deg,rgb(11_27_51/0.94)_0%,rgb(11_27_51/0.82)_45%,rgb(8_58_122/0.55)_100%)]"></div>
-  <div class="absolute inset-x-0 bottom-0 h-32 bg-gradient-to-b from-transparent to-night/60"></div>
+  {
+    tone === 'night' && (
+      <>
+        <!-- Velo: mantiene legible lo que va encima aunque el video sea claro. -->
+        <div class="absolute inset-0 bg-[linear-gradient(160deg,rgb(11_27_51/0.86)_0%,rgb(11_27_51/0.7)_50%,rgb(8_58_122/0.55)_100%)]" />
+        <div class="absolute inset-x-0 bottom-0 h-32 bg-gradient-to-b from-transparent to-night/60" />
+      </>
+    )
+  }
 </div>
 
 <style>
@@ -73,6 +84,15 @@ const hayVideo = Boolean(mp4 || webm);
     right: 28%;
     top: 40%;
     background: rgb(184 203 232 / 0.18);
+  }
+  .tone-cobalt .orb-a {
+    background: rgb(63 134 230 / 0.55);
+  }
+  .tone-cobalt .orb-b {
+    background: rgb(8 58 122 / 0.6);
+  }
+  .tone-cobalt .orb-c {
+    background: rgb(233 241 252 / 0.16);
   }
   .grid-lines {
     background-image:

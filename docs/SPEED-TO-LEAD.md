@@ -4,13 +4,23 @@
 
 | Variante | URL | Contenido |
 | --- | --- | --- |
-| `general` | `/speed-to-lead` | Formulario con la reputación al lado: cofundadores, casos reales con cifra, partners, testimonios (si hay) y franja de logos. |
-| `instituciones` | `/speed-to-lead/instituciones` | Formulario sobre fondo motion/video del nicho `institutos`, con su cliente real. Sin testimonios. |
-| `clinicas` | `/speed-to-lead/clinicas` | Formulario sobre fondo motion/video del nicho `clinicas`, con su cliente real. Sin testimonios. |
+| `general` | `/speed-to-lead` | Formulario sobre campo cobalto; el ecosistema (cuatro pilares + flujo hacia el CRM); casos reales, logos y testimonios (si hay). |
+| `instituciones` | `/speed-to-lead/instituciones` | Formulario sobre campo noche con video del nicho `institutos`; demostración del sector, lo que hace y lo que nunca hace; casos. Sin testimonios. |
+| `clinicas` | `/speed-to-lead/clinicas` | Igual con el nicho `clinicas` y su cliente real del sector. Sin testimonios. |
 
-Cada una es una página de registro de una sola pantalla: el formulario es todo el contenido (`components/landing/RegistroGeneral.astro`, `RegistroNicho.astro`, ventanilla en `FormWindow.astro`). En móvil el formulario va justo después del titular.
+Las tres usan la misma página, `components/landing/Registro.astro` (ventanilla del formulario en `FormWindow.astro`, campo animado en `MotionBackdrop.astro`), en este orden:
 
-Son sólo para tráfico de pauta: se accede por URL directa y **ningún enlace del sitio apunta a ellas**. No llevan navegación, pie, chat ni pop-up de webinar (sólo el logo sin enlace, el formulario y el botón flotante de WhatsApp). Son `noindex` y no están en el sitemap. No las bloquees en `robots.txt`: Google Ads y Meta necesitan rastrearlas para aprobar los anuncios, y el `noindex` sólo se respeta si el rastreador puede leer la página.
+1. Barra con el logo (sin enlace) y un atajo "Agendar" que lleva al formulario y enfoca el primer campo.
+2. Portada: titular, promesas, cofundadores y credenciales sobre blanco; el formulario flota sobre el campo de color. En móvil el formulario va justo después del titular, en una banda a sangre.
+3. Qué pasa después de enviar: los cuatro pasos de `steps` (en `landings.ts`), que se encienden en secuencia.
+4. General: pilares + `FlowDemo`. Nicho: `NicheDemo`, `jobs` y `redLines` del sector.
+5. Casos reales con cifra (el del sector primero, si existe), cliente del sector y franja de logos, en noche.
+6. Cofundadores y equipo.
+7. Cierre en cobalto y pie legal mínimo (privacidad, términos, preferencias de cookies).
+
+Los contenedores decorativos usan `overflow-clip`, nunca `overflow-hidden`: un `hidden` sigue siendo desplazable por el navegador y, al enfocar un campo en móvil, corría la portada de lado.
+
+Son sólo para tráfico de pauta: se accede por URL directa y **ningún enlace del sitio apunta a ellas**. No llevan la navegación ni el pie del sitio ni el pop-up de webinar; sí llevan el chat de IONIC (en las de nicho, con el registro del sector: `BaseLayout nicho`) y el flotante de WhatsApp, que en móvil se ocultan mientras se escribe en el formulario. Son `noindex` y no están en el sitemap. No las bloquees en `robots.txt`: Google Ads y Meta necesitan rastrearlas para aprobar los anuncios, y el `noindex` sólo se respeta si el rastreador puede leer la página.
 Para la pauta, usa la URL con UTMs, p. ej. `https://ionoshub.net/speed-to-lead/clinicas?utm_source=meta&utm_campaign=clinicas-oct`.
 Medición en Meta (Pixel + API de Conversiones, evento `Lead`): `docs/META-PIXEL.md`.
 

@@ -8,6 +8,7 @@ import ChatWidget from '../components/ChatWidget.astro';
 import ChatLauncher from '../components/ChatLauncher.astro';
 import WebinarPromo from '../components/WebinarPromo.astro';
 import { SITE, DEFAULT_WA_MESSAGE, WHATSAPP_NUMBER, META_PIXEL_ID } from '../lib/site';
+import type { NicheId } from '../data/niches';
 
 interface Props {
   title: string;
@@ -19,10 +20,12 @@ interface Props {
   waMessage?: string;
   noindex?: boolean;
   /**
-   * Landing de pauta (`/speed-to-lead`): sin navegación, pie, chat ni pop-up de webinar. Llega tráfico
-   * pagado y la página no ofrece más salida que el formulario y WhatsApp.
+   * Landing de pauta (`/speed-to-lead`): sin navegación, pie del sitio ni pop-up de webinar. Llega tráfico
+   * pagado y la página no ofrece más salida que el formulario, WhatsApp y el chat de IONIC.
    */
   landing?: boolean;
+  /** Sector para el chat de IONIC cuando la ruta no es la del nicho (landings de pauta por sector) */
+  nicho?: NicheId;
 }
 
 const {
@@ -34,6 +37,7 @@ const {
   waMessage = DEFAULT_WA_MESSAGE,
   noindex = false,
   landing = false,
+  nicho,
 } = Astro.props;
 
 const fullTitle = title.includes('IonosHub') ? title : `${title} | IonosHub`;
@@ -48,9 +52,9 @@ const metaVerification = import.meta.env.PUBLIC_META_DOMAIN_VERIFICATION as stri
 // Meta Pixel sólo en las landings de pauta y sólo con consentimiento de publicidad (CookieConsent).
 const metaPixelId = landing ? (import.meta.env.PUBLIC_META_PIXEL_ID as string | undefined) || META_PIXEL_ID : '';
 
-// El chat va visible salvo que se apague con PUBLIC_CHAT_UI=0 (oculta la burbuja).
+// El chat va visible salvo que se apague con PUBLIC_CHAT_UI=0 (oculta la burbuja), también en las landings de pauta.
 // Para cortar también el endpoint, CHAT_ENABLED=0 en Vercel.
-const chatUi = import.meta.env.PUBLIC_CHAT_UI !== '0' && !landing;
+const chatUi = import.meta.env.PUBLIC_CHAT_UI !== '0';
 
 const orgJsonLd = {
   '@context': 'https://schema.org',
@@ -124,7 +128,7 @@ const orgJsonLd = {
       {chatUi && <ChatLauncher />}
       <WhatsAppFloat message={waMessage} />
     </div>
-    {chatUi && <ChatWidget />}
+    {chatUi && <ChatWidget nicho={nicho} />}
     {!landing && <WebinarPromo />}
     <CookieConsent gaId={gaId} metaPixelId={metaPixelId} />
     <script src="../scripts/motion.ts"></script>
