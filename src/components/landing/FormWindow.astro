@@ -12,14 +12,17 @@ interface Props {
 const { landing, class: className = '' } = Astro.props;
 ---
 
-<div id="formulario" class:list={['scroll-mt-24 overflow-hidden rounded-[1.75rem] border border-line bg-canvas text-ink shadow-lift', className]}>
+<div id="formulario" class:list={['scroll-mt-24 overflow-clip rounded-[1.75rem] border border-line bg-canvas text-ink shadow-lift', className]}>
   <div class="flex items-center gap-3 border-b border-line-soft bg-ice-3 px-6 py-4 sm:px-8">
-    <span class="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-cobalt text-white">
+    <span class="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-cobalt text-white" data-form-icon>
       <Icon name="calendar" size={18} />
     </span>
-    <p class="text-[1.05rem] font-semibold leading-tight text-ink" data-form-title aria-live="polite">{landing.form.title}</p>
+    <div class="min-w-0 leading-tight">
+      <p class="text-[1.05rem] font-semibold text-ink" data-form-title aria-live="polite">{landing.form.title}</p>
+      <p class="mt-0.5 text-[0.85rem] text-ink-3" data-form-subtitle>Gratis y sin compromiso · menos de un minuto</p>
+    </div>
   </div>
   <div class="p-6 sm:p-8">
-    <SpeedToLeadForm client:load variante={landing.id} form={landing.form} waHref={waLink(landing.waMessage)} />
+    <SpeedToLeadForm client:load variante={landing.id} form={landing.form} waHref={waLink(landing.waMessage)} siguiente={landing.steps.at(-1)?.title ?? ''} />
   </div>
 </div>

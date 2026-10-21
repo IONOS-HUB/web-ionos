@@ -6,15 +6,25 @@ import type { NicheId } from './niches';
  * que el lead llega a GHL (`variante`). Cada variante tiene su propia página en `src/pages/speed-to-lead/`
  * (añadir una variante = un objeto aquí + su archivo de página).
  *
- * - `general` es la versión humanizada: equipo, casos reales, logos y testimonios (si existen).
- * - Las de nicho no llevan testimonios: el léxico, lo que el agente hace y sus líneas rojas salen de
- *   `niches.ts` para no duplicar copy, y el fondo es un video motion (o su versión en CSS).
+ * - `general` muestra el ecosistema completo (los cuatro pilares y el flujo hacia el CRM), casos, equipo y
+ *   testimonios (si existen).
+ * - Las de nicho no llevan testimonios: la demostración del sector, lo que el agente hace y sus líneas rojas
+ *   salen de `niches.ts` para no duplicar copy, y el campo del formulario es noche con video (o motion en CSS).
  *
  * Son sólo para pauta: ningún enlace del sitio apunta a ellas, son `noindex` y no están en el sitemap.
+ * Todas usan la misma página (`components/landing/Registro.astro`); lo que cambia por variante vive aquí.
  * Las páginas que posicionan por sector son `/servicios/inteligencia-artificial/<slug>`.
  */
 
 export type LandingId = 'general' | 'instituciones' | 'clinicas';
+
+/** Un paso de lo que pasa después de enviar el formulario. Es el proceso real, no una promesa nueva. */
+export interface LandingStep {
+  /** Cuándo ocurre, en corto: va como rótulo del paso */
+  when: string;
+  title: string;
+  detail: string;
+}
 
 export interface LandingVariant {
   id: LandingId;
@@ -28,6 +38,8 @@ export interface LandingVariant {
   lead: string;
   /** Tres promesas cortas junto al formulario; nada que no podamos cumplir */
   promises: string[];
+  /** Los cuatro pasos desde que envía el formulario hasta el diagnóstico o la demostración */
+  steps: LandingStep[];
   form: {
     title: string;
     nameLabel: string;
@@ -58,6 +70,12 @@ export const landings: LandingVariant[] = [
       'Te contactamos en menos de un día hábil',
       'Diagnóstico gratuito, sin compromiso de compra',
       'Lo lleva un cofundador, no un vendedor',
+    ],
+    steps: [
+      { when: 'Ahora', title: 'Dejas tus datos', detail: 'Cinco campos. Te toma menos de un minuto.' },
+      { when: 'Al instante', title: 'Entran a nuestro CRM', detail: 'Tu solicitud queda registrada y asignada. No se pierde en un chat.' },
+      { when: 'En menos de un día hábil', title: 'Te escribe un cofundador', detail: 'Por WhatsApp, para elegir el horario que te venga bien.' },
+      { when: '30 minutos', title: 'Diagnóstico gratuito', detail: 'Sales con un plan concreto de IA, automatización o marketing.' },
     ],
     form: {
       title: 'Agenda tu diagnóstico gratuito',
@@ -96,6 +114,12 @@ export const landings: LandingVariant[] = [
       'Nunca da notas ni datos de un menor por chat',
       'Conectado a tu sistema académico y tu CRM de admisiones',
     ],
+    steps: [
+      { when: 'Ahora', title: 'Dejas tus datos', detail: 'Cinco campos. Te toma menos de un minuto.' },
+      { when: 'Al instante', title: 'Entran a nuestro CRM', detail: 'Tu solicitud queda registrada y asignada. No se pierde en un chat.' },
+      { when: 'En menos de un día hábil', title: 'Te escribimos por WhatsApp', detail: 'Para agendar la demostración con tu equipo de admisiones.' },
+      { when: 'Demostración', title: 'Lo ves con tu matrícula', detail: 'El agente respondiendo cupos, horarios y requisitos de tu institución.' },
+    ],
     form: {
       title: 'Solicita la demostración para tu institución',
       nameLabel: 'Tu nombre',
@@ -131,6 +155,12 @@ export const landings: LandingVariant[] = [
       'Demostración con la agenda de tu consultorio',
       'No diagnostica, no receta, no comparte datos del paciente',
       'Conectada a tu agenda, tu CRM o tu historia clínica',
+    ],
+    steps: [
+      { when: 'Ahora', title: 'Dejas tus datos', detail: 'Cinco campos. Te toma menos de un minuto.' },
+      { when: 'Al instante', title: 'Entran a nuestro CRM', detail: 'Tu solicitud queda registrada y asignada. No se pierde en un chat.' },
+      { when: 'En menos de un día hábil', title: 'Te escribimos por WhatsApp', detail: 'Para agendar la demostración en el horario de tu consultorio.' },
+      { when: 'Demostración', title: 'La escuchas con tu agenda', detail: 'Cómo contestaría, agendaría y confirmaría a tus pacientes.' },
     ],
     form: {
       title: 'Solicita la demostración para tu clínica',

@@ -30,7 +30,10 @@ import Icon from './Icon.astro';
 <style>
   .cw-launch {
     background: linear-gradient(140deg, var(--color-cobalt-glow), var(--color-cobalt) 55%, var(--color-cobalt-deep));
-    box-shadow: var(--shadow-phone);
+    /* Aro blanco: se distingue también sobre campos cobalto (landings, ola del hero). */
+    box-shadow:
+      0 0 0 2px rgb(255 255 255 / 0.9),
+      var(--shadow-phone);
   }
 
   /* Punto vivo: señal de que hay alguien (algo) al otro lado, sin ruido visual. */

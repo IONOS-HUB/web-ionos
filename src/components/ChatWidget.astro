@@ -12,14 +12,19 @@
 import Icon from './Icon.astro';
 import { GREETING } from '../lib/chat/copy';
 import { waLink, CALENDAR_URL } from '../lib/site';
-import { nicheFromPath } from '../data/niches';
+import { nicheById, nicheFromPath, type NicheId } from '../data/niches';
+
+interface Props {
+  /** Sector fijado por la página (landings de pauta por sector, cuya ruta no es la del nicho) */
+  nicho?: NicheId;
+}
 
 /**
  * En una página de sector, IONIC habla en el registro de ese sector y siembra sus preguntas. El
  * sector se resuelve en el servidor desde la ruta y viaja como `data-nicho`: el navegador manda el
  * identificador, pero `/api/chat` sólo acepta los conocidos, así que no puede inventarse uno.
  */
-const nicho = nicheFromPath(Astro.url.pathname);
+const nicho = (Astro.props.nicho && nicheById(Astro.props.nicho)) || nicheFromPath(Astro.url.pathname);
 const sugerencias = nicho
   ? [...nicho.chatPrompts, 'Quiero agendar']
   : ['¿Qué hacen exactamente?', '¿Cómo atiende llamadas la IA?', 'Quiero agendar'];

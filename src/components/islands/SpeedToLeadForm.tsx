@@ -1,4 +1,4 @@
-import { useState, type FormEvent, type ReactNode } from 'react';
+import { useRef, useState, type FormEvent, type ReactNode } from 'react';
 import SelectorPais from './SelectorPais';
 import { paisPorIso, PAIS_POR_DEFECTO } from '../../data/paises';
 import { CALENDAR_URL } from '../../lib/site';
@@ -12,12 +12,17 @@ import type { LandingVariant } from '../../data/landings';
  * Conversión en Meta: con el Pixel cargado (sólo si la persona aceptó la publicidad), el envío dispara
  * `Lead` en el navegador y el servidor manda el mismo evento a la API de Conversiones con el mismo
  * `eventID`, para que Meta lo cuente una vez. Ver docs/META-PIXEL.md.
+ *
+ * Al enviar, la confirmación ocupa el mismo sitio sin mover la página: en escritorio conserva el alto
+ * del formulario; en móvil, donde el formulario es largo, la ventanilla vuelve a la vista.
  */
 
 interface Props {
   variante: LandingVariant['id'];
   form: LandingVariant['form'];
   waHref: string;
+  /** El último paso de la variante ("Diagnóstico gratuito", "Lo ves con tu matrícula"…), para la confirmación */
+  siguiente: string;
 }
 
 const UTM = ['utm_source', 'utm_medium', 'utm_campaign', 'utm_term', 'utm_content', 'gclid', 'fbclid'];
@@ -70,8 +75,12 @@ const initial = {
 type Campo = keyof typeof initial;
 type Estado = 'idle' | 'enviando' | 'listo' | 'error';
 
-export default function SpeedToLeadForm({ variante, form, waHref }: Props) {
+const TOTAL_PASOS = 6;
+
+export default function SpeedToLeadForm({ variante, form, waHref, siguiente }: Props) {
   const [data, setData] = useState(initial);
+  const formRef = useRef<HTMLFormElement>(null);
+  const [altoListo, setAltoListo] = useState<number>();
   const [consentimiento, setConsentimiento] = useState(false);
   const [errores, setErrores] = useState<Partial<Record<Campo | 'consentimiento' | 'general', string>>>({});
   const [estado, setEstado] = useState<Estado>('idle');
@@ -80,6 +89,18 @@ export default function SpeedToLeadForm({ variante, form, waHref }: Props) {
     setData((d) => ({ ...d, [campo]: valor }));
     if (errores[campo]) setErrores((e) => ({ ...e, [campo]: '' }));
   };
+
+  // Avance visible mientras se llena: cada dato válido suma. Sólo orienta; la validación real es `validar`.
+  const pais = paisPorIso(data.pais);
+  const digitosTel = data.telefono.replace(/\D/g, '').replace(/^0+/, '');
+  const completos = [
+    data.nombre.trim().length >= 3,
+    digitosTel.length >= (pais?.min ?? 6) && digitosTel.length <= (pais?.max ?? 14),
+    /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(data.correo.trim()),
+    Boolean(data.organizacion.trim()),
+    Boolean(data.calificacion),
+    consentimiento,
+  ].filter(Boolean).length;
 
   const validar = () => {
     const e: typeof errores = {};
@@ -138,9 +159,17 @@ export default function SpeedToLeadForm({ variante, form, waHref }: Props) {
         setEstado('error');
         return;
       }
+      // En escritorio la confirmación conserva el alto del formulario: nada de lo que hay alrededor salta.
+      if (window.matchMedia('(min-width: 1024px)').matches) setAltoListo(formRef.current?.offsetHeight);
       setEstado('listo');
       // La cabecera de la ventanilla (fuera de la isla) deja de pedir y confirma.
       document.querySelector<HTMLElement>('[data-form-title]')?.replaceChildren('Solicitud recibida');
+      document.querySelector<HTMLElement>('[data-form-subtitle]')?.replaceChildren('Te escribimos por WhatsApp en menos de un día hábil');
+      // En móvil el formulario es largo y el botón quedaba abajo: se vuelve al inicio de la ventanilla.
+      if (!window.matchMedia('(min-width: 1024px)').matches) {
+        const suave = !window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+        requestAnimationFrame(() => document.getElementById('formulario')?.scrollIntoView({ behavior: suave ? 'smooth' : 'auto', block: 'start' }));
+      }
       // Conversión principal de la landing para GA4; sólo si GA está cargado.
       (window as unknown as { gtag?: (...a: unknown[]) => void }).gtag?.('event', 'generate_lead', {
         method: 'speed_to_lead',
@@ -159,12 +188,19 @@ export default function SpeedToLeadForm({ variante, form, waHref }: Props) {
 
   if (estado === 'listo') {
     const nombrePila = data.nombre.trim().split(' ')[0];
+    const pasos = [
+      { titulo: 'Solicitud recibida', cuando: 'Ahora', hecho: true },
+      { titulo: 'Te escribimos por WhatsApp', cuando: 'En menos de un día hábil', hecho: false },
+      { titulo: siguiente, cuando: 'Después', hecho: false },
+    ];
     return (
-      <div className="pop flex flex-col items-start gap-5" role="status" aria-live="polite">
-        <span className="flex h-12 w-12 items-center justify-center rounded-full bg-cobalt text-white">
+      <div className="pop flex flex-col justify-center gap-6" style={{ minHeight: altoListo }} role="status" aria-live="polite">
+        <span className="relative flex h-14 w-14 items-center justify-center rounded-full bg-cobalt text-white">
+          <span className="absolute inset-0 rounded-full bg-cobalt/40 motion-safe:animate-[ping_1.4s_cubic-bezier(0,0,0.2,1)_2]" aria-hidden="true" />
           <svg
-            width="22"
-            height="22"
+            className="relative"
+            width="26"
+            height="26"
             viewBox="0 0 24 24"
             fill="none"
             stroke="currentColor"
@@ -177,17 +213,41 @@ export default function SpeedToLeadForm({ variante, form, waHref }: Props) {
           </svg>
         </span>
         <div>
-          <h3 className="display-tight text-[1.6rem] font-semibold text-ink">Listo{nombrePila ? `, ${nombrePila}` : ''}. Ya tenemos tus datos.</h3>
-          <p className="mt-2 text-[1.02rem] leading-relaxed text-ink-2">
-            Te contactamos por WhatsApp en menos de un día hábil. Si no quieres esperar, elige ahora el horario que te venga bien.
-          </p>
+          <h3 className="display-tight text-[1.7rem] font-semibold text-ink">Listo{nombrePila ? `, ${nombrePila}` : ''}. Ya tenemos tus datos.</h3>
+          <p className="mt-2 text-[1.02rem] leading-relaxed text-ink-2">Si no quieres esperar, elige ahora el horario que te venga bien.</p>
         </div>
-        <div className="flex w-full flex-col gap-3 sm:flex-row">
+
+        <ol className="divide-y divide-line-soft rounded-[1rem] border border-line">
+          {pasos.map((p, i) => (
+            <li key={p.titulo} className="flex items-center gap-3 px-4 py-3">
+              <span
+                className={`tnum flex h-7 w-7 shrink-0 items-center justify-center rounded-full text-[0.8rem] font-semibold ${
+                  p.hecho ? 'bg-cobalt text-white' : 'bg-ice text-cobalt-ink'
+                }`}
+              >
+                {p.hecho ? (
+                  <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+                    <path d="m5 12.5 4.5 4.5L19 7.5" />
+                  </svg>
+                ) : (
+                  i + 1
+                )}
+              </span>
+              <span className="min-w-0 flex-1 leading-tight">
+                <span className="block text-[0.95rem] font-semibold text-ink">{p.titulo}</span>
+                <span className="mt-0.5 block text-[0.8rem] text-ink-3">{p.cuando}</span>
+              </span>
+            </li>
+          ))}
+        </ol>
+
+        {/* Apilados siempre: en una fila no caben en el ancho de la ventanilla y el segundo se salía. */}
+        <div className="flex flex-col gap-3">
           <a
             href={CALENDAR_URL}
             target="_blank"
             rel="noopener noreferrer"
-            className="btn btn-primary"
+            className="btn btn-primary w-full"
             onClick={() => {
               (window as unknown as { gtag?: (...a: unknown[]) => void }).gtag?.('event', 'open_calendar', {
                 page_path: window.location.pathname,
@@ -198,8 +258,12 @@ export default function SpeedToLeadForm({ variante, form, waHref }: Props) {
             }}
           >
             Elegir horario ahora
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.75" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+              <path d="M5 12h14" />
+              <path d="m13 6 6 6-6 6" />
+            </svg>
           </a>
-          <a href={waHref} target="_blank" rel="noopener noreferrer" className="btn btn-ghost">
+          <a href={waHref} target="_blank" rel="noopener noreferrer" className="btn btn-ghost w-full">
             Escribir por WhatsApp
           </a>
         </div>
@@ -213,7 +277,19 @@ export default function SpeedToLeadForm({ variante, form, waHref }: Props) {
   const mal = 'border-red-500 ring-4 ring-red-500/10';
 
   return (
-    <form onSubmit={onSubmit} noValidate className="flex flex-col gap-4">
+    <form ref={formRef} onSubmit={onSubmit} noValidate className="flex flex-col gap-4">
+      <div className="flex items-center gap-3" aria-hidden="true">
+        <div className="h-1.5 flex-1 overflow-hidden rounded-full bg-ice-2">
+          <div
+            className="h-full rounded-full bg-cobalt transition-[width] duration-500 ease-[var(--ease-out-expo)]"
+            style={{ width: `${Math.max(4, (completos / TOTAL_PASOS) * 100)}%` }}
+          />
+        </div>
+        <span className="tnum shrink-0 text-[0.8rem] font-semibold text-ink-3">
+          {completos === TOTAL_PASOS ? 'Todo listo' : `${completos} de ${TOTAL_PASOS}`}
+        </span>
+      </div>
+
       <div className="hidden" aria-hidden="true">
         <label htmlFor="stl-website">Sitio web</label>
         <input id="stl-website" type="text" tabIndex={-1} autoComplete="off" value={data.website} onChange={(e) => set('website', e.target.value)} />

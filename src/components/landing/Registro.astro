@@ -1,0 +1,523 @@
+---
+/**
+ * Página de registro "speed to lead": la misma estructura para las tres variantes; lo que cambia vive en
+ * `src/data/landings.ts` (y, en las de nicho, en `niches.ts`).
+ *
+ * 1. Barra con la marca (sin enlaces: tráfico de pauta) y un atajo al formulario.
+ * 2. Portada: titular y promesas sobre blanco, el formulario flotando sobre el campo de color (cobalto en
+ *    la general, noche con video en los nichos). En móvil, el campo es una banda a sangre tras el titular.
+ * 3. Qué pasa después de enviar: los cuatro pasos reales, que se encienden en secuencia.
+ * 4. El ecosistema (general: pilares + flujo hacia el CRM) o la demostración del sector (nicho).
+ * 5. Prueba en noche: casos reales con cifra, cliente del sector y logos.
+ * 6. Quién atiende: los cofundadores y el equipo.
+ * 7. Cierre en cobalto y pie legal mínimo.
+ *
+ * Todo lo que se muestra es real o va etiquetado como demostración (PRODUCT.md): nada se inventa para
+ * rellenar. Los contenedores decorativos usan `overflow-clip`, no `overflow-hidden`: un `hidden` sigue
+ * siendo desplazable por el navegador y, al enfocar un campo, corría la portada de lado en móvil.
+ */
+import Icon from '../Icon.astro';
+import BrandMark from '../BrandMark.astro';
+import ClientLogo from '../ClientLogo.astro';
+import FlowDemo from '../demos/FlowDemo.astro';
+import NicheDemo from '../demos/NicheDemo.astro';
+import MotionBackdrop from './MotionBackdrop.astro';
+import FormWindow from './FormWindow.astro';
+import { team } from '../../data/team';
+import { successCases } from '../../data/cases';
+import { clients, partners } from '../../data/site-content';
+import { pillars } from '../../data/pillars';
+import { testimonials } from '../../data/testimonials';
+import { waLink } from '../../lib/site';
+import type { LandingVariant } from '../../data/landings';
+import type { Niche } from '../../data/niches';
+
+interface Props {
+  landing: LandingVariant;
+  niche?: Niche;
+}
+const { landing, niche } = Astro.props;
+
+const founders = team.filter((m) => m.area === 'Dirección');
+const resto = team.filter((m) => m.area !== 'Dirección');
+
+// El caso del sector va primero si existe; se completa hasta tres con los casos con cifra más claros.
+const slugs = [...new Set([niche?.proof.caseSlug, 'zona-gamers', 'daniela-vidal', 'pawau'].filter(Boolean))].slice(0, 3);
+const casos = slugs
+  .map((slug) => successCases.find((c) => c.slug === slug))
+  .filter((c): c is (typeof successCases)[number] => Boolean(c));
+const loop = [...clients, ...clients];
+const anio = new Date().getFullYear();
+---
+
+<!-- 1 · Marca -->
+<header class="sticky top-0 z-30 border-b border-line-soft bg-canvas/90 backdrop-blur-md">
+  <div class="wrap flex h-16 items-center justify-between gap-4 lg:h-[4.5rem]">
+    <img src="/imgs/logo.webp" alt="IonosHub" width="463" height="140" class="h-9 w-auto lg:h-10" decoding="async" fetchpriority="high" />
+    <div class="flex items-center gap-5">
+      <p class="hidden items-center gap-2 text-[0.92rem] text-ink-2 md:flex">
+        <Icon name="clock" size={16} class="text-cobalt" />
+        Te contactamos en menos de un día hábil
+      </p>
+      <a href="#formulario" class="btn btn-primary !min-h-11 !px-5 text-[0.95rem]" data-stl-goto>
+        {niche ? 'Pedir demostración' : 'Agendar'}
+        <Icon name="arrow-right" size={16} />
+      </a>
+    </div>
+  </div>
+</header>
+
+<!-- 2 · Portada -->
+<section class="relative overflow-clip">
+  <!--
+    Tres bloques en la retícula: titular, formulario y confianza. Móvil: en ese orden (el formulario justo
+    tras el titular). Escritorio: titular y confianza apilados a la izquierda, formulario a la derecha.
+  -->
+  <div
+    class="wrap grid grid-cols-[minmax(0,1fr)] gap-10 pt-9 lg:min-h-[calc(100dvh-4.5rem)] lg:grid-cols-12 lg:grid-rows-[auto_auto] lg:content-center lg:gap-x-8 lg:gap-y-0 lg:py-14"
+  >
+    <div class="min-w-0 lg:col-span-6 lg:row-start-1 lg:self-end lg:pr-4">
+      <h1 class="hero-in display-tight text-[clamp(2.3rem,4.2vw,3.6rem)] font-semibold text-ink">
+        {landing.h1}
+        <span class="block text-cobalt">{landing.h1Accent}</span>
+      </h1>
+      <p class="hero-in mt-5 max-w-xl text-[clamp(1.05rem,1.4vw,1.22rem)] leading-relaxed text-ink-2" style="--d: 80ms">
+        {landing.lead}
+      </p>
+    </div>
+
+    <!--
+      El campo de color es un solo elemento: en móvil cubre esta columna (banda a sangre); en escritorio la
+      columna deja de ser posicionada y el campo se ancla a la sección, a la derecha. Así hay un solo video.
+    -->
+    <div
+      class="relative isolate min-w-0 py-10 max-lg:mx-[calc(-1*clamp(1.25rem,4vw,2.5rem))] max-lg:px-[clamp(1.25rem,4vw,2.5rem)] lg:static lg:col-span-5 lg:col-start-8 lg:row-span-2 lg:row-start-1 lg:self-center lg:py-0"
+    >
+      <div class="absolute inset-0 -z-10 overflow-clip rounded-t-[2.25rem] lg:inset-y-0 lg:left-auto lg:right-0 lg:w-[44%] lg:rounded-none lg:rounded-l-[4rem]">
+        <MotionBackdrop background={niche ? landing.background : undefined} tone={niche ? 'night' : 'cobalt'} />
+      </div>
+
+      <div class="hero-in relative z-10" style="--d: 140ms">
+        <FormWindow landing={landing} />
+      </div>
+    </div>
+
+    <div class="min-w-0 pb-12 lg:col-span-6 lg:row-start-2 lg:self-start lg:pb-0 lg:pr-4">
+      <ul class="flex flex-col gap-3 lg:mt-7">
+        {
+          landing.promises.map((p, i) => (
+            <li class="hero-in flex items-start gap-3 text-[1.02rem] text-ink" style={`--d: ${160 + i * 70}ms`}>
+              <span class="flex h-7 w-7 shrink-0 items-center justify-center rounded-full bg-cobalt text-white">
+                <Icon name="check" size={15} />
+              </span>
+              <span class="pt-0.5">{p}</span>
+            </li>
+          ))
+        }
+      </ul>
+
+      <div class="hero-in mt-9 flex items-center gap-4 border-t border-line-soft pt-6" style="--d: 380ms">
+        <ul class="flex shrink-0 -space-x-3" aria-hidden="true">
+          {
+            founders.map((m) => (
+              <li>
+                <img src={m.photo} alt="" width="52" height="52" decoding="async" class="h-[3.25rem] w-[3.25rem] rounded-full border-[3px] border-canvas object-cover object-top" />
+              </li>
+            ))
+          }
+        </ul>
+        <p class="text-[0.95rem] leading-snug text-ink-2">
+          <span class="font-semibold text-ink">{founders.map((m) => m.name.split(' ')[0]).join(' y ')}</span>, cofundadores de IonosHub, revisan
+          cada solicitud.
+        </p>
+      </div>
+
+      <ul class="hero-in mt-5 flex flex-wrap gap-2" aria-label="Partners y credenciales" style="--d: 440ms">
+        {
+          partners.map((p, i) => (
+            <li
+              class:list={[
+                'inline-flex items-center gap-2 rounded-full px-3 py-1.5 text-[0.82rem] font-semibold',
+                i === 0 ? 'bg-cobalt text-white' : 'border border-cobalt/30 bg-ice text-cobalt-ink',
+              ]}
+            >
+              <BrandMark name={p.brand} size={14} />
+              {p.name} · {p.credential}
+            </li>
+          ))
+        }
+      </ul>
+    </div>
+
+  </div>
+</section>
+
+<!-- 3 · Qué pasa después de enviar -->
+<section class="bg-ice-3 py-20 lg:py-28">
+  <div class="wrap">
+    <div class="max-w-3xl">
+      <h2 class="display-tight text-[clamp(2rem,4.2vw,3.25rem)] font-semibold text-ink" data-reveal>Así de rápido responde un ecosistema bien armado.</h2>
+      <p class="mt-5 text-[clamp(1.05rem,1.4vw,1.25rem)] leading-relaxed text-ink-2" data-reveal data-reveal-delay="60">
+        Esta página funciona como lo que construimos para nuestros clientes: el lead entra, se registra solo y una persona responde
+        antes de que se enfríe.
+      </p>
+    </div>
+
+    <ol class="tl mt-12 grid gap-8 lg:mt-16 lg:grid-cols-4 lg:gap-6" data-reveal data-reveal-delay="120">
+      {
+        landing.steps.map((s, i) => (
+          <li class="tl-step relative grid grid-cols-[2.75rem_1fr] gap-4 lg:grid-cols-1" style={`--d: ${i * 0.55}s`}>
+            {/* Conector hasta el disco siguiente: hacia abajo en móvil (salva el gap de 2 rem), a la derecha en escritorio (1.5 rem). */}
+            {i < landing.steps.length - 1 && (
+              <span
+                class="tl-link absolute left-[1.3125rem] top-11 -bottom-8 w-0.5 bg-ice-2 lg:bottom-auto lg:left-11 lg:top-[1.3125rem] lg:h-0.5 lg:w-[calc(100%-1.25rem)]"
+                aria-hidden="true"
+              >
+                <span class="tl-fill absolute inset-0 bg-cobalt" />
+              </span>
+            )}
+            <span class="tl-dot tnum relative z-10 flex h-11 w-11 items-center justify-center rounded-full bg-cobalt text-[1rem] font-semibold text-white shadow-lift">
+              {i + 1}
+            </span>
+            <div>
+              <p class="text-[0.72rem] font-semibold uppercase tracking-wide text-cobalt-ink">{s.when}</p>
+              <h3 class="mt-1.5 text-[1.25rem] font-semibold leading-snug text-ink">{s.title}</h3>
+              <p class="mt-1.5 text-[0.98rem] leading-relaxed text-ink-2">{s.detail}</p>
+            </div>
+          </li>
+        ))
+      }
+    </ol>
+  </div>
+</section>
+
+<!-- 4 · El ecosistema (general) o la demostración del sector (nicho) -->
+{
+  niche ? (
+    <section class="py-20 lg:py-28">
+      <div class="wrap grid gap-12 lg:grid-cols-12 lg:items-center lg:gap-16">
+        <div class="min-w-0 lg:col-span-6" data-reveal>
+          <NicheDemo niche={niche} />
+        </div>
+        <div class="min-w-0 lg:col-span-6">
+          <h2 class="display-tight text-[clamp(2rem,4.2vw,3.25rem)] font-semibold text-ink" data-reveal>
+            {niche.id === 'clinicas' ? 'Así sonaría en tu consultorio.' : 'Así respondería en tu institución.'}
+          </h2>
+          <ul class="mt-8 flex flex-col gap-3.5" data-reveal data-reveal-delay="60">
+            {niche.jobs.slice(0, 4).map((j) => (
+              <li class="flex items-start gap-3 text-[1rem] leading-relaxed text-ink-2">
+                <span class="mt-0.5 flex h-7 w-7 shrink-0 items-center justify-center rounded-full bg-cobalt text-white">
+                  <Icon name="check" size={15} />
+                </span>
+                {j}
+              </li>
+            ))}
+          </ul>
+          <div class="mt-8 rounded-[1.25rem] border border-line bg-ice-3 p-5 sm:p-6" data-reveal data-reveal-delay="120">
+            <p class="text-[0.72rem] font-semibold uppercase tracking-wide text-ink-3">Lo que nunca hace</p>
+            <ul class="mt-3 flex flex-col gap-2.5">
+              {niche.redLines.map((r) => (
+                <li class="flex items-start gap-3 text-[0.98rem] leading-snug text-ink">
+                  <span class="mt-0.5 flex h-6 w-6 shrink-0 items-center justify-center rounded-full bg-canvas text-cobalt-ink ring-1 ring-line">
+                    <Icon name="shield" size={13} />
+                  </span>
+                  {r}
+                </li>
+              ))}
+            </ul>
+          </div>
+        </div>
+      </div>
+    </section>
+  ) : (
+    <section class="py-20 lg:py-28">
+      <div class="wrap grid gap-12 lg:grid-cols-12 lg:items-center lg:gap-16">
+        <div class="min-w-0 lg:col-span-5">
+          <h2 class="display-tight text-[clamp(2rem,4.2vw,3.25rem)] font-semibold text-ink" data-reveal>
+            Un solo equipo para todo tu ecosistema.
+          </h2>
+          <p class="mt-5 text-[clamp(1.05rem,1.4vw,1.25rem)] leading-relaxed text-ink-2" data-reveal data-reveal-delay="60">
+            Puedes empezar por una pieza. Lo que construimos se conecta con lo siguiente, para que ningún lead dependa de que alguien lo
+            vea a tiempo.
+          </p>
+          <ul class="mt-8 divide-y divide-line border-y border-line" data-reveal data-reveal-delay="120">
+            {pillars.map((p) => (
+              <li class="pillar-row flex items-start gap-4 py-4">
+                <span class="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-ice text-cobalt-ink transition-colors duration-300">
+                  <Icon name={p.id} size={19} />
+                </span>
+                <div>
+                  <p class="text-[1.05rem] font-semibold text-ink">{p.title}</p>
+                  <p class="mt-0.5 text-[0.92rem] leading-snug text-ink-2">{p.tagline}</p>
+                </div>
+              </li>
+            ))}
+          </ul>
+        </div>
+        <div class="min-w-0 lg:col-span-7" data-reveal data-reveal-delay="100">
+          <FlowDemo />
+        </div>
+      </div>
+    </section>
+  )
+}
+
+<!-- 5 · Prueba -->
+<section class="relative overflow-clip bg-night py-20 text-white lg:py-28">
+  <div class="pointer-events-none absolute -right-40 top-0 h-[30rem] w-[30rem] rounded-full bg-cobalt/30 blur-3xl" aria-hidden="true"></div>
+  <div class="wrap relative">
+    <div class="max-w-3xl">
+      <h2 class="display-tight text-[clamp(2rem,4.2vw,3.25rem)] font-semibold" data-reveal>Resultados reales, con nombre y apellido.</h2>
+      <p class="mt-5 text-[clamp(1.05rem,1.4vw,1.25rem)] leading-relaxed text-night-text" data-reveal data-reveal-delay="60">
+        Negocios de Ecuador que ya trabajan con su ecosistema. Las cifras son las suyas.
+      </p>
+    </div>
+
+    <ul class="mt-12 grid gap-5 md:grid-cols-3 lg:mt-14" aria-label="Casos reales">
+      {
+        casos.map((c, i) => (
+          <li class="case-card flex flex-col rounded-[1.5rem] border border-night-line bg-night-2 p-6 sm:p-7" data-reveal data-reveal-delay={String(100 + i * 90)}>
+            {c.logo && <ClientLogo src={c.logo} alt={c.client} size="md" class="!border-transparent" />}
+            <p class="tnum mt-6 text-[clamp(1.7rem,2.6vw,2.2rem)] font-semibold leading-tight">{c.highlight.replace(/(\d) %/g, '$1\u00a0%')}</p>
+            <p class="mt-3 text-[0.98rem] leading-relaxed text-night-text">{c.result}</p>
+            <p class="mt-auto pt-6 text-[0.85rem] font-semibold text-white">
+              {c.client}
+              <span class="font-normal text-night-text"> · {c.industry}</span>
+            </p>
+          </li>
+        ))
+      }
+    </ul>
+
+    {
+      niche?.proof.clientLogo && !niche.proof.caseSlug && (
+        <div class="mt-5 flex flex-col gap-4 rounded-[1.5rem] border border-night-line p-6 sm:flex-row sm:items-center sm:gap-6" data-reveal>
+          <ClientLogo src={niche.proof.clientLogo} alt={niche.proof.clientName ?? ''} size="lg" class="!border-transparent" />
+          <p class="text-[1.05rem] leading-snug text-night-text">
+            En tu sector ya trabajamos con <span class="font-semibold text-white">{niche.proof.clientName}</span>.
+          </p>
+        </div>
+      )
+    }
+
+    {
+      testimonials.length > 0 && !niche && (
+        <ul class="mt-5 grid gap-5 md:grid-cols-2" aria-label="Testimonios">
+          {testimonials.slice(0, 2).map((t) => (
+            <li class="rounded-[1.5rem] border border-night-line p-6 sm:p-7" data-reveal>
+              <blockquote class="text-[1.05rem] leading-relaxed text-white">“{t.quote}”</blockquote>
+              <div class="mt-4 flex items-center gap-3">
+                {t.photo && <img src={t.photo} alt="" width="40" height="40" loading="lazy" decoding="async" class="h-10 w-10 rounded-full object-cover" />}
+                <p class="text-[0.85rem] leading-tight text-night-text">
+                  <span class="block font-semibold text-white">{t.name}</span>
+                  {t.role} · {t.company}
+                </p>
+              </div>
+            </li>
+          ))}
+        </ul>
+      )
+    }
+  </div>
+
+  <div class="marquee relative mt-14 overflow-clip [mask-image:linear-gradient(to_right,transparent,black_10%,black_90%,transparent)]" aria-label="Clientes de IonosHub">
+    <ul class="marquee-track flex w-max items-center gap-4 pr-4">
+      {
+        loop.map((c, i) => (
+          <li class="shrink-0" aria-hidden={i >= clients.length ? 'true' : undefined}>
+            <ClientLogo src={c.src} alt={i >= clients.length ? '' : c.alt} size="md" class="!border-transparent" />
+          </li>
+        ))
+      }
+    </ul>
+  </div>
+</section>
+
+<!-- 6 · Quién atiende -->
+<section class="py-20 lg:py-28">
+  <div class="wrap grid gap-12 lg:grid-cols-12 lg:items-center lg:gap-16">
+    <div class="min-w-0 lg:col-span-5">
+      <h2 class="display-tight text-[clamp(2rem,4.2vw,3.25rem)] font-semibold text-ink" data-reveal>Te atiende quien diseña el sistema.</h2>
+      <p class="mt-5 text-[clamp(1.05rem,1.4vw,1.25rem)] leading-relaxed text-ink-2" data-reveal data-reveal-delay="60">
+        Sin intermediarios ni vendedores: los cofundadores revisan tu solicitud y llevan el diagnóstico. Detrás, un equipo en Ibarra
+        que construye la IA, las automatizaciones, la pauta y el software.
+      </p>
+      <div class="mt-8 flex items-center gap-4" data-reveal data-reveal-delay="120">
+        <ul class="flex -space-x-3">
+          {
+            resto.map((m) => (
+              <li>
+                <img src={m.photo} alt={m.name} title={`${m.name} · ${m.role}`} width="48" height="48" loading="lazy" decoding="async" class="h-12 w-12 rounded-full border-[3px] border-canvas object-cover object-top" />
+              </li>
+            ))
+          }
+        </ul>
+        <p class="text-[0.92rem] leading-snug text-ink-2">
+          <span class="tnum font-semibold text-ink">{team.length} personas</span> en el equipo
+        </p>
+      </div>
+    </div>
+
+    <ul class="grid gap-5 sm:grid-cols-2 lg:col-span-7">
+      {
+        founders.map((m, i) => (
+          <li class="founder group overflow-clip rounded-[1.5rem] border border-line bg-canvas" data-reveal data-reveal-delay={String(80 + i * 100)}>
+            <div class="aspect-[4/5] overflow-clip bg-ice-2">
+              <img src={m.photo} alt={m.name} width="480" height="600" loading="lazy" decoding="async" class="founder-photo h-full w-full object-cover object-top" />
+            </div>
+            <div class="p-5">
+              <p class="text-[1.1rem] font-semibold text-ink">{m.name}</p>
+              <p class="mt-0.5 text-[0.9rem] font-semibold text-cobalt-ink">{m.role}</p>
+              <p class="mt-2 text-[0.9rem] leading-relaxed text-ink-2">{m.expertise}</p>
+            </div>
+          </li>
+        ))
+      }
+    </ul>
+  </div>
+</section>
+
+<!-- 7 · Cierre -->
+<section class="pb-16 lg:pb-24">
+  <div class="wrap">
+    <div class="relative overflow-clip rounded-[1.75rem] bg-cobalt px-6 py-12 text-white sm:px-10 lg:px-16 lg:py-16" data-reveal>
+      <div class="pointer-events-none absolute -right-24 -top-32 h-[26rem] w-[26rem] rounded-full bg-cobalt-glow/30 blur-3xl" aria-hidden="true"></div>
+      <div class="pointer-events-none absolute -bottom-40 -left-20 h-[24rem] w-[24rem] rounded-full bg-cobalt-ink/60 blur-3xl" aria-hidden="true"></div>
+      <div class="relative grid gap-8 lg:grid-cols-12 lg:items-center">
+        <div class="lg:col-span-8">
+          <h2 class="display-tight text-[clamp(2rem,4.2vw,3.25rem)] font-semibold">
+            {niche ? 'Mira cómo funcionaría en tu caso.' : 'Tu plan empieza con un minuto.'}
+          </h2>
+          <p class="mt-4 max-w-2xl text-[clamp(1.05rem,1.4vw,1.2rem)] leading-relaxed text-ice">
+            {landing.promises[0]}. Si prefieres hablar ahora, escríbenos por WhatsApp.
+          </p>
+        </div>
+        <div class="flex flex-col gap-3 sm:flex-row lg:col-span-4 lg:flex-col">
+          <a href="#formulario" class="btn btn-on-dark" data-stl-goto>
+            {landing.form.cta}
+            <Icon name="arrow-right" size={18} />
+          </a>
+          <a href={waLink(landing.waMessage)} target="_blank" rel="noopener noreferrer" class="btn border border-white/40 text-white hover:bg-white/10">
+            <Icon name="whatsapp" size={18} />
+            Escribir por WhatsApp
+          </a>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- Pie legal mínimo: sin navegación hacia el resto del sitio, pero con la política y las preferencias de cookies. -->
+<footer class="border-t border-line-soft py-8 max-lg:pb-36">
+  <div class="wrap flex flex-col gap-3 text-[0.85rem] text-ink-3 sm:flex-row sm:items-center sm:justify-between">
+    <p>© {anio} IonosHub · Ibarra, Ecuador</p>
+    <div class="flex flex-wrap gap-x-5 gap-y-2">
+      <a href="/politica-de-privacidad" target="_blank" rel="noopener" class="hover:text-ink">Política de privacidad</a>
+      <a href="/terminos-y-condiciones" target="_blank" rel="noopener" class="hover:text-ink">Términos y condiciones</a>
+      <button type="button" class="hover:text-ink" data-cookie-prefs>Preferencias de cookies</button>
+    </div>
+  </div>
+</footer>
+
+<style>
+  /*
+   * Línea de tiempo: el estado por defecto es el final (riel lleno, discos cobalto). Sólo con motion y
+   * antes de entrar en pantalla se vacía; al entrar (`.is-in`, del reveal) el riel se llena y cada disco
+   * se enciende a su tiempo (`--d`). Longhands: el minificador vacía el atajo `animation` con var().
+   */
+  :global(html.motion-ready) .tl .tl-fill {
+    transform-origin: top;
+    transform: scaleY(0);
+    transition: transform 0.55s var(--ease-out-quint);
+  }
+  :global(html.motion-ready) .tl.is-in .tl-fill {
+    transform: none;
+    transition-delay: calc(var(--d) + 0.25s);
+  }
+  :global(html.motion-ready) .tl:not(.is-in) .tl-dot {
+    background: var(--color-ice-2);
+    color: var(--color-ink-3);
+    box-shadow: none;
+  }
+  :global(html.motion-ready) .tl.is-in .tl-dot {
+    animation-name: tl-on;
+    animation-duration: 0.6s;
+    animation-timing-function: var(--ease-out-expo);
+    animation-fill-mode: both;
+    animation-delay: var(--d);
+  }
+  :global(html.motion-ready) .tl:not(.is-in) .tl-step > div {
+    opacity: 0.35;
+  }
+  :global(html.motion-ready) .tl.is-in .tl-step > div {
+    transition: opacity 0.6s var(--ease-out-expo);
+    transition-delay: var(--d);
+  }
+  @keyframes tl-on {
+    from {
+      background: var(--color-ice-2);
+      color: var(--color-ink-3);
+      transform: scale(0.85);
+    }
+    60% {
+      transform: scale(1.12);
+    }
+  }
+  @media (min-width: 1024px) {
+    :global(html.motion-ready) .tl .tl-fill {
+      transform-origin: left;
+      transform: scaleX(0);
+    }
+  }
+
+  /* Filas de pilar: el disco se enciende al pasar. */
+  .pillar-row:hover > span {
+    background: var(--color-cobalt);
+    color: #fff;
+  }
+
+  /* Casos: suben un poco al pasar. */
+  .case-card {
+    transition:
+      transform 0.5s var(--ease-out-expo),
+      border-color 0.3s;
+  }
+  .case-card:hover {
+    transform: translateY(-4px);
+    border-color: rgb(63 134 230 / 0.6);
+  }
+
+  /* Fotos del equipo: escala de grises que recupera el color al pasar (DESIGN.md). */
+  .founder-photo {
+    filter: grayscale(1) contrast(1.05);
+    transition:
+      filter 0.6s var(--ease-out-expo),
+      transform 0.8s var(--ease-out-expo);
+  }
+  .founder:hover .founder-photo {
+    filter: none;
+    transform: scale(1.03);
+  }
+
+  /* En móvil, con el teclado abierto, los flotantes (chat y WhatsApp) no tapan el campo que se escribe. */
+  @media (max-width: 1023px) {
+    :global(body:has(#formulario :focus) [data-float-stack]) {
+      opacity: 0;
+      pointer-events: none;
+    }
+  }
+</style>
+
+<script>
+  // Los atajos "Agendar" llevan al formulario y dejan el cursor en el primer campo, sin un segundo toque.
+  document.querySelectorAll<HTMLAnchorElement>('[data-stl-goto]').forEach((a) =>
+    a.addEventListener('click', (e) => {
+      const destino = document.getElementById('formulario');
+      if (!destino) return;
+      e.preventDefault();
+      const suave = !window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+      destino.scrollIntoView({ behavior: suave ? 'smooth' : 'auto', block: 'start' });
+      window.setTimeout(() => document.getElementById('stl-nombre')?.focus({ preventScroll: true }), suave ? 550 : 0);
+    }),
+  );
+</script>
