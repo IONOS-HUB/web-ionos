@@ -4,13 +4,16 @@
  * - Sin elección: sólo cookies necesarias; GA4 no se carga.
  * - "Aceptar todo" o analítica activada en "Personalizar": se actualiza el consentimiento y se carga gtag.js.
  * - La elección se guarda en localStorage (`ionoshub-consent`) y se puede cambiar desde "Preferencias de cookies" en el pie.
+ * - Con `metaPixelId` (sólo las landings de pauta) aparece además "Publicidad · Meta": el Pixel sólo se
+ *   carga si se acepta. En las páginas sin Pixel esa elección no se toca, se conserva la anterior.
  */
 import Icon from './Icon.astro';
 
 interface Props {
   gaId: string;
+  metaPixelId?: string;
 }
-const { gaId } = Astro.props;
+const { gaId, metaPixelId = '' } = Astro.props;
 ---
 
 <!--
@@ -35,7 +38,7 @@ const { gaId } = Astro.props;
         línea de más empuja la barra hacia arriba y se come los CTA de la página.
       -->
       <p id="cc-title" class="text-[0.82rem] leading-snug text-ink-2 sm:mt-1.5 sm:text-[0.92rem] sm:leading-relaxed">
-        Cookies para que el sitio funcione y, si lo permites, analítica.{' '}
+        Cookies para que el sitio funcione y, si lo permites, {metaPixelId ? 'analítica y publicidad' : 'analítica'}.{' '}
         <span class="hidden sm:inline">Así sabemos qué páginas ayudan más. Nunca vendemos tus datos.{' '}</span>
         <a href="/politica-de-privacidad" class="font-semibold text-cobalt-ink underline underline-offset-2">Política de privacidad</a>
       </p>
@@ -57,6 +60,19 @@ const { gaId } = Astro.props;
       </span>
       <input type="checkbox" class="cc-switch" data-cc-analytics aria-label="Permitir Google Analytics" />
     </label>
+    {
+      metaPixelId && (
+        <label class="flex items-center justify-between gap-4 px-4 py-3">
+          <span>
+            <span class="block text-[0.95rem] font-semibold text-ink">Publicidad · Meta Pixel</span>
+            <span class="block text-[0.82rem] text-ink-3">
+              Le dice a Meta (Facebook e Instagram) que llegaste por un anuncio y si enviaste la solicitud, para medir y mejorar nuestras campañas. Tus datos de contacto van cifrados.
+            </span>
+          </span>
+          <input type="checkbox" class="cc-switch" data-cc-ads aria-label="Permitir Meta Pixel" />
+        </label>
+      )
+    }
   </div>
 
   <!--
@@ -130,13 +146,14 @@ const { gaId } = Astro.props;
   }
 </style>
 
-<script is:inline define:vars={{ gaId }}>
+<script is:inline define:vars={{ gaId, metaPixelId }}>
   (() => {
     const KEY = 'ionoshub-consent';
     const box = document.querySelector('[data-cookie-consent]');
     if (!box) return;
     const prefs = box.querySelector('.cc-prefs');
     const analyticsInput = box.querySelector('[data-cc-analytics]');
+    const adsInput = box.querySelector('[data-cc-ads]');
     const saveBtn = box.querySelector('[data-cc-save]');
     const customizeBtn = box.querySelector('[data-cc-customize]');
 
@@ -163,6 +180,31 @@ const { gaId } = Astro.props;
       gtag('config', gaId, { anonymize_ip: true });
     };
 
+    // Meta Pixel: el código base oficial, pero sólo cuando la persona acepta la publicidad.
+    let pixelLoaded = false;
+    const loadPixel = () => {
+      if (pixelLoaded || !metaPixelId) return;
+      pixelLoaded = true;
+      !(function (f, b, e, v, n, t, s) {
+        if (f.fbq) return;
+        n = f.fbq = function () {
+          n.callMethod ? n.callMethod.apply(n, arguments) : n.queue.push(arguments);
+        };
+        if (!f._fbq) f._fbq = n;
+        n.push = n;
+        n.loaded = !0;
+        n.version = '2.0';
+        n.queue = [];
+        t = b.createElement(e);
+        t.async = !0;
+        t.src = v;
+        s = b.getElementsByTagName(e)[0];
+        s.parentNode.insertBefore(t, s);
+      })(window, document, 'script', 'https://connect.facebook.net/en_US/fbevents.js');
+      fbq('init', metaPixelId);
+      fbq('track', 'PageView');
+    };
+
     const read = () => {
       try {
         return JSON.parse(localStorage.getItem(KEY) || 'null');
@@ -170,9 +212,14 @@ const { gaId } = Astro.props;
         return null;
       }
     };
-    const apply = (analytics) => {
+    const apply = (analytics, ads) => {
       gtag('consent', 'update', { analytics_storage: analytics ? 'granted' : 'denied' });
       if (analytics) loadGa();
+      // Lo lee el formulario de las landings para decidir si el servidor manda el Lead a Meta.
+      window.ionosAdsConsent = !!(ads && metaPixelId);
+      if (ads) loadPixel();
+      // Retirar el permiso con el Pixel ya cargado: deja de enviar desde ahora.
+      else if (pixelLoaded) fbq('consent', 'revoke');
     };
     const root = document.documentElement;
     // El alto del aviso llega por ResizeObserver (sin forzar layout desde JS); cubre fuente tardía y resize.
@@ -195,11 +242,14 @@ const { gaId } = Astro.props;
      */
     const lift = () => requestAnimationFrame(() => setLift(box.offsetHeight));
 
-    const save = (analytics) => {
+    const save = (analytics, ads) => {
+      // Sin Pixel en la página no se preguntó por la publicidad: se conserva lo que se eligió antes.
+      if (!metaPixelId) ads = !!(read() || {}).ads;
       try {
-        localStorage.setItem(KEY, JSON.stringify({ necessary: true, analytics, at: new Date().toISOString(), v: 1 }));
+        localStorage.setItem(KEY, JSON.stringify({ necessary: true, analytics, ads, at: new Date().toISOString(), v: 2 }));
       } catch {}
-      apply(analytics);
+      if (ads && pixelLoaded) fbq('consent', 'grant');
+      apply(analytics, ads);
       box.hidden = true;
       root.classList.remove('cc-open');
       // El aviso se oculta con el foco dentro: sin esto el foco vuelve al body y se pierde el sitio.
@@ -215,6 +265,7 @@ const { gaId } = Astro.props;
     const open = (focus) => {
       const saved = read();
       analyticsInput.checked = !!(saved && saved.analytics);
+      if (adsInput) adsInput.checked = !!(saved && saved.ads);
       prefs.hidden = true;
       saveBtn.hidden = true;
       customizeBtn.hidden = false;
@@ -224,8 +275,8 @@ const { gaId } = Astro.props;
       if (focus) box.querySelector('[data-cc-accept]').focus({ preventScroll: true });
     };
 
-    box.querySelector('[data-cc-accept]').addEventListener('click', () => save(true));
-    box.querySelector('[data-cc-necessary]').addEventListener('click', () => save(false));
+    box.querySelector('[data-cc-accept]').addEventListener('click', () => save(true, true));
+    box.querySelector('[data-cc-necessary]').addEventListener('click', () => save(false, false));
     customizeBtn.addEventListener('click', () => {
       prefs.hidden = false;
       saveBtn.hidden = false;
@@ -233,7 +284,7 @@ const { gaId } = Astro.props;
       lift();
       analyticsInput.focus({ preventScroll: true });
     });
-    saveBtn.addEventListener('click', () => save(analyticsInput.checked));
+    saveBtn.addEventListener('click', () => save(analyticsInput.checked, !!(adsInput && adsInput.checked)));
 
     // Reapertura desde el pie ("Preferencias de cookies")
     document.querySelectorAll('[data-cookie-prefs]').forEach((b) =>
@@ -254,8 +305,9 @@ const { gaId } = Astro.props;
     });
 
     const saved = read();
-    if (saved) apply(!!saved.analytics);
-    else {
+    if (saved) apply(!!saved.analytics, !!(metaPixelId && saved.ads));
+    // Quien eligió antes de que existiera la categoría de publicidad aún no respondió a ella.
+    if (!saved || (metaPixelId && saved.ads === undefined)) {
       // Primera visita: el aviso aparece cuando el hilo principal queda libre, fuera de la ruta crítica.
       const show = () => open(false);
       if ('requestIdleCallback' in window) requestIdleCallback(show, { timeout: 1500 });
@@ -265,7 +317,9 @@ const { gaId } = Astro.props;
     // Clics a WhatsApp como evento de contacto (sólo llega a GA si hay consentimiento)
     document.addEventListener('click', (e) => {
       const a = e.target instanceof Element ? e.target.closest('a[href*="wa.me"]') : null;
-      if (a) gtag('event', 'contact_whatsapp', { link_text: a.textContent.trim().slice(0, 60), page_path: location.pathname });
+      if (!a) return;
+      gtag('event', 'contact_whatsapp', { link_text: a.textContent.trim().slice(0, 60), page_path: location.pathname });
+      if (pixelLoaded && window.ionosAdsConsent) fbq('track', 'Contact');
     });
   })();
 </script>

@@ -8,6 +8,10 @@ import type { LandingVariant } from '../../data/landings';
  * Formulario de las landings de pauta, sobre `/api/speed-to-lead`. Corto a propósito: cada campo de
  * más cuesta leads. Guarda la atribución de campaña (utm_*, gclid, fbclid) de la URL de llegada en
  * `sessionStorage`, para que no se pierda si la persona navega antes de enviar.
+ *
+ * Conversión en Meta: con el Pixel cargado (sólo si la persona aceptó la publicidad), el envío dispara
+ * `Lead` en el navegador y el servidor manda el mismo evento a la API de Conversiones con el mismo
+ * `eventID`, para que Meta lo cuente una vez. Ver docs/META-PIXEL.md.
  */
 
 interface Props {
@@ -36,6 +40,22 @@ function atribucion(): Record<string, string> {
     return desdeUrl;
   }
 }
+
+type Fbq = (...a: unknown[]) => void;
+/** El Pixel, sólo si está cargado y la persona no retiró el permiso (`ionosAdsConsent` lo pone CookieConsent). */
+const fbq = () => {
+  const w = window as unknown as { fbq?: Fbq; ionosAdsConsent?: boolean };
+  return w.ionosAdsConsent ? w.fbq : undefined;
+};
+
+const cookie = (nombre: string) =>
+  document.cookie
+    .split('; ')
+    .find((c) => c.startsWith(`${nombre}=`))
+    ?.slice(nombre.length + 1);
+
+const nuevoEventId = () =>
+  typeof crypto !== 'undefined' && 'randomUUID' in crypto ? crypto.randomUUID() : `${Date.now()}-${Math.random().toString(36).slice(2, 12)}`;
 
 const initial = {
   nombre: '',
@@ -91,6 +111,7 @@ export default function SpeedToLeadForm({ variante, form, waHref }: Props) {
     if (data.website) return; // bot
     if (!validar()) return;
     setEstado('enviando');
+    const eventId = nuevoEventId();
     try {
       const res = await fetch('/api/speed-to-lead', {
         method: 'POST',
@@ -106,9 +127,10 @@ export default function SpeedToLeadForm({ variante, form, waHref }: Props) {
           consentimiento,
           pagina_origen: window.location.href,
           utm: atribucion(),
+          meta: { consent: Boolean(fbq()), event_id: eventId, fbp: cookie('_fbp'), fbc: cookie('_fbc') },
         }),
       });
-      const cuerpo = (await res.json()) as { ok?: boolean; error?: string };
+      const cuerpo = (await res.json()) as { ok?: boolean; error?: string; duplicado?: boolean };
       if (!res.ok || !cuerpo.ok) {
         setErrores({
           general: cuerpo.error ?? 'No pudimos enviar tu solicitud. Inténtalo de nuevo.',
@@ -125,6 +147,8 @@ export default function SpeedToLeadForm({ variante, form, waHref }: Props) {
         variante,
         page_path: window.location.pathname,
       });
+      // Un lead repetido no vuelve a contar en Meta: el servidor tampoco lo envía a CAPI.
+      if (!cuerpo.duplicado) fbq()?.('track', 'Lead', { content_name: `speed-to-lead · ${variante}`, content_category: data.calificacion }, { eventID: eventId });
     } catch {
       setErrores({
         general: 'No pudimos enviar tu solicitud. Revisa tu conexión e inténtalo de nuevo.',
@@ -164,12 +188,14 @@ export default function SpeedToLeadForm({ variante, form, waHref }: Props) {
             target="_blank"
             rel="noopener noreferrer"
             className="btn btn-primary"
-            onClick={() =>
+            onClick={() => {
               (window as unknown as { gtag?: (...a: unknown[]) => void }).gtag?.('event', 'open_calendar', {
                 page_path: window.location.pathname,
                 from: 'speed_to_lead',
-              })
-            }
+              });
+              // Abrir la agenda no es una cita agendada: evento propio, no el estándar `Schedule`.
+              fbq()?.('trackCustom', 'AbrirAgenda', { content_name: `speed-to-lead · ${variante}` });
+            }}
           >
             Elegir horario ahora
           </a>

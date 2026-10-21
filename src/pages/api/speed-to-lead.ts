@@ -2,6 +2,7 @@ import type { APIRoute } from 'astro';
 import { deliverLead, UTM_KEYS, type Atribucion } from '../../lib/lead';
 import { allowLead, clientIp } from '../../lib/chat/ratelimit';
 import { landingById } from '../../data/landings';
+import { sendMetaLead } from '../../lib/meta';
 
 export const prerender = false;
 
@@ -10,6 +11,10 @@ export const prerender = false;
  * (y a n8n si sigue configurado) con `canal: 'speed-to-lead'`, la variante y la atribución de campaña.
  *
  * Freno propio (`stl`): quien deja sus datos en la landing y además escribe al chat no se bloquea.
+ *
+ * Con el lead entregado, el mismo `Lead` que dispara el Pixel sale a la API de Conversiones de Meta
+ * (`lib/meta.ts`), con su `event_id` para que Meta no lo cuente dos veces. Sólo si `meta.consent`:
+ * el navegador lo marca cuando la persona aceptó la publicidad en el aviso de cookies.
  */
 
 interface Body {
@@ -23,6 +28,7 @@ interface Body {
   consentimiento?: boolean;
   pagina_origen?: string;
   utm?: Record<string, unknown>;
+  meta?: { consent?: boolean; event_id?: string; fbp?: string; fbc?: string };
   website?: string; // honeypot
 }
 
@@ -106,5 +112,23 @@ export const POST: APIRoute = async ({ request }) => {
       : json({ error: 'No pudimos enviar tu solicitud. Escríbenos por WhatsApp.' }, 503);
   }
   if (result === 'error') return json({ error: 'No pudimos enviar tu solicitud. Inténtalo de nuevo.' }, 502);
+
+  const eventId = limpio(body.meta?.event_id, 64);
+  if (body.meta?.consent === true && /^[\w-]{8,64}$/.test(eventId)) {
+    await sendMetaLead({
+      eventId,
+      sourceUrl: limpio(body.pagina_origen, 300) || new URL(landing.route, request.url).href,
+      correo,
+      telefono,
+      nombre,
+      ip: clientIp(request),
+      userAgent: request.headers.get('user-agent') ?? undefined,
+      fbp: limpio(body.meta.fbp, 120) || undefined,
+      fbc: limpio(body.meta.fbc, 300) || undefined,
+      fbclid: utm.fbclid,
+      variante: landing.id,
+      calificacion,
+    });
+  }
   return json({ ok: true, delivered: true });
 };

@@ -12,6 +12,7 @@ Cada una es una página de registro de una sola pantalla: el formulario es todo 
 
 Son sólo para tráfico de pauta: se accede por URL directa y **ningún enlace del sitio apunta a ellas**. No llevan navegación, pie, chat ni pop-up de webinar (sólo el logo sin enlace, el formulario y el botón flotante de WhatsApp). Son `noindex` y no están en el sitemap. No las bloquees en `robots.txt`: Google Ads y Meta necesitan rastrearlas para aprobar los anuncios, y el `noindex` sólo se respeta si el rastreador puede leer la página.
 Para la pauta, usa la URL con UTMs, p. ej. `https://ionoshub.net/speed-to-lead/clinicas?utm_source=meta&utm_campaign=clinicas-oct`.
+Medición en Meta (Pixel + API de Conversiones, evento `Lead`): `docs/META-PIXEL.md`.
 
 El contenido de cada variante es un objeto en `src/data/landings.ts` (titular, promesas, etiquetas del formulario, pregunta de calificación, fondo, mensaje de WhatsApp, meta). Para añadir una: el objeto ahí, su archivo en `src/pages/speed-to-lead/` y su id en `LandingId`.
 
