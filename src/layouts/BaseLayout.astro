@@ -7,7 +7,7 @@ import CookieConsent from '../components/CookieConsent.astro';
 import ChatWidget from '../components/ChatWidget.astro';
 import ChatLauncher from '../components/ChatLauncher.astro';
 import WebinarPromo from '../components/WebinarPromo.astro';
-import { SITE, DEFAULT_WA_MESSAGE, WHATSAPP_NUMBER } from '../lib/site';
+import { SITE, DEFAULT_WA_MESSAGE, WHATSAPP_NUMBER, META_PIXEL_ID } from '../lib/site';
 
 interface Props {
   title: string;
@@ -46,7 +46,7 @@ const googleVerification = import.meta.env.PUBLIC_GOOGLE_SITE_VERIFICATION as st
 const bingVerification = import.meta.env.PUBLIC_BING_SITE_VERIFICATION as string | undefined;
 const metaVerification = import.meta.env.PUBLIC_META_DOMAIN_VERIFICATION as string | undefined;
 // Meta Pixel sólo en las landings de pauta y sólo con consentimiento de publicidad (CookieConsent).
-const metaPixelId = landing ? ((import.meta.env.PUBLIC_META_PIXEL_ID as string | undefined) ?? '') : '';
+const metaPixelId = landing ? (import.meta.env.PUBLIC_META_PIXEL_ID as string | undefined) || META_PIXEL_ID : '';
 
 // El chat va visible salvo que se apague con PUBLIC_CHAT_UI=0 (oculta la burbuja).
 // Para cortar también el endpoint, CHAT_ENABLED=0 en Vercel.

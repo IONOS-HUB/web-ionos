@@ -21,7 +21,7 @@ El resto del sitio no carga el Pixel. Para llevarlo a todas las páginas, quita 
 
 | Variable | Ámbito | Qué es |
 | --- | --- | --- |
-| `PUBLIC_META_PIXEL_ID` | Production y Preview | ID del conjunto de datos (Pixel). Se incrusta en el HTML: **redeploya** al cambiarlo. |
+| `PUBLIC_META_PIXEL_ID` | Opcional | Sobreescribe el Pixel por defecto, `1472397644734399` (`META_PIXEL_ID` en `src/lib/site.ts`). Se incrusta en el HTML: **redeploya** al cambiarlo. |
 | `META_CAPI_TOKEN` | Production | Token de la API de Conversiones. Sólo servidor. |
 | `META_TEST_EVENT_CODE` | Production, sólo mientras pruebas | Código de "Probar eventos". Quítalo al terminar. |
 | `PUBLIC_META_DOMAIN_VERIFICATION` | Production | Valor `content` de la metaetiqueta de verificación del dominio. |
@@ -37,7 +37,7 @@ En [business.facebook.com](https://business.facebook.com) necesitas un portfolio
 1. **Administrador de eventos** ([business.facebook.com/events_manager](https://business.facebook.com/events_manager)) → **Conectar orígenes de datos** (el `+` verde) → **Web** → **Conectar**.
 2. Nombre: `IonosHub · Web`. URL: `https://ionoshub.net`.
 3. Cuando pregunte cómo conectar, elige **Meta Pixel y API de Conversiones** → **Configurar manualmente**. No pegues ningún código: el sitio ya lo trae.
-4. Copia el **ID del conjunto de datos** (15–16 dígitos, en **Configuración**) → `PUBLIC_META_PIXEL_ID`.
+4. El **ID del conjunto de datos** ya está en el código: `1472397644734399` (`META_PIXEL_ID` en `src/lib/site.ts`). El "código base" y el "código de evento" que ofrece Meta **no se pegan**: el sitio ya los trae y sólo los carga con consentimiento.
 5. **Configuración del negocio → Orígenes de datos → Conjuntos de datos** → tu Pixel → **Asignar activos**: conecta la cuenta publicitaria.
 
 ### 3. Token de la API de Conversiones

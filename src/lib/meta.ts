@@ -6,11 +6,12 @@
  * Sólo se envía si la persona aceptó la publicidad en el aviso de cookies (el Pixel estaba cargado) y
  * con los datos de contacto en SHA-256, como pide Meta. Sólo servidor: el token nunca llega al navegador.
  *
- * Variables: `PUBLIC_META_PIXEL_ID`, `META_CAPI_TOKEN` y, para probar en el Administrador de eventos,
+ * Variables: `META_CAPI_TOKEN` (el Pixel es `META_PIXEL_ID` de `site.ts`, o `PUBLIC_META_PIXEL_ID`) y, para probar en el Administrador de eventos,
  * `META_TEST_EVENT_CODE`. Ver docs/META-PIXEL.md.
  */
 import { createHash } from 'node:crypto';
 import { readEnv, toE164 } from './lead';
+import { META_PIXEL_ID } from './site';
 
 /** Versión de la Graph API. Meta mantiene cada una unos dos años; súbela cuando avise de su retiro. */
 const GRAPH_VERSION = 'v23.0';
@@ -38,7 +39,7 @@ const sha256 = (valor: string) => createHash('sha256').update(valor).digest('hex
 const fbcDesde = (fbclid: string) => `fb.1.${Date.now()}.${fbclid}`;
 
 export async function sendMetaLead(lead: MetaLead): Promise<void> {
-  const pixelId = readEnv('PUBLIC_META_PIXEL_ID');
+  const pixelId = readEnv('PUBLIC_META_PIXEL_ID') || META_PIXEL_ID;
   const token = readEnv('META_CAPI_TOKEN');
   if (!pixelId || !token) return;
 

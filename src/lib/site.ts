@@ -22,6 +22,9 @@ export function waLink(message: string = DEFAULT_WA_MESSAGE): string {
 }
 
 /** Agenda de diagnósticos (Google Calendar). El corto abre en una pestaña; el largo se incrusta. */
+/** Meta Pixel (conjunto de datos "IonosHub · Web"). Público; `PUBLIC_META_PIXEL_ID` lo sobreescribe. */
+export const META_PIXEL_ID = '1472397644734399';
+
 export const CALENDAR_URL = 'https://calendar.app.google/LSjLcpH2TpMAasgN6';
 export const CALENDAR_EMBED_URL =
   'https://calendar.google.com/calendar/appointments/schedules/AcZssZ2fkQPDl0FF5Em6-T_xqHSd5jGjlM4nrgd5a7htOGIVQSf3tIFviKK7k7ru8ZeTq96U1yxsbpn1?gv=true';
