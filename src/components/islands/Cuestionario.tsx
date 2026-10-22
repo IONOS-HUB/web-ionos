@@ -3,27 +3,33 @@ import SelectorPais from './SelectorPais';
 import { paisPorIso, PAIS_POR_DEFECTO } from '../../data/paises';
 import {
   DATOS,
-  INTRO,
-  PREGUNTAS,
-  SECCIONES,
+  GENERAL,
+  SERVICIOS,
+  comoLlenarlo,
   respondida,
+  servicioPorId,
   type DatosCliente,
   type Pregunta,
   type Respuesta,
   type Respuestas,
   type RespuestaUnica,
   type RespuestaVarias,
-} from '../../data/cuestionario';
+  type Servicio,
+  type ServicioId,
+} from '../../data/cuestionarios';
 
 /**
- * Cuestionario de página web por pasos (`/cuestionario-web`): portada con la clave, «Tus datos», las once
- * secciones del documento, un repaso y la confirmación. Las preguntas salen de `data/cuestionario.ts`.
+ * Cuestionario por pasos para clientes (`/cuestionario`): portada → «Tus datos» con el desplegable del servicio
+ * → las secciones de ese servicio → repaso → confirmación. Las preguntas salen de `data/cuestionarios/`.
  *
- * - La clave se comprueba en el servidor antes de empezar (`/api/cuestionario`, acción `verificar`) y se
- *   vuelve a mandar al enviar; vive en `sessionStorage` mientras la pestaña siga abierta.
- * - Las respuestas se guardan solas en `localStorage`: llenarlo toma 20–30 minutos y la persona puede
- *   cerrar y seguir otro día. Se borran al enviar.
- * - Sólo «Tus datos» es obligatorio. Las preguntas con ★ se recomiendan en el repaso, no se exigen.
+ * - Enlace personal `?c=<id de contacto de GHL>`: la página le pide a `/api/cuestionario` (acción `contacto`)
+ *   los datos que ya tiene el CRM y el servicio en que lo clasificó. Con eso «Tus datos» llega lleno y no se
+ *   pide clave. `?s=<servicio>` elige el servicio desde el enlace.
+ * - Enlace genérico: la clave se comprueba en el servidor antes de empezar (acción `verificar`) y se vuelve a
+ *   mandar al enviar; vive en `sessionStorage` mientras la pestaña siga abierta.
+ * - Las respuestas se guardan solas en `localStorage`, por servicio: llenarlo toma 15–30 minutos y la persona
+ *   puede cerrar y seguir otro día. Se borran al enviar.
+ * - Sólo «Tus datos» y el servicio son obligatorios. Las preguntas con ★ se recomiendan en el repaso.
  */
 
 interface Props {
@@ -31,16 +37,15 @@ interface Props {
 }
 
 type Datos = DatosCliente & { pais: string };
-type Vista = 'portada' | 'pasos' | 'enviado';
-type ErroresDatos = Partial<Record<keyof DatosCliente, string>>;
+type Vista = 'cargando' | 'portada' | 'pasos' | 'enviado';
+type ErroresDatos = Partial<Record<keyof DatosCliente | 'servicio', string>>;
+type RespuestasPorServicio = Partial<Record<ServicioId, Respuestas>>;
 
-const BORRADOR = 'ionos:cuestionario-web';
+const BORRADOR = 'ionos:cuestionario';
+/** Borrador del primer cuestionario (sólo página web), para no perder lo que alguien dejó a medias. */
+const BORRADOR_V1 = 'ionos:cuestionario-web';
 const CLAVE = 'ionos:cuestionario-clave';
 const DATOS_VACIOS: Datos = { negocio: '', nombre: '', cargo: '', whatsapp: '', correo: '', ciudad: '', pais: PAIS_POR_DEFECTO };
-/** Paso 0: tus datos · 1–11: secciones · 12: repaso */
-const ULTIMO = SECCIONES.length + 1;
-const TOTAL_PREGUNTAS = PREGUNTAS.length;
-const ESTRELLAS = PREGUNTAS.filter((p) => p.importante);
 
 const leer = (almacen: 'local' | 'session', clave: string): string | null => {
   try {
@@ -59,13 +64,33 @@ const escribir = (almacen: 'local' | 'session', clave: string, valor: string | n
   }
 };
 
+interface Borrador {
+  servicio?: string;
+  datos?: Datos;
+  respuestas?: RespuestasPorServicio;
+  paso?: number;
+  guardado?: number;
+}
+
+function leerBorrador(): Borrador | null {
+  try {
+    const b = JSON.parse(leer('local', BORRADOR) ?? 'null') as Borrador | null;
+    if (b) return b;
+    const v1 = JSON.parse(leer('local', BORRADOR_V1) ?? 'null') as { datos?: Datos; respuestas?: Respuestas; paso?: number; guardado?: number } | null;
+    return v1 ? { servicio: 'web', datos: v1.datos, respuestas: { web: v1.respuestas ?? {} }, paso: v1.paso, guardado: v1.guardado } : null;
+  } catch {
+    return null; // Borrador ilegible: se empieza de cero.
+  }
+}
+
 const suave = () => !window.matchMedia('(prefers-reduced-motion: reduce)').matches;
 
 /** WhatsApp con prefijo y sin el 0 inicial del número nacional: `+593 991234567`. */
 const whatsappCompleto = (d: Datos) => `${paisPorIso(d.pais)?.prefijo ?? ''} ${d.whatsapp.replace(/\D/g, '').replace(/^0+/, '')}`.trim();
 
-function validarDatos(d: Datos): ErroresDatos {
+function validarDatos(d: Datos, servicio: Servicio | undefined): ErroresDatos {
   const e: ErroresDatos = {};
+  if (!servicio) e.servicio = 'Elige el servicio que te interesa.';
   if (d.negocio.trim().length < 2) e.negocio = 'Escribe el nombre de tu negocio.';
   if (d.nombre.trim().length < 3) e.nombre = 'Escribe tu nombre.';
   const pais = paisPorIso(d.pais);
@@ -75,13 +100,18 @@ function validarDatos(d: Datos): ErroresDatos {
   return e;
 }
 
-export default function CuestionarioWeb({ waHref }: Props) {
-  const [vista, setVista] = useState<Vista>('portada');
+export default function Cuestionario({ waHref }: Props) {
+  const [vista, setVista] = useState<Vista>('cargando');
   const [clave, setClave] = useState('');
   const [errorClave, setErrorClave] = useState('');
   const [verificando, setVerificando] = useState(false);
+  /** ID de contacto de GHL ya comprobado por el servidor (enlace personal) */
+  const [contacto, setContacto] = useState<string | null>(null);
+  const [avisoEnlace, setAvisoEnlace] = useState('');
+  const [servicioId, setServicioId] = useState<ServicioId | ''>('');
+  const [delCrm, setDelCrm] = useState(false);
   const [datos, setDatos] = useState<Datos>(DATOS_VACIOS);
-  const [respuestas, setRespuestas] = useState<Respuestas>({});
+  const [respuestasPor, setRespuestasPor] = useState<RespuestasPorServicio>({});
   const [paso, setPaso] = useState(0);
   const [erroresDatos, setErroresDatos] = useState<ErroresDatos>({});
   const [guardado, setGuardado] = useState<number>();
@@ -92,26 +122,74 @@ export default function CuestionarioWeb({ waHref }: Props) {
   const titulo = useRef<HTMLHeadingElement>(null);
   const primerRender = useRef(true);
 
-  // Al cargar: retoma el borrador y, si la clave sigue en esta pestaña, entra directo al paso guardado.
+  const servicio = servicioPorId(servicioId);
+  const secciones = servicio?.secciones ?? [];
+  const preguntas = secciones.flatMap((s) => s.preguntas);
+  const respuestas = (servicio && respuestasPor[servicio.id]) || {};
+  /** Paso 0: tus datos · 1…n: secciones · n+1: repaso */
+  const ultimo = secciones.length + 1;
+
+  // Al cargar: retoma el borrador, lee el enlace (`?c=`, `?s=`) y, con enlace personal, pide los datos del CRM.
   useEffect(() => {
-    try {
-      const b = JSON.parse(leer('local', BORRADOR) ?? 'null') as { datos?: Datos; respuestas?: Respuestas; paso?: number; guardado?: number } | null;
-      if (b) {
-        if (b.datos) setDatos({ ...DATOS_VACIOS, ...b.datos });
-        if (b.respuestas) setRespuestas(b.respuestas);
-        if (typeof b.paso === 'number') setPaso(Math.min(Math.max(0, b.paso), ULTIMO));
-        setGuardado(b.guardado);
-        setHayBorrador(Boolean(b.datos?.negocio || Object.keys(b.respuestas ?? {}).length));
+    const params = new URLSearchParams(window.location.search);
+    const idContacto = (params.get('c') ?? '').trim();
+    const delEnlace = servicioPorId(params.get('s'));
+
+    const b = leerBorrador();
+    let elegido = servicioPorId(b?.servicio)?.id;
+    if (b) {
+      if (b.datos) setDatos({ ...DATOS_VACIOS, ...b.datos });
+      if (b.respuestas) setRespuestasPor(b.respuestas);
+      if (typeof b.paso === 'number') setPaso(Math.max(0, b.paso));
+      setGuardado(b.guardado);
+      setHayBorrador(Boolean(b.datos?.negocio || Object.values(b.respuestas ?? {}).some((r) => Object.keys(r ?? {}).length)));
+    }
+    if (delEnlace && delEnlace.id !== elegido) {
+      elegido = delEnlace.id;
+      setPaso(0);
+    }
+    if (elegido) setServicioId(elegido);
+
+    if (!idContacto) {
+      const c = leer('session', CLAVE);
+      if (c) setClave(c);
+      setVista(c ? 'pasos' : 'portada');
+      setCargado(true);
+      return;
+    }
+
+    (async () => {
+      try {
+        const res = await fetch('/api/cuestionario', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ accion: 'contacto', contacto: idContacto }),
+        });
+        const cuerpo = (await res.json()) as { ok?: boolean; error?: string; datos?: Datos; servicio?: ServicioId | null };
+        if (!res.ok || !cuerpo.ok || !cuerpo.datos) {
+          setAvisoEnlace(cuerpo.error ?? 'No pudimos abrir tu enlace personal.');
+        } else {
+          const crm = cuerpo.datos;
+          setContacto(idContacto);
+          // Lo que la persona ya escribió en este navegador manda; el CRM llena lo que está vacío.
+          setDatos((d) => {
+            const lleno = { ...d };
+            for (const c of DATOS) if (!lleno[c.id].trim() && crm[c.id]) lleno[c.id] = crm[c.id];
+            if (!d.whatsapp.trim() && crm.whatsapp && paisPorIso(crm.pais)) lleno.pais = crm.pais;
+            return lleno;
+          });
+          if (!elegido && servicioPorId(cuerpo.servicio)) {
+            setServicioId(cuerpo.servicio as ServicioId);
+            setDelCrm(true);
+          }
+        }
+      } catch {
+        setAvisoEnlace('No pudimos abrir tu enlace personal. Revisa tu conexión y recarga la página.');
+      } finally {
+        setVista('portada');
+        setCargado(true);
       }
-    } catch {
-      /* Borrador ilegible: se empieza de cero. */
-    }
-    const c = leer('session', CLAVE);
-    if (c) {
-      setClave(c);
-      setVista('pasos');
-    }
-    setCargado(true);
+    })();
   }, []);
 
   // Guarda en el navegador medio segundo después del último cambio.
@@ -119,11 +197,12 @@ export default function CuestionarioWeb({ waHref }: Props) {
     if (!cargado || vista === 'enviado') return;
     const t = window.setTimeout(() => {
       const ahora = Date.now();
-      escribir('local', BORRADOR, JSON.stringify({ v: 1, datos, respuestas, paso, guardado: ahora }));
+      escribir('local', BORRADOR, JSON.stringify({ v: 2, servicio: servicioId, datos, respuestas: respuestasPor, paso, guardado: ahora }));
+      escribir('local', BORRADOR_V1, null);
       setGuardado(ahora);
     }, 500);
     return () => window.clearTimeout(t);
-  }, [datos, respuestas, paso, cargado, vista]);
+  }, [servicioId, datos, respuestasPor, paso, cargado, vista]);
 
   // Cada cambio de paso vuelve al inicio de la ventanilla y deja el foco en su título (lectores de pantalla).
   useEffect(() => {
@@ -131,41 +210,59 @@ export default function CuestionarioWeb({ waHref }: Props) {
       primerRender.current = false;
       return;
     }
-    if (vista === 'portada') return;
+    if (vista !== 'pasos') return;
     document.getElementById('cw-ventanilla')?.scrollIntoView({ behavior: suave() ? 'smooth' : 'auto', block: 'start' });
     titulo.current?.focus({ preventScroll: true });
   }, [paso, vista]);
 
-  const responder = (id: string, valor: Respuesta | undefined) =>
-    setRespuestas((r) => {
-      const nuevo = { ...r };
+  // Un borrador puede traer un paso que no existe en el servicio elegido.
+  useEffect(() => {
+    if (paso > ultimo) setPaso(servicio ? ultimo : 0);
+  }, [paso, ultimo, servicio]);
+
+  const responder = (id: string, valor: Respuesta | undefined) => {
+    if (!servicio) return;
+    setRespuestasPor((todas) => {
+      const nuevo = { ...(todas[servicio.id] ?? {}) };
       if (valor === undefined) delete nuevo[id];
       else nuevo[id] = valor;
-      return nuevo;
+      return { ...todas, [servicio.id]: nuevo };
     });
+  };
 
   const setDato = (campo: keyof Datos, valor: string) => {
     setDatos((d) => ({ ...d, [campo]: valor }));
     if (campo in erroresDatos) setErroresDatos((e) => ({ ...e, [campo]: undefined }));
   };
 
+  const elegirServicio = (id: string) => {
+    const s = servicioPorId(id);
+    setServicioId(s?.id ?? '');
+    setDelCrm(false);
+    if (erroresDatos.servicio) setErroresDatos((e) => ({ ...e, servicio: undefined }));
+  };
+
   const irA = (n: number) => {
-    // Para salir de «Tus datos» hacia delante, los obligatorios tienen que estar.
+    // Para salir de «Tus datos» hacia delante, el servicio y los obligatorios tienen que estar.
     if (paso === 0 && n > 0) {
-      const e = validarDatos(datos);
+      const e = validarDatos(datos, servicio);
       setErroresDatos(e);
-      const primero = DATOS.find((c) => e[c.id]);
+      const primero = e.servicio ? 'servicio' : DATOS.find((c) => e[c.id])?.id;
       if (primero) {
-        document.getElementById(`cw-${primero.id}`)?.focus();
+        document.getElementById(`cw-${primero}`)?.focus();
         return;
       }
     }
     setErrorEnvio('');
-    setPaso(Math.min(Math.max(0, n), ULTIMO));
+    setPaso(Math.min(Math.max(0, n), ultimo));
   };
 
   const entrar = async (ev: FormEvent) => {
     ev.preventDefault();
+    if (contacto) {
+      setVista('pasos');
+      return;
+    }
     if (!clave.trim()) {
       setErrorClave('Escribe la clave que te enviamos.');
       return;
@@ -193,8 +290,8 @@ export default function CuestionarioWeb({ waHref }: Props) {
   };
 
   const enviar = async () => {
-    const e = validarDatos(datos);
-    if (Object.keys(e).length) {
+    const e = validarDatos(datos, servicio);
+    if (Object.keys(e).length || !servicio) {
       setErroresDatos(e);
       setPaso(0);
       return;
@@ -215,7 +312,8 @@ export default function CuestionarioWeb({ waHref }: Props) {
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
           accion: 'enviar',
-          clave,
+          ...(contacto ? { contacto } : { clave }),
+          servicio: servicio.id,
           datos: cliente,
           respuestas,
           pagina_origen: window.location.href,
@@ -223,9 +321,14 @@ export default function CuestionarioWeb({ waHref }: Props) {
       });
       const cuerpo = (await res.json()) as { ok?: boolean; error?: string; faltan?: string[] };
       if (res.status === 401) {
-        // La clave cambió desde que empezó: se pide de nuevo sin perder nada.
+        // La clave cambió o el enlace ya no vale: se pide la clave sin perder nada.
         escribir('session', CLAVE, null);
-        setErrorClave(cuerpo.error ?? 'La clave no es correcta.');
+        if (contacto) {
+          setContacto(null);
+          setAvisoEnlace(cuerpo.error ?? 'Tu enlace personal ya no es válido.');
+        } else {
+          setErrorClave(cuerpo.error ?? 'La clave no es correcta.');
+        }
         setVista('portada');
         return;
       }
@@ -243,11 +346,16 @@ export default function CuestionarioWeb({ waHref }: Props) {
     }
   };
 
-  const contestadas = PREGUNTAS.filter((p) => respondida(p, respuestas[p.id])).length;
+  const contestadas = preguntas.filter((p) => respondida(p, respuestas[p.id])).length;
+
+  if (vista === 'cargando') return <Cargando />;
 
   if (vista === 'portada') {
     return (
       <Portada
+        servicio={servicio}
+        contacto={contacto ? { nombre: datos.nombre, negocio: datos.negocio } : null}
+        aviso={avisoEnlace}
         clave={clave}
         setClave={(v) => {
           setClave(v);
@@ -258,21 +366,25 @@ export default function CuestionarioWeb({ waHref }: Props) {
         onSubmit={entrar}
         hayBorrador={hayBorrador}
         contestadas={contestadas}
+        total={preguntas.length}
         waHref={waHref}
       />
     );
   }
 
-  if (vista === 'enviado') return <Enviado nombre={datos.nombre} waHref={waHref} />;
+  if (vista === 'enviado') return <Enviado nombre={datos.nombre} servicio={servicio} waHref={waHref} />;
 
-  const seccion = paso >= 1 && paso <= SECCIONES.length ? SECCIONES[paso - 1] : undefined;
-  const pasos = [{ id: 'datos', numero: '00', titulo: 'Tus datos' }, ...SECCIONES, { id: 'repaso', numero: '12', titulo: 'Revisar y enviar' }];
+  const seccion = paso >= 1 && paso <= secciones.length ? secciones[paso - 1] : undefined;
+  const pasos = servicio
+    ? [{ id: 'datos', numero: '00', titulo: 'Tus datos' }, ...secciones, { id: 'repaso', numero: String(ultimo).padStart(2, '0'), titulo: 'Revisar y enviar' }]
+    : [{ id: 'datos', numero: '00', titulo: 'Tus datos' }];
   const completo = (i: number) => {
-    if (i === 0) return Object.keys(validarDatos(datos)).length === 0;
-    if (i === ULTIMO) return false;
-    return SECCIONES[i - 1].preguntas.some((p) => respondida(p, respuestas[p.id]));
+    if (i === 0) return Object.keys(validarDatos(datos, servicio)).length === 0;
+    if (i === ultimo) return false;
+    return secciones[i - 1].preguntas.some((p) => respondida(p, respuestas[p.id]));
   };
   const siguiente = pasos[paso + 1];
+  const enRepaso = Boolean(servicio) && paso === ultimo;
 
   return (
     <div className="grid grid-cols-[minmax(0,1fr)] gap-6 lg:grid-cols-12 lg:gap-10">
@@ -280,20 +392,29 @@ export default function CuestionarioWeb({ waHref }: Props) {
       <aside className="lg:col-span-4">
         <div className="lg:sticky lg:top-24">
           <div className="rounded-[1.25rem] border border-line bg-canvas p-5">
-            <div className="flex items-baseline justify-between gap-3">
-              <p className="text-[0.95rem] font-semibold text-ink">
-                Paso <span className="tnum">{paso + 1}</span> de <span className="tnum">{pasos.length}</span>
+            {servicio ? (
+              <>
+                <p className="text-[0.72rem] font-semibold uppercase tracking-[0.025em] text-cobalt-ink">{servicio.nombre}</p>
+                <div className="mt-1 flex items-baseline justify-between gap-3">
+                  <p className="text-[0.95rem] font-semibold text-ink">
+                    Paso <span className="tnum">{paso + 1}</span> de <span className="tnum">{pasos.length}</span>
+                  </p>
+                  <p className="tnum text-[0.8rem] text-ink-3">
+                    {contestadas} de {preguntas.length} preguntas
+                  </p>
+                </div>
+                <div className="mt-3 h-2 overflow-hidden rounded-full bg-ice-2" aria-hidden="true">
+                  <div
+                    className="h-full rounded-full bg-cobalt transition-[width] duration-500 ease-[var(--ease-out-expo)]"
+                    style={{ width: `${Math.max(4, (contestadas / Math.max(1, preguntas.length)) * 100)}%` }}
+                  />
+                </div>
+              </>
+            ) : (
+              <p className="text-[0.95rem] leading-relaxed text-ink-2">
+                <span className="font-semibold text-ink">Empieza por «Tus datos».</span> Cuando elijas el servicio, aquí verás sus secciones.
               </p>
-              <p className="tnum text-[0.8rem] text-ink-3">
-                {contestadas} de {TOTAL_PREGUNTAS} preguntas
-              </p>
-            </div>
-            <div className="mt-3 h-2 overflow-hidden rounded-full bg-ice-2" aria-hidden="true">
-              <div
-                className="h-full rounded-full bg-cobalt transition-[width] duration-500 ease-[var(--ease-out-expo)]"
-                style={{ width: `${Math.max(4, (contestadas / TOTAL_PREGUNTAS) * 100)}%` }}
-              />
-            </div>
+            )}
             <p className="mt-3 flex items-center gap-1.5 text-[0.8rem] text-ink-3" aria-live="polite">
               {guardado ? (
                 <>
@@ -305,16 +426,21 @@ export default function CuestionarioWeb({ waHref }: Props) {
               )}
             </p>
 
-            <details className="group mt-4 lg:hidden">
-              <summary className="flex cursor-pointer list-none items-center justify-between rounded-full bg-ice-3 px-4 py-2.5 text-[0.9rem] font-semibold text-cobalt-ink">
-                Ver todas las secciones
-                <Ico d={ICONOS.chevron} size={16} className="transition-transform duration-300 group-open:rotate-180" />
-              </summary>
-              <Indice pasos={pasos} actual={paso} completo={completo} irA={irA} />
-            </details>
-            <div className="mt-4 hidden lg:block">
-              <Indice pasos={pasos} actual={paso} completo={completo} irA={irA} />
-            </div>
+            {servicio && (
+              <>
+                <details className="group mt-4 lg:hidden">
+                  <summary className="flex cursor-pointer list-none items-center justify-between rounded-full bg-ice-3 px-4 py-2.5 text-[0.9rem] font-semibold text-cobalt-ink">
+                    Ver todas las secciones
+                    <Ico d={ICONOS.chevron} size={16} className="transition-transform duration-300 group-open:rotate-180" />
+                  </summary>
+                  <Indice pasos={pasos} actual={paso} completo={completo} irA={irA} />
+                </details>
+                <div className="mt-4 hidden lg:block">
+                  <Indice pasos={pasos} actual={paso} completo={completo} irA={irA} />
+                </div>
+                <Glosario glosario={servicio.glosario} className="mt-4 hidden lg:block" compacto />
+              </>
+            )}
           </div>
         </div>
       </aside>
@@ -323,16 +449,20 @@ export default function CuestionarioWeb({ waHref }: Props) {
         <div id="cw-ventanilla" className="scroll-mt-24 overflow-clip rounded-[1.75rem] border border-line bg-canvas shadow-lift">
           <div className="flex items-start gap-4 border-b border-line-soft bg-ice-3 px-6 py-5 sm:px-8">
             <span className="tnum flex h-11 w-11 shrink-0 items-center justify-center rounded-full bg-cobalt text-[0.95rem] font-semibold text-white">
-              {paso === 0 ? <Ico d={ICONOS.user} size={20} /> : paso === ULTIMO ? <Ico d={ICONOS.check} size={20} /> : seccion?.numero}
+              {paso === 0 ? <Ico d={ICONOS.user} size={20} /> : enRepaso ? <Ico d={ICONOS.check} size={20} /> : seccion?.numero}
             </span>
             <div className="min-w-0">
               <h2 ref={titulo} tabIndex={-1} className="display-tight text-[1.6rem] font-semibold text-ink outline-none sm:text-[1.9rem]">
-                {paso === 0 ? 'Tus datos' : paso === ULTIMO ? 'Revisa y envía' : seccion?.titulo}
+                {paso === 0 ? 'Tus datos' : enRepaso ? 'Revisa y envía' : seccion?.titulo}
               </h2>
               <p className="mt-1.5 text-[0.95rem] leading-relaxed text-ink-2">
                 {paso === 0 ? (
-                  'Para saber de qué negocio hablamos y a quién le escribimos. Estos cuatro datos son los únicos obligatorios.'
-                ) : paso === ULTIMO ? (
+                  contacto ? (
+                    'Los llenamos con lo que ya nos contaste. Revisa que estén bien, confirma el servicio y sigue.'
+                  ) : (
+                    'Para saber de qué negocio hablamos, sobre qué servicio y a quién le escribimos. Son los únicos datos obligatorios.'
+                  )
+                ) : enRepaso ? (
                   'Mira qué te falta. Puedes enviar aunque dejes preguntas en blanco: lo conversamos en la llamada.'
                 ) : (
                   <>
@@ -344,15 +474,32 @@ export default function CuestionarioWeb({ waHref }: Props) {
           </div>
 
           <div className="px-6 py-2 sm:px-8">
-            {paso === 0 && <PasoDatos datos={datos} errores={erroresDatos} setDato={setDato} />}
+            {paso === 0 && (
+              <PasoDatos
+                datos={datos}
+                errores={erroresDatos}
+                setDato={setDato}
+                servicio={servicio}
+                elegirServicio={elegirServicio}
+                delCrm={delCrm}
+                respondidas={(id) => Object.keys(respuestasPor[id] ?? {}).length}
+              />
+            )}
             {seccion && (
               <div className="divide-y divide-line-soft">
                 {seccion.preguntas.map((p) => (
-                  <PreguntaCampo key={p.id} p={p} valor={respuestas[p.id]} onChange={(v) => responder(p.id, v)} respuestas={respuestas} datos={datos} />
+                  <PreguntaCampo
+                    key={`${servicioId}:${p.id}`}
+                    p={p}
+                    valor={respuestas[p.id]}
+                    onChange={(v) => responder(p.id, v)}
+                    respuestas={respuestas}
+                    datos={datos}
+                  />
                 ))}
               </div>
             )}
-            {paso === ULTIMO && <Repaso datos={datos} respuestas={respuestas} irA={irA} />}
+            {enRepaso && servicio && <Repaso servicio={servicio} datos={datos} respuestas={respuestas} irA={irA} />}
           </div>
 
           {errorEnvio && (
@@ -371,10 +518,10 @@ export default function CuestionarioWeb({ waHref }: Props) {
             ) : (
               <span className="hidden sm:block" />
             )}
-            {paso < ULTIMO ? (
+            {!enRepaso ? (
               <button type="button" className="btn btn-primary w-full sm:w-auto" onClick={() => irA(paso + 1)}>
-                {paso === ULTIMO - 1 ? 'Revisar y enviar' : 'Siguiente'}
-                <span className="sr-only">: {siguiente?.titulo}</span>
+                {servicio && paso === ultimo - 1 ? 'Revisar y enviar' : 'Siguiente'}
+                {siguiente && <span className="sr-only">: {siguiente.titulo}</span>}
                 <Ico d={ICONOS.arrow} size={18} />
               </button>
             ) : (
@@ -390,9 +537,23 @@ export default function CuestionarioWeb({ waHref }: Props) {
   );
 }
 
-/* ── Portada con la clave ──────────────────────────────────────────────── */
+/* ── Portada: enlace personal o clave ──────────────────────────────────── */
+
+function Cargando() {
+  return (
+    <div className="flex min-h-[50vh] items-center justify-center" role="status" aria-live="polite">
+      <p className="flex items-center gap-3 text-[1.05rem] text-ink-2">
+        <span className="h-5 w-5 rounded-full border-2 border-ice-2 border-t-cobalt motion-safe:animate-spin" aria-hidden="true" />
+        Preparando tu cuestionario…
+      </p>
+    </div>
+  );
+}
 
 function Portada(props: {
+  servicio: Servicio | undefined;
+  contacto: { nombre: string; negocio: string } | null;
+  aviso: string;
   clave: string;
   setClave: (v: string) => void;
   error: string;
@@ -400,19 +561,34 @@ function Portada(props: {
   onSubmit: (e: FormEvent) => void;
   hayBorrador: boolean;
   contestadas: number;
+  total: number;
   waHref: string;
 }) {
   const [ver, setVer] = useState(false);
+  const s = props.servicio;
+  const intro = s ?? GENERAL;
+  const pila = props.contacto?.nombre.trim().split(/\s+/)[0];
   return (
     <div className="grid grid-cols-[minmax(0,1fr)] gap-10 lg:grid-cols-12 lg:gap-16">
       <div className="min-w-0 lg:col-span-6">
-        <h1 className="display-tight text-[clamp(2.3rem,4.2vw,3.6rem)] font-semibold text-ink">{INTRO.titulo}</h1>
-        <p className="mt-5 text-[clamp(1.05rem,1.4vw,1.25rem)] leading-relaxed text-ink-2">{INTRO.lead}</p>
-        <p className="mt-4 text-[1.02rem] leading-relaxed text-ink-2">{INTRO.queEs}</p>
+        <h1 className="display-tight text-[clamp(2.3rem,4.2vw,3.6rem)] font-semibold text-ink">{intro.titulo}</h1>
+        <p className="mt-5 text-[clamp(1.05rem,1.4vw,1.25rem)] leading-relaxed text-ink-2">{intro.lead}</p>
+        <p className="mt-4 text-[1.02rem] leading-relaxed text-ink-2">{intro.queEs}</p>
+
+        {!s && (
+          <ul className="mt-6 divide-y divide-line-soft rounded-[1.25rem] border border-line bg-canvas px-5">
+            {SERVICIOS.map((x) => (
+              <li key={x.id} className="py-3">
+                <p className="text-[0.98rem] font-semibold text-ink">{x.nombre}</p>
+                <p className="mt-0.5 text-[0.92rem] leading-relaxed text-ink-3">{x.descripcion}</p>
+              </li>
+            ))}
+          </ul>
+        )}
 
         <h2 className="mt-10 text-[1.35rem] font-semibold text-ink">Cómo llenarlo</h2>
         <ul className="mt-4 space-y-3">
-          {INTRO.comoLlenarlo.map((t) => (
+          {comoLlenarlo(intro.minutos).map((t) => (
             <li key={t} className="flex gap-3 text-[1rem] leading-relaxed text-ink-2">
               <span className="mt-0.5 flex h-6 w-6 shrink-0 items-center justify-center rounded-full bg-ice text-cobalt-ink">
                 <Ico d={ICONOS.check} size={14} />
@@ -422,57 +598,91 @@ function Portada(props: {
           ))}
         </ul>
 
-        <Glosario className="mt-8" />
+        {s && <Glosario glosario={s.glosario} className="mt-8" />}
       </div>
 
       <div className="min-w-0 lg:col-span-6 lg:pt-2">
         <form onSubmit={props.onSubmit} noValidate className="overflow-clip rounded-[1.75rem] border border-line bg-canvas shadow-lift">
           <div className="flex items-center gap-3 border-b border-line-soft bg-ice-3 px-6 py-4 sm:px-8">
             <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-cobalt text-white">
-              <Ico d={ICONOS.shield} size={18} />
+              <Ico d={props.contacto ? ICONOS.user : ICONOS.shield} size={18} />
             </span>
             <div className="min-w-0 leading-tight">
-              <p className="text-[1.05rem] font-semibold text-ink">Acceso para clientes</p>
-              <p className="mt-0.5 text-[0.85rem] text-ink-3">Escribe la clave que te enviamos por WhatsApp o correo</p>
+              {props.contacto ? (
+                <>
+                  <p className="text-[1.05rem] font-semibold text-ink">Hola{pila ? `, ${pila}` : ''}</p>
+                  <p className="mt-0.5 truncate text-[0.85rem] text-ink-3">
+                    {props.contacto.negocio ? `Preparamos este cuestionario para ${props.contacto.negocio}` : 'Preparamos este cuestionario para ti'}
+                  </p>
+                </>
+              ) : (
+                <>
+                  <p className="text-[1.05rem] font-semibold text-ink">Acceso para clientes</p>
+                  <p className="mt-0.5 text-[0.85rem] text-ink-3">Escribe la clave que te enviamos por WhatsApp o correo</p>
+                </>
+              )}
             </div>
           </div>
           <div className="flex flex-col gap-4 p-6 sm:p-8">
-            <div>
-              <label htmlFor="cw-clave" className="mb-1.5 block text-[0.95rem] font-semibold text-ink">
-                Clave de acceso
-              </label>
-              <div className="relative">
-                <input
-                  id="cw-clave"
-                  type={ver ? 'text' : 'password'}
-                  autoComplete="off"
-                  autoCapitalize="none"
-                  spellCheck={false}
-                  className={`${CAMPO} w-full pr-24 ${props.error ? MAL : BIEN}`}
-                  value={props.clave}
-                  onChange={(e) => props.setClave(e.target.value)}
-                  aria-invalid={!!props.error}
-                  aria-describedby={props.error ? 'cw-clave-err' : undefined}
-                />
-                <button
-                  type="button"
-                  onClick={() => setVer((v) => !v)}
-                  className="absolute right-2 top-1/2 -translate-y-1/2 rounded-full px-3 py-1.5 text-[0.85rem] font-semibold text-cobalt-ink hover:bg-ice-3"
-                  aria-pressed={ver}
-                >
-                  {ver ? 'Ocultar' : 'Mostrar'}
-                </button>
-              </div>
-              {props.error && (
-                <p id="cw-clave-err" className="mt-1.5 text-sm text-red-600" role="alert">
-                  {props.error}
-                </p>
-              )}
-            </div>
+            {props.contacto ? (
+              <p className="text-[1rem] leading-relaxed text-ink-2">
+                Ya tenemos tus datos de contacto, así que no tienes que escribirlos otra vez: revísalos en el primer paso y sigue con las preguntas.
+              </p>
+            ) : (
+              <>
+                {props.aviso && (
+                  <p
+                    className="flex items-start gap-2 rounded-2xl border border-ice-2 bg-ice-3 px-4 py-3 text-[0.92rem] leading-relaxed text-ink-2"
+                    role="status"
+                  >
+                    <Ico d={ICONOS.alert} size={18} className="mt-px shrink-0 text-cobalt-ink" />
+                    {props.aviso}
+                  </p>
+                )}
+                <div>
+                  <label htmlFor="cw-clave" className="mb-1.5 block text-[0.95rem] font-semibold text-ink">
+                    Clave de acceso
+                  </label>
+                  <div className="relative">
+                    <input
+                      id="cw-clave"
+                      type={ver ? 'text' : 'password'}
+                      autoComplete="off"
+                      autoCapitalize="none"
+                      spellCheck={false}
+                      className={`${CAMPO} w-full pr-24 ${props.error ? MAL : BIEN}`}
+                      value={props.clave}
+                      onChange={(e) => props.setClave(e.target.value)}
+                      aria-invalid={!!props.error}
+                      aria-describedby={props.error ? 'cw-clave-err' : undefined}
+                    />
+                    <button
+                      type="button"
+                      onClick={() => setVer((v) => !v)}
+                      className="absolute right-2 top-1/2 -translate-y-1/2 rounded-full px-3 py-1.5 text-[0.85rem] font-semibold text-cobalt-ink hover:bg-ice-3"
+                      aria-pressed={ver}
+                    >
+                      {ver ? 'Ocultar' : 'Mostrar'}
+                    </button>
+                  </div>
+                  {props.error && (
+                    <p id="cw-clave-err" className="mt-1.5 text-sm text-red-600" role="alert">
+                      {props.error}
+                    </p>
+                  )}
+                </div>
+              </>
+            )}
             {props.hayBorrador && (
               <p className="rounded-2xl border border-ice-2 bg-ice-3 px-4 py-3 text-[0.92rem] leading-relaxed text-ink-2">
-                Tienes respuestas guardadas en este navegador (<span className="tnum">{props.contestadas}</span> de{' '}
-                <span className="tnum">{TOTAL_PREGUNTAS}</span> preguntas). Al entrar sigues donde lo dejaste.
+                {props.total > 0 ? (
+                  <>
+                    Tienes respuestas guardadas en este navegador (<span className="tnum">{props.contestadas}</span> de{' '}
+                    <span className="tnum">{props.total}</span> preguntas). Al entrar sigues donde lo dejaste.
+                  </>
+                ) : (
+                  'Tienes respuestas guardadas en este navegador. Al entrar sigues donde lo dejaste.'
+                )}
               </p>
             )}
             <button type="submit" className="btn btn-primary w-full" disabled={props.verificando} aria-busy={props.verificando}>
@@ -481,9 +691,9 @@ function Portada(props: {
             </button>
           </div>
           <div className="border-t border-line-soft bg-ice-3 px-6 py-4 text-[0.88rem] text-ink-3 sm:px-8">
-            ¿No tienes la clave?{' '}
+            {props.contacto ? '¿Tienes dudas? ' : '¿No tienes la clave? '}
             <a href={props.waHref} target="_blank" rel="noopener noreferrer" className="font-semibold text-cobalt-ink underline">
-              Pídela por WhatsApp
+              {props.contacto ? 'Escríbenos por WhatsApp' : 'Pídela por WhatsApp'}
             </a>
             .
           </div>
@@ -493,18 +703,20 @@ function Portada(props: {
   );
 }
 
-function Glosario({ className = '' }: { className?: string }) {
+function Glosario({ glosario, className = '', compacto = false }: { glosario: Servicio['glosario']; className?: string; compacto?: boolean }) {
   return (
-    <details className={`group rounded-[1.25rem] border border-line bg-canvas ${className}`}>
-      <summary className="flex cursor-pointer list-none items-center justify-between gap-3 px-5 py-4 text-[1rem] font-semibold text-ink">
+    <details className={`group rounded-[1.25rem] ${compacto ? 'border-t border-line-soft pt-1' : 'border border-line bg-canvas'} ${className}`}>
+      <summary
+        className={`flex cursor-pointer list-none items-center justify-between gap-3 font-semibold text-ink ${compacto ? 'px-2.5 py-3 text-[0.92rem]' : 'px-5 py-4 text-[1rem]'}`}
+      >
         Palabras que quizás escuches
         <Ico d={ICONOS.chevron} size={18} className="text-ink-3 transition-transform duration-300 group-open:rotate-180" />
       </summary>
-      <dl className="divide-y divide-line-soft border-t border-line-soft px-5">
-        {INTRO.glosario.map((g) => (
+      <dl className={`divide-y divide-line-soft border-t border-line-soft ${compacto ? 'px-2.5' : 'px-5'}`}>
+        {glosario.map((g) => (
           <div key={g.termino} className="py-3">
-            <dt className="text-[0.95rem] font-semibold text-ink">{g.termino}</dt>
-            <dd className="mt-0.5 text-[0.95rem] leading-relaxed text-ink-2">{g.definicion}</dd>
+            <dt className={`font-semibold text-ink ${compacto ? 'text-[0.9rem]' : 'text-[0.95rem]'}`}>{g.termino}</dt>
+            <dd className={`mt-0.5 leading-relaxed text-ink-2 ${compacto ? 'text-[0.88rem]' : 'text-[0.95rem]'}`}>{g.definicion}</dd>
           </div>
         ))}
       </dl>
@@ -566,11 +778,68 @@ function Indice({
   );
 }
 
-/* ── Paso 0: tus datos ─────────────────────────────────────────────────── */
+/* ── Paso 0: servicio y tus datos ──────────────────────────────────────── */
 
-function PasoDatos({ datos, errores, setDato }: { datos: Datos; errores: ErroresDatos; setDato: (c: keyof Datos, v: string) => void }) {
+function PasoDatos({
+  datos,
+  errores,
+  setDato,
+  servicio,
+  elegirServicio,
+  delCrm,
+  respondidas,
+}: {
+  datos: Datos;
+  errores: ErroresDatos;
+  setDato: (c: keyof Datos, v: string) => void;
+  servicio: Servicio | undefined;
+  elegirServicio: (id: string) => void;
+  delCrm: boolean;
+  respondidas: (id: ServicioId) => number;
+}) {
   return (
     <div className="grid grid-cols-1 gap-x-5 gap-y-4 py-6 sm:grid-cols-2">
+      <div className="sm:col-span-2">
+        <label htmlFor="cw-servicio" className="mb-1.5 block text-[0.95rem] font-semibold text-ink">
+          ¿Sobre qué servicio es este cuestionario?
+        </label>
+        <div className="relative">
+          <select
+            id="cw-servicio"
+            className={`${CAMPO} w-full cursor-pointer appearance-none pr-12 ${errores.servicio ? MAL : BIEN} ${servicio ? '' : 'text-ink-3'}`}
+            value={servicio?.id ?? ''}
+            onChange={(e) => elegirServicio(e.target.value)}
+            aria-invalid={!!errores.servicio}
+            aria-describedby={errores.servicio ? 'cw-servicio-err' : servicio ? 'cw-servicio-ayuda' : undefined}
+          >
+            <option value="" disabled>
+              Elige un servicio
+            </option>
+            {SERVICIOS.map((s) => (
+              <option key={s.id} value={s.id} className="text-ink">
+                {s.nombre}
+                {respondidas(s.id) && s.id !== servicio?.id ? ' · con respuestas guardadas' : ''}
+              </option>
+            ))}
+          </select>
+          <Ico d={ICONOS.chevron} size={18} className="pointer-events-none absolute right-4 top-1/2 -translate-y-1/2 text-ink-3" />
+        </div>
+        {errores.servicio ? (
+          <p id="cw-servicio-err" className="mt-1.5 text-sm text-red-600">
+            {errores.servicio}
+          </p>
+        ) : (
+          servicio && (
+            <p id="cw-servicio-ayuda" className="mt-1.5 text-[0.9rem] leading-relaxed text-ink-3">
+              {servicio.descripcion}
+              {delCrm && ' Lo elegimos según lo que conversamos; si es otro, cámbialo aquí.'}
+            </p>
+          )
+        )}
+      </div>
+
+      <div className="border-t border-line-soft sm:col-span-2" aria-hidden="true" />
+
       {DATOS.map((c) => {
         const id = `cw-${c.id}`;
         const error = errores[c.id];
@@ -995,11 +1264,15 @@ function Tabla({
 
 /* ── Repaso antes de enviar ────────────────────────────────────────────── */
 
-function Repaso({ datos, respuestas, irA }: { datos: Datos; respuestas: Respuestas; irA: (n: number) => void }) {
-  const faltanEstrellas = ESTRELLAS.filter((p) => !respondida(p, respuestas[p.id]));
+function Repaso({ servicio, datos, respuestas, irA }: { servicio: Servicio; datos: Datos; respuestas: Respuestas; irA: (n: number) => void }) {
+  const faltanEstrellas = servicio.secciones.flatMap((s) => s.preguntas).filter((p) => p.importante && !respondida(p, respuestas[p.id]));
   return (
     <div className="py-6">
       <dl className="grid grid-cols-1 gap-x-6 gap-y-2 rounded-2xl border border-line-soft bg-ice-3 px-5 py-4 sm:grid-cols-2">
+        <div className="min-w-0 sm:col-span-2">
+          <dt className="text-[0.72rem] font-semibold uppercase tracking-[0.025em] text-ink-3">Servicio</dt>
+          <dd className="truncate text-[0.95rem] font-semibold text-ink">{servicio.nombre}</dd>
+        </div>
         {DATOS.filter((c) => datos[c.id]).map((c) => (
           <div key={c.id} className="min-w-0">
             <dt className="text-[0.72rem] font-semibold uppercase tracking-[0.025em] text-ink-3">{c.titulo}</dt>
@@ -1019,7 +1292,7 @@ function Repaso({ datos, respuestas, irA }: { datos: Datos; respuestas: Respuest
               <li key={p.id}>
                 <button
                   type="button"
-                  onClick={() => irA(SECCIONES.findIndex((s) => s.preguntas.includes(p)) + 1)}
+                  onClick={() => irA(servicio.secciones.findIndex((s) => s.preguntas.includes(p)) + 1)}
                   className="flex w-full items-center gap-3 px-4 py-3 text-left transition-colors hover:bg-ice-3"
                 >
                   <span className="tnum w-7 shrink-0 text-[0.9rem] font-semibold text-cobalt-ink">{p.n}.</span>
@@ -1040,7 +1313,7 @@ function Repaso({ datos, respuestas, irA }: { datos: Datos; respuestas: Respuest
       )}
 
       <ul className="mt-6 divide-y divide-line-soft">
-        {SECCIONES.map((s, i) => {
+        {servicio.secciones.map((s, i) => {
           const hechas = s.preguntas.filter((p) => respondida(p, respuestas[p.id])).length;
           return (
             <li key={s.id} className="flex items-center gap-3 py-2.5">
@@ -1070,7 +1343,7 @@ function Repaso({ datos, respuestas, irA }: { datos: Datos; respuestas: Respuest
 
 /* ── Confirmación ──────────────────────────────────────────────────────── */
 
-function Enviado({ nombre, waHref }: { nombre: string; waHref: string }) {
+function Enviado({ nombre, servicio, waHref }: { nombre: string; servicio: Servicio | undefined; waHref: string }) {
   const pila = nombre.trim().split(/\s+/)[0];
   const ref = useRef<HTMLHeadingElement>(null);
   useEffect(() => {
@@ -1089,10 +1362,10 @@ function Enviado({ nombre, waHref }: { nombre: string; waHref: string }) {
             <h2 ref={ref} tabIndex={-1} className="display-tight text-[clamp(1.8rem,3vw,2.4rem)] font-semibold text-ink outline-none">
               ¡Gracias{pila ? `, ${pila}` : ''}! Recibimos tu cuestionario.
             </h2>
-            <p className="mt-3 text-[1.02rem] leading-relaxed text-ink-2">Con tus respuestas preparamos el plan de tu página. Esto es lo que sigue:</p>
+            <p className="mt-3 text-[1.02rem] leading-relaxed text-ink-2">Con tus respuestas preparamos tu propuesta. Esto es lo que sigue:</p>
           </div>
           <ol className="divide-y divide-line-soft rounded-[1rem] border border-line">
-            {INTRO.despues.map((t, i) => (
+            {(servicio?.despues ?? []).map((t, i) => (
               <li key={t} className="flex items-center gap-3 px-4 py-3">
                 <span
                   className={`tnum flex h-7 w-7 shrink-0 items-center justify-center rounded-full text-[0.8rem] font-semibold ${

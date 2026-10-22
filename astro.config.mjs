@@ -25,6 +25,11 @@ const legacyRedirects = {
   '/webinars/ia-en-tu-trabajo': '/webinars',
 };
 
+// Enlaces ocultos que cambiaron de ruta. El primer cuestionario era sólo de página web.
+const internalRedirects = {
+  '/cuestionario-web': '/cuestionario?s=web',
+};
+
 export default defineConfig({
   site: 'https://ionoshub.net',
   /**
@@ -40,9 +45,9 @@ export default defineConfig({
   // Fuera del sitemap: las landings de pauta y el cuestionario de clientes (páginas ocultas, noindex).
   integrations: [
     react(),
-    sitemap({ filter: (page) => !page.includes('/api/') && !page.includes('/speed-to-lead') && !page.includes('/cuestionario-web') }),
+    sitemap({ filter: (page) => !page.includes('/api/') && !page.includes('/speed-to-lead') && !page.includes('/cuestionario') }),
   ],
-  redirects: legacyRedirects,
+  redirects: { ...legacyRedirects, ...internalRedirects },
   build: { inlineStylesheets: 'always' },
   vite: {
     plugins: [
