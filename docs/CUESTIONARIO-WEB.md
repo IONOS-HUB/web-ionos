@@ -74,6 +74,10 @@ Configuración sin tocar el flujo (data table `cuestionario_web_config`, columna
 | `drive_carpeta` | Nombre exacto de la carpeta de Drive. |
 | `notificar_a` | Correo(s) que reciben el aviso, separados por coma. |
 
+Las ejecuciones de producción que salen bien no se guardan en n8n (configuración por defecto), así que no
+se pueden reintentar desde el historial. Si quieres poder revisarlas o relanzarlas: flujo → Settings → «Save
+successful production executions» → Save.
+
 ### Credencial de Google Drive
 
 Los tres nodos de Drive usan la credencial OAuth «Gestor de Redes Sociales». Para que los archivos queden en el
