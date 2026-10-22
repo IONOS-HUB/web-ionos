@@ -186,6 +186,22 @@ export async function allowLead(
 }
 
 /**
+ * Intentos de una IP en una ventana fija, para lo que no es un lead: las claves y los envíos del
+ * cuestionario de clientes. Devuelve false cuando la IP se pasó del límite.
+ */
+export async function allowAttempt(scope: string, ip: string, limit: number, windowSeconds: number): Promise<boolean> {
+  const ventana = Math.floor(Date.now() / (windowSeconds * 1000));
+  const usados = await contar(`${scope}:ip:${ip}:${ventana}`, windowSeconds);
+  if (usados === null) {
+    const bucket = bucketFor(`${scope}:${ip}`, windowSeconds * 1000);
+    if (bucket.leads >= limit) return false;
+    bucket.leads += 1;
+    return true;
+  }
+  return usados <= limit;
+}
+
+/**
  * Comprobación de operación: estado del contador compartido y qué IP está viendo el servidor.
  * La usa el diagnóstico protegido de `/api/chat`.
  */

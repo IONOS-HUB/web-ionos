@@ -24,6 +24,11 @@ interface Props {
    * pagado y la página no ofrece más salida que el formulario, WhatsApp y el chat de IONIC.
    */
   landing?: boolean;
+  /**
+   * Página de trabajo para clientes (`/cuestionario-web`): sin navegación, pie, pop-up de webinar, chat de
+   * IONIC ni Pixel. Sólo queda el flotante de WhatsApp, por si la persona se atasca.
+   */
+  interno?: boolean;
   /** Sector para el chat de IONIC cuando la ruta no es la del nicho (landings de pauta por sector) */
   nicho?: NicheId;
 }
@@ -37,8 +42,10 @@ const {
   waMessage = DEFAULT_WA_MESSAGE,
   noindex = false,
   landing = false,
+  interno = false,
   nicho,
 } = Astro.props;
+const sinMarco = landing || interno;
 
 const fullTitle = title.includes('IonosHub') ? title : `${title} | IonosHub`;
 const canonical = new URL(path, SITE.url).href;
@@ -54,7 +61,7 @@ const metaPixelId = landing ? (import.meta.env.PUBLIC_META_PIXEL_ID as string | 
 
 // El chat va visible salvo que se apague con PUBLIC_CHAT_UI=0 (oculta la burbuja), también en las landings de pauta.
 // Para cortar también el endpoint, CHAT_ENABLED=0 en Vercel.
-const chatUi = import.meta.env.PUBLIC_CHAT_UI !== '0';
+const chatUi = import.meta.env.PUBLIC_CHAT_UI !== '0' && !interno;
 
 const orgJsonLd = {
   '@context': 'https://schema.org',
@@ -118,18 +125,18 @@ const orgJsonLd = {
     >
       Saltar al contenido
     </a>
-    {!landing && <Nav />}
+    {!sinMarco && <Nav />}
     <main id="contenido" class="flex-1">
       <slot />
     </main>
-    {!landing && <Footer />}
+    {!sinMarco && <Footer />}
     <!-- Columna de acciones flotantes: el chat encima, WhatsApp abajo. El aviso de cookies la sube en móvil. -->
     <div class="fixed bottom-5 right-5 z-40 flex flex-col items-end gap-3 sm:bottom-6 sm:right-6" data-float-stack>
       {chatUi && <ChatLauncher />}
       <WhatsAppFloat message={waMessage} />
     </div>
     {chatUi && <ChatWidget nicho={nicho} />}
-    {!landing && <WebinarPromo />}
+    {!sinMarco && <WebinarPromo />}
     <CookieConsent gaId={gaId} metaPixelId={metaPixelId} />
     <script src="../scripts/motion.ts"></script>
   </body>
