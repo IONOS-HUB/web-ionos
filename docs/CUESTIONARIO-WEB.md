@@ -69,15 +69,16 @@ Configuración sin tocar el flujo (data table `cuestionario_web_config`, columna
 | clave | Para qué |
 | --- | --- |
 | `webhook_key` | Clave compartida con la web (`CUESTIONARIO_WEBHOOK_KEY`). |
-| `modelo` | Modelo de Claude, por defecto `claude-opus-5-5` (`claude-sonnet-5-5` es más rápido y barato). |
-| `max_tokens` | Largo máximo del PRD (2000–20000, por defecto 12000). |
+| `modelo` | Modelo de Claude, por defecto `claude-opus-5-5` (`claude-sonnet-5-5` es más rápido y cuesta la mitad). |
+| `max_tokens` | Largo máximo del PRD (2000–20000; hoy 16000). Cuenta también el razonamiento interno: un PRD completo usa unos 10–11k. |
 | `notificar_a` | Correo(s) que reciben el aviso, separados por coma. |
 
 Las ejecuciones de producción que salen bien no se guardan en n8n (configuración por defecto), así que no
 se pueden reintentar desde el historial. Si quieres poder revisarlas o relanzarlas: flujo → Settings → «Save
 successful production executions» → Save.
 
-(La fila `drive_carpeta` de la tabla ya no se usa: la carpeta se elige en el nodo.)
+Costo medido en la primera prueba: unos 4.600 tokens de entrada y 10.500 de salida por PRD, es decir
+≈ US$0,23 con Claude Opus 5.5 ($4 / $20 por millón) o ≈ US$0,11 con Claude Sonnet 5.5 ($2 / $10).
 
 ### Credencial de Google Drive (cuenta de servicio)
 
