@@ -37,7 +37,11 @@ export default defineConfig({
   trailingSlash: 'never',
   output: 'static',
   adapter: vercel(),
-  integrations: [react(), sitemap({ filter: (page) => !page.includes('/api/') && !page.includes('/speed-to-lead') })],
+  // Fuera del sitemap: las landings de pauta y el cuestionario de clientes (páginas ocultas, noindex).
+  integrations: [
+    react(),
+    sitemap({ filter: (page) => !page.includes('/api/') && !page.includes('/speed-to-lead') && !page.includes('/cuestionario-web') }),
+  ],
   redirects: legacyRedirects,
   build: { inlineStylesheets: 'always' },
   vite: {
