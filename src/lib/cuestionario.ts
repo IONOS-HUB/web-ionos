@@ -180,11 +180,44 @@ export function cuestionarioAMarkdown(servicio: Servicio, { datos, respuestas }:
 
 /* ── Contacto de GoHighLevel (enlace personal `?c=`) ───────────────────── */
 
-/** Lo que sabe el CRM del contacto. `datos` va al navegador; `contexto` sólo viaja de aquí a n8n. */
+/**
+ * Lo que sabe el CRM del contacto. Nada de esto sale tal cual al navegador: `paraNavegador` tapa el WhatsApp y el
+ * correo (el enlace se puede reenviar) y `contexto` sólo viaja de aquí a n8n.
+ */
 export interface ContactoCrm {
   datos: DatosCliente & { pais: string };
   servicio?: ServicioId;
   contexto: Record<string, string>;
+}
+
+/** Datos del CRM que el navegador recibe tapados y el servidor completa al enviar. */
+export const DATOS_OCULTOS = ['whatsapp', 'correo'] as const;
+export type DatoOculto = (typeof DATOS_OCULTOS)[number];
+
+const tapar = (v: string, inicio: number, fin: number) =>
+  v.length <= inicio + fin ? '•'.repeat(v.length) : v.slice(0, inicio) + '•'.repeat(Math.max(3, v.length - inicio - fin)) + v.slice(-fin);
+
+/** `987654321` → `98•••••21`; `ana@negocio.com` → `a•••@negocio.com`. Nombre, negocio y ciudad van tal cual. */
+export function paraNavegador({ datos }: ContactoCrm): { datos: DatosCliente & { pais: string }; ocultos: DatoOculto[] } {
+  const [usuario = '', dominio = ''] = datos.correo.split('@');
+  return {
+    datos: {
+      ...datos,
+      whatsapp: datos.whatsapp ? tapar(datos.whatsapp, 2, 2) : '',
+      correo: datos.correo ? `${usuario.slice(0, 1)}•••@${dominio}` : '',
+    },
+    ocultos: DATOS_OCULTOS.filter((c) => datos[c]),
+  };
+}
+
+/** Pone en los datos del envío el WhatsApp y el correo reales del CRM que la persona dejó sin cambiar. */
+export function completarConCrm(datosCrudos: unknown, usarCrm: unknown, contacto: ContactoCrm | null): Record<string, unknown> {
+  const d = { ...objeto(datosCrudos) };
+  if (!contacto || !Array.isArray(usarCrm)) return d;
+  const c = contacto.datos;
+  if (usarCrm.includes('whatsapp') && c.whatsapp) d.whatsapp = `${paises.find((p) => p.iso === c.pais)?.prefijo ?? ''} ${c.whatsapp}`.trim();
+  if (usarCrm.includes('correo') && c.correo) d.correo = c.correo;
+  return d;
 }
 
 /** Los ID de contacto de GHL son 20 caracteres alfanuméricos; se deja margen sin aceptar nada raro. */

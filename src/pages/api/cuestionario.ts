@@ -1,7 +1,16 @@
 import type { APIRoute } from 'astro';
 import { readEnv } from '../../lib/lead';
 import { allowAttempt, clientIp } from '../../lib/chat/ratelimit';
-import { buscarContacto, contextoCrmMarkdown, cuestionarioAMarkdown, idContactoValido, limpiarCuestionario, type ContactoCrm } from '../../lib/cuestionario';
+import {
+  buscarContacto,
+  completarConCrm,
+  contextoCrmMarkdown,
+  cuestionarioAMarkdown,
+  idContactoValido,
+  limpiarCuestionario,
+  paraNavegador,
+  type ContactoCrm,
+} from '../../lib/cuestionario';
 import { servicioPorId } from '../../data/cuestionarios';
 
 export const prerender = false;
@@ -9,14 +18,17 @@ export const prerender = false;
 /**
  * Cuestionarios para clientes (`/cuestionario`). No es un lead: no pasa por `deliverLead`. Va a su propio
  * webhook de n8n (`CUESTIONARIO_WEBHOOK_URL`), que pide a Claude el PRD del servicio en Markdown, lo guarda en
- * Google Drive y, si llegó por el enlace personal, cierra el ciclo en GoHighLevel. Guía: docs/CUESTIONARIOS.md.
+ * Google Drive y cierra el ciclo en GoHighLevel (con la clave, en el contacto que encuentra o crea por WhatsApp o
+ * correo). El enlace y los recordatorios también los manda n8n. Guía: docs/CUESTIONARIOS.md.
  *
  * Se entra de dos maneras:
  * - Enlace personal `?c=<id de contacto de GHL>`: n8n busca al contacto y, si existe, no se pide la clave.
  * - Enlace genérico: la clave `CUESTIONARIO_CLAVE`, que frena los envíos masivos.
  *
  * Acciones:
- * - `contacto`: datos del contacto para prellenar «Tus datos» y el servicio en que lo clasificó el CRM.
+ * - `contacto`: datos del contacto para prellenar «Tus datos» (WhatsApp y correo tapados: el enlace se puede
+ *   reenviar) y el servicio en que lo clasificó el CRM. Al enviar, `usar_crm` dice cuáles dejó sin cambiar y aquí
+ *   se completan con los reales.
  * - `verificar`: la portada comprueba la clave antes de dejar empezar.
  * - `enviar`: valida, arma el Markdown y lo reenvía a n8n con el header `x-ionos-key`. El contacto o la clave
  *   se vuelven a comprobar aquí: el navegador no decide nada.
@@ -30,6 +42,8 @@ interface Body {
   contacto?: string;
   servicio?: string;
   datos?: unknown;
+  /** Datos del CRM que la persona dejó sin cambiar (llegaron tapados): los pone el servidor */
+  usar_crm?: unknown;
   respuestas?: unknown;
   pagina_origen?: string;
   prueba?: boolean;
@@ -85,7 +99,7 @@ export const POST: APIRoute = async ({ request }) => {
       return json({ error: 'No pudimos abrir tu cuestionario. Inténtalo de nuevo en unos minutos.' }, 502);
     }
     if (!contacto) return json(noVale, 401);
-    if (body.accion === 'contacto') return json({ ok: true, datos: contacto.datos, servicio: contacto.servicio ?? null });
+    if (body.accion === 'contacto') return json({ ok: true, ...paraNavegador(contacto), servicio: contacto.servicio ?? null });
   } else {
     if (body.accion === 'contacto') return json({ error: 'Falta el contacto' }, 400);
     if (!(await allowAttempt('cues:clave', ip, 20, 60 * 60))) {
@@ -111,7 +125,7 @@ export const POST: APIRoute = async ({ request }) => {
     return json({ error: `Ya recibimos varios cuestionarios desde tu conexión hoy. ${WHATSAPP}` }, 429);
   }
 
-  const limpio = limpiarCuestionario(servicio, body.datos, body.respuestas);
+  const limpio = limpiarCuestionario(servicio, completarConCrm(body.datos, body.usar_crm, contacto), body.respuestas);
   if (limpio.faltan.length) return json({ error: 'Faltan datos obligatorios', faltan: limpio.faltan }, 400);
 
   const enviado = new Date();
@@ -124,7 +138,7 @@ export const POST: APIRoute = async ({ request }) => {
     enviado_en: enviado.toISOString(),
     pagina_origen: String(body.pagina_origen ?? '').slice(0, 300),
     prueba: body.prueba === true,
-    // Sólo con el enlace personal: n8n deja la nota, la etiqueta y mueve la oportunidad en GHL.
+    // Con el enlace personal, el contacto de GHL; sin él, n8n lo busca o lo crea con los datos de `cliente`.
     ghl_contact_id: contacto ? body.contacto : null,
     contexto_crm: contacto ? contextoCrmMarkdown(contacto.contexto) : '',
     cliente: limpio.datos,
