@@ -144,9 +144,9 @@ function respuestaMd(p: Pregunta, r: Respuesta | undefined): string {
   }
 }
 
-/** Fecha legible en hora de Ecuador: «22 de octubre de 2026, 12:34». */
+/** Fecha legible en hora de Ecuador: «22 de octubre de 2026, 13:34». */
 export function fechaEcuador(fecha = new Date()): string {
-  return new Intl.DateTimeFormat('es-EC', { dateStyle: 'long', timeStyle: 'short', timeZone: 'America/Guayaquil' }).format(fecha);
+  return new Intl.DateTimeFormat('es-EC', { dateStyle: 'long', timeStyle: 'short', hourCycle: 'h23', timeZone: 'America/Guayaquil' }).format(fecha);
 }
 
 export function cuestionarioAMarkdown({ datos, respuestas }: CuestionarioLimpio, enviado = new Date()): string {
