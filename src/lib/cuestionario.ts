@@ -1,6 +1,7 @@
 /**
- * Servidor del cuestionario de página web (`/api/cuestionario`): limpia lo que llega del navegador contra
- * `data/cuestionario.ts` y lo convierte en el Markdown que n8n entrega a Claude para escribir el PRD.
+ * Servidor de los cuestionarios para clientes (`/api/cuestionario`): limpia lo que llega del navegador contra
+ * el cuestionario del servicio (`data/cuestionarios/`), lo convierte en el Markdown que n8n entrega a Claude
+ * y busca en GoHighLevel, vía n8n, al contacto del enlace personal (`?c=`).
  *
  * Nada de lo que manda el navegador se confía: textos recortados, opciones que no existen descartadas,
  * máximos y opciones excluyentes reaplicados. El Markdown cita las respuestas abiertas como bloque (`>`)
@@ -8,14 +9,18 @@
  */
 import {
   DATOS,
-  SECCIONES,
+  servicioDeInteres,
   type DatosCliente,
   type Pregunta,
   type Respuesta,
   type RespuestaUnica,
   type RespuestaVarias,
   type Respuestas,
-} from '../data/cuestionario';
+  type Servicio,
+  type ServicioId,
+} from '../data/cuestionarios';
+import { PAIS_POR_DEFECTO, paises } from '../data/paises';
+import { readEnv } from './lead';
 
 const MAX_TEXTO = 4000;
 const MAX_CORTO = 300;
@@ -86,7 +91,7 @@ function limpiarRespuesta(p: Pregunta, crudo: unknown): Respuesta | undefined {
   }
 }
 
-export function limpiarCuestionario(datosCrudos: unknown, respuestasCrudas: unknown): CuestionarioLimpio {
+export function limpiarCuestionario(servicio: Servicio, datosCrudos: unknown, respuestasCrudas: unknown): CuestionarioLimpio {
   const d = objeto(datosCrudos);
   const datos = Object.fromEntries(DATOS.map((c) => [c.id, linea(d[c.id], 140)])) as unknown as DatosCliente;
 
@@ -98,7 +103,7 @@ export function limpiarCuestionario(datosCrudos: unknown, respuestasCrudas: unkn
 
   const r = objeto(respuestasCrudas);
   const respuestas: Respuestas = {};
-  for (const p of SECCIONES.flatMap((s) => s.preguntas)) {
+  for (const p of servicio.secciones.flatMap((s) => s.preguntas)) {
     const limpia = limpiarRespuesta(p, r[p.id]);
     if (limpia !== undefined) respuestas[p.id] = limpia;
   }
@@ -149,7 +154,7 @@ export function fechaEcuador(fecha = new Date()): string {
   return new Intl.DateTimeFormat('es-EC', { dateStyle: 'long', timeStyle: 'short', hourCycle: 'h23', timeZone: 'America/Guayaquil' }).format(fecha);
 }
 
-export function cuestionarioAMarkdown({ datos, respuestas }: CuestionarioLimpio, enviado = new Date()): string {
+export function cuestionarioAMarkdown(servicio: Servicio, { datos, respuestas }: CuestionarioLimpio, enviado = new Date()): string {
   const partes: string[] = [];
 
   partes.push(
@@ -158,16 +163,124 @@ export function cuestionarioAMarkdown({ datos, respuestas }: CuestionarioLimpio,
       '',
       '| Dato | Respuesta |',
       '| --- | --- |',
+      `| Servicio | ${servicio.nombre} |`,
       ...DATOS.map((c) => `| ${c.titulo} | ${celda(datos[c.id] || '—')} |`),
       `| Fecha | ${fechaEcuador(enviado)} |`,
     ].join('\n'),
   );
 
-  for (const s of SECCIONES) {
+  for (const s of servicio.secciones) {
     partes.push(`## ${s.numero} · ${s.titulo}`);
     for (const p of s.preguntas) {
       partes.push(`### ${p.n}. ${p.titulo}${p.importante ? ' ★' : ''}\n\n${respuestaMd(p, respuestas[p.id])}`);
     }
   }
   return partes.join('\n\n');
+}
+
+/* ── Contacto de GoHighLevel (enlace personal `?c=`) ───────────────────── */
+
+/** Lo que sabe el CRM del contacto. `datos` va al navegador; `contexto` sólo viaja de aquí a n8n. */
+export interface ContactoCrm {
+  datos: DatosCliente & { pais: string };
+  servicio?: ServicioId;
+  contexto: Record<string, string>;
+}
+
+/** Los ID de contacto de GHL son 20 caracteres alfanuméricos; se deja margen sin aceptar nada raro. */
+export const idContactoValido = (id: unknown): id is string => typeof id === 'string' && /^[A-Za-z0-9]{12,40}$/.test(id);
+
+/** `+593960638900` → `{ pais: 'EC', numero: '960638900' }`. Con prefijos compartidos (+1) gana EC o US. */
+export function separarTelefono(telefono: string): { pais: string; numero: string } {
+  const digitos = telefono.replace(/\D/g, '');
+  if (!telefono.trim().startsWith('+')) return { pais: PAIS_POR_DEFECTO, numero: digitos };
+  const prefijo = (iso: string) => paises.find((p) => p.iso === iso)?.prefijo.replace(/\D/g, '') ?? '';
+  const candidatos = paises.filter((p) => digitos.startsWith(p.prefijo.replace(/\D/g, '')));
+  if (!candidatos.length) return { pais: PAIS_POR_DEFECTO, numero: digitos };
+  const largo = Math.max(...candidatos.map((p) => p.prefijo.length));
+  const mejores = candidatos.filter((p) => p.prefijo.length === largo);
+  const pais = (mejores.find((p) => p.iso === PAIS_POR_DEFECTO) ?? mejores.find((p) => p.iso === 'US') ?? mejores[0]).iso;
+  return { pais, numero: digitos.slice(prefijo(pais).length) };
+}
+
+/** URL del flujo de n8n que lee el contacto. Si no se configura, se deduce de la del cuestionario. */
+function urlContacto(): string | undefined {
+  const propia = readEnv('CUESTIONARIO_CONTACTO_URL');
+  if (propia) return propia;
+  const envio = readEnv('CUESTIONARIO_WEBHOOK_URL');
+  return envio && /\/cuestionario-web\/?$/.test(envio) ? envio.replace(/\/cuestionario-web\/?$/, '/cuestionario-contacto') : undefined;
+}
+
+const DEMO = {
+  negocio: 'Clínica Dental Sonríe',
+  nombre: 'Andrés Paredes',
+  whatsapp: '+593987654321',
+  correo: 'andres@sonrie.ec',
+  ciudad: 'Otavalo',
+  interes: 'Software a medida',
+  contexto: { sector: 'Odontología', reto: 'Demostración: contacto ficticio de desarrollo' },
+};
+
+/**
+ * Busca al contacto en GHL a través de n8n. `null` si no existe (o el ID es de otra cuenta); lanza si n8n
+ * no responde, para que la página diga «inténtalo de nuevo» en vez de «tu enlace no vale».
+ * En desarrollo, sin URL configurada, devuelve un contacto ficticio para poder probar el flujo.
+ */
+export async function buscarContacto(id: string): Promise<ContactoCrm | null> {
+  if (!idContactoValido(id)) return null;
+  const url = urlContacto();
+  let c: Record<string, unknown>;
+  if (!url) {
+    if (!import.meta.env.DEV) throw new Error('Sin CUESTIONARIO_WEBHOOK_URL: no se puede leer el contacto');
+    console.warn('[cuestionario] Sin URL de contacto: en desarrollo se usa un contacto ficticio.');
+    c = DEMO;
+  } else {
+    const res = await fetch(url, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json', 'x-ionos-key': readEnv('CUESTIONARIO_WEBHOOK_KEY') ?? '' },
+      body: JSON.stringify({ contactId: id }),
+      signal: AbortSignal.timeout(10_000),
+    });
+    if (res.status === 404) return null;
+    if (!res.ok) throw new Error(`n8n respondió ${res.status} al buscar el contacto`);
+    const cuerpo = objeto(await res.json());
+    if (cuerpo.ok !== true) return null;
+    c = objeto(cuerpo.contacto);
+  }
+
+  const telefono = separarTelefono(linea(c.whatsapp, 40));
+  const contexto = Object.fromEntries(
+    Object.entries(objeto(c.contexto))
+      .map(([k, v]) => [k.slice(0, 40), texto(v, 2000)])
+      .filter(([, v]) => v),
+  );
+  const interes = linea(c.interes, 120);
+  if (interes) contexto.interes = interes;
+  return {
+    datos: {
+      negocio: linea(c.negocio, 140),
+      nombre: linea(c.nombre, 140),
+      cargo: '',
+      whatsapp: telefono.numero,
+      pais: telefono.pais,
+      correo: linea(c.correo, 140),
+      ciudad: linea(c.ciudad, 140),
+    },
+    servicio: servicioDeInteres(interes),
+    contexto,
+  };
+}
+
+/** Lo que el CRM sabe del contacto, como lista para el prompt de n8n (no es texto del cliente). */
+export function contextoCrmMarkdown(contexto: Record<string, string>): string {
+  const NOMBRES: Record<string, string> = {
+    interes: 'Interés principal',
+    sector: 'Sector',
+    reto: 'Reto que contó',
+    campana: 'Campaña de origen',
+    resumen_ia: 'Resumen de la conversación con IONIC',
+  };
+  return Object.entries(contexto)
+    .map(([k, v]) => `- **${NOMBRES[k] ?? k}:** ${v.replace(/\s*\n\s*/g, ' ')}`)
+    .join('\n');
 }
