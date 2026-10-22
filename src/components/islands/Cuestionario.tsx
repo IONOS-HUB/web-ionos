@@ -40,6 +40,8 @@ type Datos = DatosCliente & { pais: string };
 type Vista = 'cargando' | 'portada' | 'pasos' | 'enviado';
 type ErroresDatos = Partial<Record<keyof DatosCliente | 'servicio', string>>;
 type RespuestasPorServicio = Partial<Record<ServicioId, Respuestas>>;
+/** WhatsApp y correo que vinieron del CRM tapados (`96•••••00`): el servidor pone los reales al enviar. */
+type Oculto = 'whatsapp' | 'correo';
 
 const BORRADOR = 'ionos:cuestionario';
 /** Borrador del primer cuestionario (sólo página web), para no perder lo que alguien dejó a medias. */
@@ -67,7 +69,10 @@ const escribir = (almacen: 'local' | 'session', clave: string, valor: string | n
 interface Borrador {
   servicio?: string;
   datos?: Datos;
+  ocultos?: Oculto[];
   respuestas?: RespuestasPorServicio;
+  /** Servicios ya enviados desde este navegador (para llenar otro sin repetir los datos) */
+  enviados?: ServicioId[];
   paso?: number;
   guardado?: number;
 }
@@ -87,16 +92,19 @@ const suave = () => !window.matchMedia('(prefers-reduced-motion: reduce)').match
 
 /** WhatsApp con prefijo y sin el 0 inicial del número nacional: `+593 991234567`. */
 const whatsappCompleto = (d: Datos) => `${paisPorIso(d.pais)?.prefijo ?? ''} ${d.whatsapp.replace(/\D/g, '').replace(/^0+/, '')}`.trim();
+/** Para mostrar: el tapado del CRM tal cual (`+593 96•••••00`) o el que escribió la persona. */
+const whatsappVisible = (d: Datos, ocultos: Oculto[]) =>
+  ocultos.includes('whatsapp') ? `${paisPorIso(d.pais)?.prefijo ?? ''} ${d.whatsapp}`.trim() : whatsappCompleto(d);
 
-function validarDatos(d: Datos, servicio: Servicio | undefined): ErroresDatos {
+function validarDatos(d: Datos, servicio: Servicio | undefined, ocultos: Oculto[]): ErroresDatos {
   const e: ErroresDatos = {};
   if (!servicio) e.servicio = 'Elige el servicio que te interesa.';
   if (d.negocio.trim().length < 2) e.negocio = 'Escribe el nombre de tu negocio.';
   if (d.nombre.trim().length < 3) e.nombre = 'Escribe tu nombre.';
   const pais = paisPorIso(d.pais);
   const digitos = d.whatsapp.replace(/\D/g, '').replace(/^0+/, '');
-  if (digitos.length < (pais?.min ?? 6) || digitos.length > (pais?.max ?? 14)) e.whatsapp = 'Revisa el número de WhatsApp.';
-  if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(d.correo.trim())) e.correo = 'Escribe un correo válido.';
+  if (!ocultos.includes('whatsapp') && (digitos.length < (pais?.min ?? 6) || digitos.length > (pais?.max ?? 14))) e.whatsapp = 'Revisa el número de WhatsApp.';
+  if (!ocultos.includes('correo') && !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(d.correo.trim())) e.correo = 'Escribe un correo válido.';
   return e;
 }
 
@@ -111,6 +119,8 @@ export default function Cuestionario({ waHref }: Props) {
   const [servicioId, setServicioId] = useState<ServicioId | ''>('');
   const [delCrm, setDelCrm] = useState(false);
   const [datos, setDatos] = useState<Datos>(DATOS_VACIOS);
+  const [ocultos, setOcultos] = useState<Oculto[]>([]);
+  const [enviados, setEnviados] = useState<ServicioId[]>([]);
   const [respuestasPor, setRespuestasPor] = useState<RespuestasPorServicio>({});
   const [paso, setPaso] = useState(0);
   const [erroresDatos, setErroresDatos] = useState<ErroresDatos>({});
@@ -137,9 +147,15 @@ export default function Cuestionario({ waHref }: Props) {
 
     const b = leerBorrador();
     let elegido = servicioPorId(b?.servicio)?.id;
+    // Los tapados del CRM sólo valen con el enlace personal: sin él, la persona los escribe.
+    const inicial: Datos = { ...DATOS_VACIOS, ...b?.datos };
+    const tapados = idContacto ? (b?.ocultos ?? []) : [];
+    for (const c of b?.ocultos ?? []) if (!tapados.includes(c)) inicial[c] = '';
+    setDatos(inicial);
+    setOcultos(tapados);
     if (b) {
-      if (b.datos) setDatos({ ...DATOS_VACIOS, ...b.datos });
       if (b.respuestas) setRespuestasPor(b.respuestas);
+      if (b.enviados) setEnviados(b.enviados);
       if (typeof b.paso === 'number') setPaso(Math.max(0, b.paso));
       setGuardado(b.guardado);
       setHayBorrador(Boolean(b.datos?.negocio || Object.values(b.respuestas ?? {}).some((r) => Object.keys(r ?? {}).length)));
@@ -165,19 +181,29 @@ export default function Cuestionario({ waHref }: Props) {
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({ accion: 'contacto', contacto: idContacto }),
         });
-        const cuerpo = (await res.json()) as { ok?: boolean; error?: string; datos?: Datos; servicio?: ServicioId | null };
+        const cuerpo = (await res.json()) as { ok?: boolean; error?: string; datos?: Datos; ocultos?: Oculto[]; servicio?: ServicioId | null };
         if (!res.ok || !cuerpo.ok || !cuerpo.datos) {
           setAvisoEnlace(cuerpo.error ?? 'No pudimos abrir tu enlace personal.');
+          for (const c of tapados) inicial[c] = '';
+          setDatos({ ...inicial });
+          setOcultos([]);
         } else {
           const crm = cuerpo.datos;
+          const delCrmOcultos = cuerpo.ocultos ?? [];
           setContacto(idContacto);
-          // Lo que la persona ya escribió en este navegador manda; el CRM llena lo que está vacío.
-          setDatos((d) => {
-            const lleno = { ...d };
-            for (const c of DATOS) if (!lleno[c.id].trim() && crm[c.id]) lleno[c.id] = crm[c.id];
-            if (!d.whatsapp.trim() && crm.whatsapp && paisPorIso(crm.pais)) lleno.pais = crm.pais;
-            return lleno;
-          });
+          // Lo que la persona ya escribió en este navegador manda; el CRM llena lo vacío y renueva sus tapados.
+          const lleno = { ...inicial };
+          const nuevosOcultos: Oculto[] = [];
+          for (const c of DATOS) {
+            const tapado = c.id === 'whatsapp' || c.id === 'correo' ? (c.id as Oculto) : null;
+            const libre = !lleno[c.id].trim() || (tapado !== null && tapados.includes(tapado));
+            if (!libre || !crm[c.id]) continue;
+            lleno[c.id] = crm[c.id];
+            if (tapado && delCrmOcultos.includes(tapado)) nuevosOcultos.push(tapado);
+          }
+          if (nuevosOcultos.includes('whatsapp') && paisPorIso(crm.pais)) lleno.pais = crm.pais;
+          setDatos(lleno);
+          setOcultos(nuevosOcultos);
           if (!elegido && servicioPorId(cuerpo.servicio)) {
             setServicioId(cuerpo.servicio as ServicioId);
             setDelCrm(true);
@@ -197,12 +223,12 @@ export default function Cuestionario({ waHref }: Props) {
     if (!cargado || vista === 'enviado') return;
     const t = window.setTimeout(() => {
       const ahora = Date.now();
-      escribir('local', BORRADOR, JSON.stringify({ v: 2, servicio: servicioId, datos, respuestas: respuestasPor, paso, guardado: ahora }));
+      escribir('local', BORRADOR, JSON.stringify({ v: 2, servicio: servicioId, datos, ocultos, respuestas: respuestasPor, enviados, paso, guardado: ahora }));
       escribir('local', BORRADOR_V1, null);
       setGuardado(ahora);
     }, 500);
     return () => window.clearTimeout(t);
-  }, [servicioId, datos, respuestasPor, paso, cargado, vista]);
+  }, [servicioId, datos, ocultos, respuestasPor, enviados, paso, cargado, vista]);
 
   // Cada cambio de paso vuelve al inicio de la ventanilla y deja el foco en su título (lectores de pantalla).
   useEffect(() => {
@@ -235,6 +261,23 @@ export default function Cuestionario({ waHref }: Props) {
     if (campo in erroresDatos) setErroresDatos((e) => ({ ...e, [campo]: undefined }));
   };
 
+  /** «Cambiar» un dato tapado del CRM: se vacía para escribir uno nuevo. */
+  const cambiarOculto = (campo: Oculto) => {
+    setDatos((d) => ({ ...d, [campo]: '' }));
+    setOcultos((o) => o.filter((x) => x !== campo));
+    window.setTimeout(() => document.getElementById(`cw-${campo}`)?.focus(), 0);
+  };
+
+  /** Después de enviar: otro servicio con los mismos datos y el mismo enlace. */
+  const otroServicio = () => {
+    setServicioId('');
+    setDelCrm(false);
+    setErroresDatos({});
+    setErrorEnvio('');
+    setPaso(0);
+    setVista('pasos');
+  };
+
   const elegirServicio = (id: string) => {
     const s = servicioPorId(id);
     setServicioId(s?.id ?? '');
@@ -245,7 +288,7 @@ export default function Cuestionario({ waHref }: Props) {
   const irA = (n: number) => {
     // Para salir de «Tus datos» hacia delante, el servicio y los obligatorios tienen que estar.
     if (paso === 0 && n > 0) {
-      const e = validarDatos(datos, servicio);
+      const e = validarDatos(datos, servicio, ocultos);
       setErroresDatos(e);
       const primero = e.servicio ? 'servicio' : DATOS.find((c) => e[c.id])?.id;
       if (primero) {
@@ -290,7 +333,7 @@ export default function Cuestionario({ waHref }: Props) {
   };
 
   const enviar = async () => {
-    const e = validarDatos(datos, servicio);
+    const e = validarDatos(datos, servicio, ocultos);
     if (Object.keys(e).length || !servicio) {
       setErroresDatos(e);
       setPaso(0);
@@ -302,8 +345,8 @@ export default function Cuestionario({ waHref }: Props) {
       negocio: datos.negocio,
       nombre: datos.nombre,
       cargo: datos.cargo,
-      whatsapp: whatsappCompleto(datos),
-      correo: datos.correo,
+      whatsapp: ocultos.includes('whatsapp') ? '' : whatsappCompleto(datos),
+      correo: ocultos.includes('correo') ? '' : datos.correo,
       ciudad: datos.ciudad,
     };
     try {
@@ -315,6 +358,7 @@ export default function Cuestionario({ waHref }: Props) {
           ...(contacto ? { contacto } : { clave }),
           servicio: servicio.id,
           datos: cliente,
+          usar_crm: contacto ? ocultos : [],
           respuestas,
           pagina_origen: window.location.href,
         }),
@@ -326,6 +370,9 @@ export default function Cuestionario({ waHref }: Props) {
         if (contacto) {
           setContacto(null);
           setAvisoEnlace(cuerpo.error ?? 'Tu enlace personal ya no es válido.');
+          // Sin enlace, los datos tapados del CRM ya no sirven: hay que escribirlos.
+          setDatos((d) => ({ ...d, ...Object.fromEntries(ocultos.map((c) => [c, ''])) }));
+          setOcultos([]);
         } else {
           setErrorClave(cuerpo.error ?? 'La clave no es correcta.');
         }
@@ -338,6 +385,12 @@ export default function Cuestionario({ waHref }: Props) {
       }
       escribir('local', BORRADOR, null);
       escribir('session', CLAVE, null);
+      setEnviados((e) => [...new Set([...e, servicio.id])]);
+      setRespuestasPor((todas) => {
+        const resto = { ...todas };
+        delete resto[servicio.id];
+        return resto;
+      });
       setVista('enviado');
     } catch {
       setErrorEnvio('No pudimos enviar tu cuestionario. Revisa tu conexión e inténtalo de nuevo: tus respuestas siguen guardadas.');
@@ -372,14 +425,16 @@ export default function Cuestionario({ waHref }: Props) {
     );
   }
 
-  if (vista === 'enviado') return <Enviado nombre={datos.nombre} servicio={servicio} waHref={waHref} />;
+  if (vista === 'enviado') {
+    return <Enviado nombre={datos.nombre} servicio={servicio} waHref={waHref} quedan={SERVICIOS.some((s) => !enviados.includes(s.id))} onOtro={otroServicio} />;
+  }
 
   const seccion = paso >= 1 && paso <= secciones.length ? secciones[paso - 1] : undefined;
   const pasos = servicio
     ? [{ id: 'datos', numero: '00', titulo: 'Tus datos' }, ...secciones, { id: 'repaso', numero: String(ultimo).padStart(2, '0'), titulo: 'Revisar y enviar' }]
     : [{ id: 'datos', numero: '00', titulo: 'Tus datos' }];
   const completo = (i: number) => {
-    if (i === 0) return Object.keys(validarDatos(datos, servicio)).length === 0;
+    if (i === 0) return Object.keys(validarDatos(datos, servicio, ocultos)).length === 0;
     if (i === ultimo) return false;
     return secciones[i - 1].preguntas.some((p) => respondida(p, respuestas[p.id]));
   };
@@ -483,6 +538,9 @@ export default function Cuestionario({ waHref }: Props) {
                 elegirServicio={elegirServicio}
                 delCrm={delCrm}
                 respondidas={(id) => Object.keys(respuestasPor[id] ?? {}).length}
+                enviados={enviados}
+                ocultos={ocultos}
+                cambiarOculto={cambiarOculto}
               />
             )}
             {seccion && (
@@ -495,11 +553,12 @@ export default function Cuestionario({ waHref }: Props) {
                     onChange={(v) => responder(p.id, v)}
                     respuestas={respuestas}
                     datos={datos}
+                    ocultos={ocultos}
                   />
                 ))}
               </div>
             )}
-            {enRepaso && servicio && <Repaso servicio={servicio} datos={datos} respuestas={respuestas} irA={irA} />}
+            {enRepaso && servicio && <Repaso servicio={servicio} datos={datos} ocultos={ocultos} respuestas={respuestas} irA={irA} />}
           </div>
 
           {errorEnvio && (
@@ -788,6 +847,9 @@ function PasoDatos({
   elegirServicio,
   delCrm,
   respondidas,
+  enviados,
+  ocultos,
+  cambiarOculto,
 }: {
   datos: Datos;
   errores: ErroresDatos;
@@ -796,6 +858,9 @@ function PasoDatos({
   elegirServicio: (id: string) => void;
   delCrm: boolean;
   respondidas: (id: ServicioId) => number;
+  enviados: ServicioId[];
+  ocultos: Oculto[];
+  cambiarOculto: (c: Oculto) => void;
 }) {
   return (
     <div className="grid grid-cols-1 gap-x-5 gap-y-4 py-6 sm:grid-cols-2">
@@ -818,7 +883,7 @@ function PasoDatos({
             {SERVICIOS.map((s) => (
               <option key={s.id} value={s.id} className="text-ink">
                 {s.nombre}
-                {respondidas(s.id) && s.id !== servicio?.id ? ' · con respuestas guardadas' : ''}
+                {enviados.includes(s.id) ? ' · ya enviado' : respondidas(s.id) && s.id !== servicio?.id ? ' · con respuestas guardadas' : ''}
               </option>
             ))}
           </select>
@@ -843,6 +908,30 @@ function PasoDatos({
       {DATOS.map((c) => {
         const id = `cw-${c.id}`;
         const error = errores[c.id];
+        const oculto = ocultos.find((o) => o === c.id);
+        if (oculto) {
+          // Dato del CRM tapado: se muestra sólo una parte (el enlace se puede reenviar) y se puede cambiar.
+          return (
+            <div key={c.id} className={c.id === 'whatsapp' ? 'sm:col-span-2' : ''}>
+              <p className="mb-1.5 text-[0.95rem] font-semibold text-ink">{c.titulo}</p>
+              <div className="flex items-center gap-3 rounded-2xl border border-line-soft bg-ice-3 py-2 pl-4 pr-2">
+                <Ico d={ICONOS.shield} size={18} className="shrink-0 text-cobalt-ink" />
+                <span className="tnum min-w-0 flex-1 truncate text-[1rem] text-ink">
+                  {oculto === 'whatsapp' ? whatsappVisible(datos, ocultos) : datos.correo}
+                </span>
+                <button
+                  type="button"
+                  onClick={() => cambiarOculto(oculto)}
+                  className="rounded-full px-3.5 py-2 text-[0.88rem] font-semibold text-cobalt-ink transition-colors hover:bg-ice"
+                  aria-label={`Cambiar ${c.titulo.toLowerCase()}`}
+                >
+                  Cambiar
+                </button>
+              </div>
+              <p className="mt-1.5 text-[0.85rem] text-ink-3">Ya lo tenemos. Por tu privacidad sólo mostramos una parte.</p>
+            </div>
+          );
+        }
         return (
           <div key={c.id} className={c.id === 'whatsapp' ? 'sm:col-span-2' : ''}>
             <label htmlFor={id} className="mb-1.5 block text-[0.95rem] font-semibold text-ink">
@@ -899,12 +988,14 @@ function PreguntaCampo({
   onChange,
   respuestas,
   datos,
+  ocultos,
 }: {
   p: Pregunta;
   valor: Respuesta | undefined;
   onChange: (v: Respuesta | undefined) => void;
   respuestas: Respuestas;
   datos: Datos;
+  ocultos: Oculto[];
 }) {
   const id = `cw-p-${p.id}`;
   const ayuda = p.ayuda ? `${id}-ayuda` : undefined;
@@ -958,7 +1049,9 @@ function PreguntaCampo({
     const actual = (valor as Record<string, string> | undefined) ?? {};
     const copiar = p.copiarDeDatos;
     const telefono = whatsappCompleto(datos);
-    const deDatos = (campo: keyof DatosCliente) => (campo === 'whatsapp' ? (datos.whatsapp ? telefono : '') : datos[campo]);
+    // Un dato tapado del CRM no se copia tapado: se deja dicho que es el mismo (el real lo tenemos).
+    const deDatos = (campo: keyof DatosCliente) =>
+      ocultos.includes(campo as Oculto) ? 'El mismo de «Tus datos»' : campo === 'whatsapp' ? (datos.whatsapp ? telefono : '') : datos[campo];
     return (
       <div className="py-6">
         <fieldset className="min-w-0" aria-describedby={ayuda}>
@@ -1264,7 +1357,19 @@ function Tabla({
 
 /* ── Repaso antes de enviar ────────────────────────────────────────────── */
 
-function Repaso({ servicio, datos, respuestas, irA }: { servicio: Servicio; datos: Datos; respuestas: Respuestas; irA: (n: number) => void }) {
+function Repaso({
+  servicio,
+  datos,
+  ocultos,
+  respuestas,
+  irA,
+}: {
+  servicio: Servicio;
+  datos: Datos;
+  ocultos: Oculto[];
+  respuestas: Respuestas;
+  irA: (n: number) => void;
+}) {
   const faltanEstrellas = servicio.secciones.flatMap((s) => s.preguntas).filter((p) => p.importante && !respondida(p, respuestas[p.id]));
   return (
     <div className="py-6">
@@ -1276,7 +1381,7 @@ function Repaso({ servicio, datos, respuestas, irA }: { servicio: Servicio; dato
         {DATOS.filter((c) => datos[c.id]).map((c) => (
           <div key={c.id} className="min-w-0">
             <dt className="text-[0.72rem] font-semibold uppercase tracking-[0.025em] text-ink-3">{c.titulo}</dt>
-            <dd className="truncate text-[0.95rem] text-ink">{c.id === 'whatsapp' ? whatsappCompleto(datos) : datos[c.id]}</dd>
+            <dd className="truncate text-[0.95rem] text-ink">{c.id === 'whatsapp' ? whatsappVisible(datos, ocultos) : datos[c.id]}</dd>
           </div>
         ))}
       </dl>
@@ -1343,7 +1448,20 @@ function Repaso({ servicio, datos, respuestas, irA }: { servicio: Servicio; dato
 
 /* ── Confirmación ──────────────────────────────────────────────────────── */
 
-function Enviado({ nombre, servicio, waHref }: { nombre: string; servicio: Servicio | undefined; waHref: string }) {
+function Enviado({
+  nombre,
+  servicio,
+  waHref,
+  quedan,
+  onOtro,
+}: {
+  nombre: string;
+  servicio: Servicio | undefined;
+  waHref: string;
+  /** Si queda algún servicio sin enviar desde este navegador */
+  quedan: boolean;
+  onOtro: () => void;
+}) {
   const pila = nombre.trim().split(/\s+/)[0];
   const ref = useRef<HTMLHeadingElement>(null);
   useEffect(() => {
@@ -1378,10 +1496,19 @@ function Enviado({ nombre, servicio, waHref }: { nombre: string; servicio: Servi
               </li>
             ))}
           </ol>
-          <a href={waHref} target="_blank" rel="noopener noreferrer" className="btn btn-ghost w-full sm:w-auto sm:self-start">
-            <Ico d={ICONOS.whatsapp} size={18} />
-            ¿Algo más? Escríbenos por WhatsApp
-          </a>
+          <div className="flex flex-col gap-3 sm:flex-row sm:flex-wrap">
+            {quedan && (
+              <button type="button" className="btn btn-primary w-full sm:w-auto" onClick={onOtro}>
+                Cuestionario de otro servicio
+                <Ico d={ICONOS.arrow} size={18} />
+              </button>
+            )}
+            <a href={waHref} target="_blank" rel="noopener noreferrer" className="btn btn-ghost w-full sm:w-auto">
+              <Ico d={ICONOS.whatsapp} size={18} />
+              ¿Algo más? Escríbenos por WhatsApp
+            </a>
+          </div>
+          {quedan && <p className="-mt-2 text-[0.88rem] text-ink-3">Tus datos ya están: sólo eliges el servicio y respondes sus preguntas.</p>}
         </div>
       </div>
     </div>
