@@ -7,7 +7,7 @@ en Google Drive junto con las respuestas originales.
 ```
 Cliente ──► /cuestionario-web ──► /api/cuestionario ──► n8n «Cuestionario web → PRD (Drive)»
             (clave + 13 pasos)    (clave, frenos,        ├─ Claude escribe el PRD
-                                   limpia, Markdown)      ├─ .md en Drive (carpeta «IONOS HUB · Cuestionarios web (PRD)»)
+                                   limpia, Markdown)      ├─ .md en Drive (carpeta «LANDING > PRDS»)
                                                           └─ correo a info@ionoshub.net con el .md adjunto
 ```
 
@@ -60,8 +60,8 @@ Flujo `zvLJyrXuu27FpvA7`. Webhook `POST /webhook/cuestionario-web`:
    abiertas y próximos pasos).
 4. **Armar documento**: PRD + anexo con las respuestas literales del cliente. Si Claude falla, el documento
    sale igual con las respuestas y un aviso.
-5. Busca la carpeta de Drive por nombre (la crea en la raíz si no existe) y guarda
-   `AAAA-MM-DD · Negocio · PRD página web.md`.
+5. **Guardar en Drive**: crea `AAAA-MM-DD · Negocio · PRD página web.md` en la carpeta elegida en el propio
+   nodo («LANDING > PRDS»). Para cambiar de carpeta, se elige otra en ese nodo.
 6. Correo a `notificar_a` con el enlace de Drive y el `.md` adjunto (aunque Drive haya fallado).
 
 Configuración sin tocar el flujo (data table `cuestionario_web_config`, columnas `clave` / `valor`):
@@ -71,22 +71,30 @@ Configuración sin tocar el flujo (data table `cuestionario_web_config`, columna
 | `webhook_key` | Clave compartida con la web (`CUESTIONARIO_WEBHOOK_KEY`). |
 | `modelo` | Modelo de Claude, por defecto `claude-opus-5-5` (`claude-sonnet-5-5` es más rápido y barato). |
 | `max_tokens` | Largo máximo del PRD (2000–20000, por defecto 12000). |
-| `drive_carpeta` | Nombre exacto de la carpeta de Drive. |
 | `notificar_a` | Correo(s) que reciben el aviso, separados por coma. |
 
 Las ejecuciones de producción que salen bien no se guardan en n8n (configuración por defecto), así que no
 se pueden reintentar desde el historial. Si quieres poder revisarlas o relanzarlas: flujo → Settings → «Save
 successful production executions» → Save.
 
-### Credencial de Google Drive
+(La fila `drive_carpeta` de la tabla ya no se usa: la carpeta se elige en el nodo.)
 
-Los tres nodos de Drive usan la credencial OAuth «Gestor de Redes Sociales». Para que los archivos queden en el
-Drive de IONOS HUB, reconéctala con la cuenta que debe guardarlos: n8n → Credentials → «Gestor de Redes
-Sociales» → Reconnect / Sign in with Google. Si prefieres una credencial nueva, créala y cámbiala en «Buscar
-carpeta», «Crear carpeta» y «Guardar en Drive».
+### Credencial de Google Drive (cuenta de servicio)
 
-La cuenta de servicio (`cliente-n8n@ionos-hub.iam.gserviceaccount.com`) no sirve para esto: Google no le da
-espacio propio y rechaza crear archivos (403), salvo dentro de una unidad compartida donde sea miembro.
+«Guardar en Drive» usa la cuenta de servicio «Acc Service IONOS HUB»
+(`cliente-n8n@ionos-hub.iam.gserviceaccount.com`), que no caduca como el OAuth. Tiene permiso de edición en
+«LANDING > PRDS», pero **una cuenta de servicio no tiene espacio propio**: Google rechaza que cree archivos
+en una carpeta de «Mi unidad» (403 «Forbidden»), aunque sí le deja crear carpetas. Hace falta una de dos cosas:
+
+- **Unidad compartida** (recomendado): mover «LANDING > PRDS» a una unidad compartida de Google Workspace y
+  añadir a `cliente-n8n@ionos-hub.iam.gserviceaccount.com` como «Administrador de contenido». Al moverla, la
+  carpeta conserva su ID, así que el flujo no se toca. Los archivos pasan a ser de la unidad, no de la cuenta.
+- **Delegación de dominio**: en Google Workspace (Admin → Seguridad → Controles de API → Delegación de todo el
+  dominio) autorizar el ID de cliente de la cuenta de servicio con el alcance
+  `https://www.googleapis.com/auth/drive`, y en la credencial de n8n activar «Impersonate a User» con
+  `info@ionoshub.net`. Los archivos quedan a nombre de esa persona.
+
+Mientras no esté ninguna, el PRD sigue llegando completo como adjunto en el correo.
 
 ## Probar
 
