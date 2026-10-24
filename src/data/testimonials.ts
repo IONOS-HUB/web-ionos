@@ -11,7 +11,8 @@
  */
 export interface Testimonial {
   name: string;
-  role: string;
+  /** Cargo, sólo si la persona lo dio */
+  role?: string;
   company: string;
   quote: string;
   photo?: string;
@@ -21,4 +22,14 @@ export interface Testimonial {
   video?: { mp4: string; webm?: string; poster: string; vertical?: boolean };
 }
 
-export const testimonials: Testimonial[] = [];
+export const testimonials: Testimonial[] = [
+  {
+    // Autorizado por la clienta (octubre de 2026). Cita tomada de los subtítulos del video, sin el saludo.
+    name: 'Mary Chamorro',
+    company: 'Aura Beauty Studio',
+    quote:
+      'Es un equipo excelente, me ayudaron a crear la página web de Aura Beauty Studio. Son unos chicos excelentes y les agradezco bastante. Es muy recomendado el trabajo, de verdad.',
+    logo: '/imgs/clientes/marca/aura.webp',
+    video: { mp4: '/videos/testimonios/aura.mp4', poster: '/videos/testimonios/aura.webp', vertical: true },
+  },
+];
