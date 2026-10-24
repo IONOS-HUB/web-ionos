@@ -2,20 +2,26 @@
 
 ## Qué mide el sitio
 
-Sólo en `/speed-to-lead`, `/speed-to-lead/instituciones` y `/speed-to-lead/clinicas` (`BaseLayout landing`), y sólo si la persona acepta **Publicidad · Meta Pixel** en el aviso de cookies ("Aceptar" la incluye):
+Sólo en las landings de pauta (`/speed-to-lead`, `/speed-to-lead/software`, `/speed-to-lead/instituciones` y `/speed-to-lead/clinicas`, `BaseLayout landing`):
 
-| Evento | Cuándo | Desde |
-| --- | --- | --- |
-| `PageView` | Al aceptar las cookies o al cargar la página si ya las había aceptado | Navegador |
-| `Lead` | Formulario entregado al CRM (no se repite si el lead ya existía) | Navegador **y** servidor, con el mismo `event_id` |
-| `Contact` | Clic al botón de WhatsApp | Navegador |
-| `AbrirAgenda` (personalizado) | Clic en "Elegir horario ahora" tras enviar | Navegador |
+| Evento | Cuándo | Desde | Requiere |
+| --- | --- | --- | --- |
+| `Lead` | Formulario entregado al CRM (no se repite si el lead ya existía) | **Servidor** siempre; además navegador, con el mismo `event_id` | La casilla de permiso del formulario (obligatoria) |
+| `PageView` | Al aceptar las cookies o al cargar la página si ya las había aceptado | Navegador | **Publicidad · Meta Pixel** en el aviso de cookies ("Aceptar" la incluye) |
+| `Contact` | Clic al botón de WhatsApp | Navegador | Ídem |
+| `AbrirAgenda` (personalizado) | Clic en "Elegir horario ahora" tras enviar | Navegador | Ídem |
 
 `Lead` lleva `content_name: "speed-to-lead · <variante>"` y `content_category` con la respuesta de la pregunta de calificación.
 
-El `Lead` del servidor (`src/lib/meta.ts`, API de Conversiones) llega aunque un bloqueador corte el Pixel, y Meta descarta el duplicado gracias al `event_id`. Lleva correo, teléfono (E.164 sin `+`) y nombre en SHA-256, IP, navegador y las cookies `_fbp`/`_fbc` (o `fbc` armado desde el `fbclid` de la URL). Sin consentimiento de publicidad no se envía nada a Meta, ni desde el navegador ni desde el servidor: espera menos `Lead` en Meta que leads en GHL.
+El `Lead` del servidor (`src/lib/meta.ts`, API de Conversiones) sale con cada lead, porque la casilla de permiso del formulario dice que se le confirmará a Meta que se envió la solicitud (la política de privacidad lo detalla). Así Meta ve todos los leads de la pauta aunque casi nadie acepte las cookies: antes de este cambio el Pixel sólo vio unas 8 visitas de ~46 clics reales y ningún lead. Lleva teléfono (E.164 sin `+`), nombre y, si lo dejó, correo, todo en SHA-256, más IP y navegador. La atribución al anuncio sale de las cookies `_fbp`/`_fbc` si existen, o del `fbclid` de la URL de llegada. Si además la persona aceptó las cookies, el Pixel manda el mismo `Lead` y Meta descarta el duplicado gracias al `event_id`.
+
+`PageView` y "Vistas de la página de destino" siguen dependiendo de las cookies: en Meta verás muchas menos visitas que clics. Las visitas reales se cuentan aparte, sin cookies, con Vercel Web Analytics (abajo).
 
 El resto del sitio no carga el Pixel. Para llevarlo a todas las páginas, quita la condición `landing ?` de `metaPixelId` en `BaseLayout.astro`.
+
+## Visitas sin cookies (Vercel Web Analytics)
+
+Vercel → el proyecto → **Analytics** → **Enable** (antes del siguiente despliegue). No usa cookies ni datos que identifiquen a la persona, así que cuenta a todos, acepten o no el aviso. Da visitas por página, fuente y país; con el plan Pro, además los eventos propios del formulario: `Formulario iniciado` (primer campo enfocado) y `Lead` (enviado), con la `variante`. Mientras no esté activado, el script `/_vercel/insights/script.js` responde 404 sin afectar la página.
 
 ## Variables (Vercel → Settings → Environment Variables)
 
@@ -81,12 +87,14 @@ Para optimizar cada campaña de nicho por su propio lead: Administrador de event
 | `Lead · Clínicas` | `Lead` | URL contiene `/speed-to-lead/clinicas` |
 | `Lead · Instituciones` | `Lead` | URL contiene `/speed-to-lead/instituciones` |
 | `Lead · General` | `Lead` | `content_name` es igual a `speed-to-lead · general` |
+| `Lead · Software` | `Lead` | URL contiene `/speed-to-lead/software` |
 
 ### 9. Campaña
 
 1. **Administrador de anuncios → Crear** → objetivo **Clientes potenciales**.
-2. Conjunto de anuncios → **Ubicación de la conversión: Sitio web** → conjunto de datos `IonosHub · Web` → evento **Cliente potencial** (`Lead`) o la conversión personalizada de la variante.
-3. Anuncio → **URL del sitio web**: la landing de la variante. En **Parámetros de URL**:
+2. Conjunto de anuncios → **Ubicación de la conversión: Sitio web** → conjunto de datos `Speed To Lead IONOS` (`1472397644734399`) → evento **Cliente potencial** (`Lead`) o la conversión personalizada de la variante. **No** "Registro completado": el sitio no lo envía, y el evento no se puede cambiar después de publicar el conjunto.
+   **Ubicaciones:** manuales, sólo Facebook e Instagram (feed, historias, reels). Sin Audience Network: en octubre de 2026 trajo la mitad de los clics de la landing a $0,01 y casi ninguno llegó a cargar la página.
+3. Anuncio → **URL del sitio web**: la landing de la variante que corresponde al mensaje del anuncio (el de software a medida → `/speed-to-lead/software`). En **Parámetros de URL**:
    `utm_source=meta&utm_medium=paid_social&utm_campaign={{campaign.name}}&utm_term={{adset.name}}&utm_content={{ad.name}}`
    Meta añade `fbclid` solo. Todo llega a GHL en `utm_*` y `fbclid`.
 4. Públicos: excluye a quien ya hizo `Lead` (público personalizado → Sitio web → evento `Lead`, 180 días) y, cuando haya volumen (~100 leads), crea un público similar a partir de él.

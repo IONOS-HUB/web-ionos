@@ -9,9 +9,12 @@ import type { LandingVariant } from '../../data/landings';
  * más cuesta leads. Guarda la atribución de campaña (utm_*, gclid, fbclid) de la URL de llegada en
  * `sessionStorage`, para que no se pierda si la persona navega antes de enviar.
  *
- * Conversión en Meta: con el Pixel cargado (sólo si la persona aceptó la publicidad), el envío dispara
- * `Lead` en el navegador y el servidor manda el mismo evento a la API de Conversiones con el mismo
- * `eventID`, para que Meta lo cuente una vez. Ver docs/META-PIXEL.md.
+ * Conversión en Meta: el servidor manda `Lead` a la API de Conversiones con cada envío (la casilla de permiso,
+ * obligatoria, incluye avisarle a Meta), aunque la persona no haya aceptado las cookies. Si además aceptó la
+ * publicidad, el Pixel dispara el mismo `Lead` en el navegador con el mismo `eventID` y Meta lo cuenta una vez.
+ * Ver docs/META-PIXEL.md. Las visitas y los envíos también se cuentan sin cookies con Vercel Web Analytics.
+ *
+ * El correo es opcional: cada campo obligatorio de más cuesta leads, y el contacto es por WhatsApp.
  *
  * Al enviar, la confirmación ocupa el mismo sitio sin mover la página: en escritorio conserva el alto
  * del formulario; en móvil, donde el formulario es largo, la ventanilla vuelve a la vista.
@@ -53,6 +56,10 @@ const fbq = () => {
   return w.ionosAdsConsent ? w.fbq : undefined;
 };
 
+/** Vercel Web Analytics (sin cookies): eventos propios para el embudo visita → empieza → envía. */
+const va = (nombre: string, datos: Record<string, string>) =>
+  (window as unknown as { va?: (...a: unknown[]) => void }).va?.('event', { name: nombre, data: datos });
+
 const cookie = (nombre: string) =>
   document.cookie
     .split('; ')
@@ -75,7 +82,8 @@ const initial = {
 type Campo = keyof typeof initial;
 type Estado = 'idle' | 'enviando' | 'listo' | 'error';
 
-const TOTAL_PASOS = 6;
+/** Lo obligatorio: nombre, WhatsApp, negocio, la pregunta y el permiso. El correo, si lo deja, no suma. */
+const TOTAL_PASOS = 5;
 
 export default function SpeedToLeadForm({ variante, form, waHref, siguiente }: Props) {
   const [data, setData] = useState(initial);
@@ -84,10 +92,18 @@ export default function SpeedToLeadForm({ variante, form, waHref, siguiente }: P
   const [consentimiento, setConsentimiento] = useState(false);
   const [errores, setErrores] = useState<Partial<Record<Campo | 'consentimiento' | 'general', string>>>({});
   const [estado, setEstado] = useState<Estado>('idle');
+  const empezado = useRef(false);
 
   const set = (campo: Campo, valor: string) => {
     setData((d) => ({ ...d, [campo]: valor }));
     if (errores[campo]) setErrores((e) => ({ ...e, [campo]: '' }));
+  };
+
+  // Una vez por visita: separa a quien ni empieza de quien empieza y no termina.
+  const alEmpezar = () => {
+    if (empezado.current) return;
+    empezado.current = true;
+    va('Formulario iniciado', { variante });
   };
 
   // Avance visible mientras se llena: cada dato válido suma. Sólo orienta; la validación real es `validar`.
@@ -96,7 +112,6 @@ export default function SpeedToLeadForm({ variante, form, waHref, siguiente }: P
   const completos = [
     data.nombre.trim().length >= 3,
     digitosTel.length >= (pais?.min ?? 6) && digitosTel.length <= (pais?.max ?? 14),
-    /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(data.correo.trim()),
     Boolean(data.organizacion.trim()),
     Boolean(data.calificacion),
     consentimiento,
@@ -105,7 +120,7 @@ export default function SpeedToLeadForm({ variante, form, waHref, siguiente }: P
   const validar = () => {
     const e: typeof errores = {};
     if (data.nombre.trim().length < 3) e.nombre = 'Escribe tu nombre.';
-    if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(data.correo.trim())) e.correo = 'Escribe un correo válido.';
+    if (data.correo.trim() && !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(data.correo.trim())) e.correo = 'Revisa el correo o déjalo en blanco.';
     const digitos = data.telefono.replace(/\D/g, '').replace(/^0+/, '');
     const pais = paisPorIso(data.pais);
     if (digitos.length < (pais?.min ?? 6) || digitos.length > (pais?.max ?? 14)) e.telefono = 'Revisa el número de WhatsApp.';
@@ -117,9 +132,9 @@ export default function SpeedToLeadForm({ variante, form, waHref, siguiente }: P
     const orden: [keyof typeof e, string][] = [
       ['nombre', 'stl-nombre'],
       ['telefono', 'stl-telefono'],
-      ['correo', 'stl-correo'],
       ['organizacion', 'stl-org'],
       ['calificacion', 'stl-calificacion'],
+      ['correo', 'stl-correo'],
       ['consentimiento', 'stl-consentimiento'],
     ];
     const primero = orden.find(([k]) => e[k]);
@@ -148,7 +163,7 @@ export default function SpeedToLeadForm({ variante, form, waHref, siguiente }: P
           consentimiento,
           pagina_origen: window.location.href,
           utm: atribucion(),
-          meta: { consent: Boolean(fbq()), event_id: eventId, fbp: cookie('_fbp'), fbc: cookie('_fbc') },
+          meta: { event_id: eventId, fbp: cookie('_fbp'), fbc: cookie('_fbc') },
         }),
       });
       const cuerpo = (await res.json()) as { ok?: boolean; error?: string; duplicado?: boolean };
@@ -177,7 +192,10 @@ export default function SpeedToLeadForm({ variante, form, waHref, siguiente }: P
         page_path: window.location.pathname,
       });
       // Un lead repetido no vuelve a contar en Meta: el servidor tampoco lo envía a CAPI.
-      if (!cuerpo.duplicado) fbq()?.('track', 'Lead', { content_name: `speed-to-lead · ${variante}`, content_category: data.calificacion }, { eventID: eventId });
+      if (!cuerpo.duplicado) {
+        fbq()?.('track', 'Lead', { content_name: `speed-to-lead · ${variante}`, content_category: data.calificacion }, { eventID: eventId });
+        va('Lead', { variante });
+      }
     } catch {
       setErrores({
         general: 'No pudimos enviar tu solicitud. Revisa tu conexión e inténtalo de nuevo.',
@@ -277,7 +295,7 @@ export default function SpeedToLeadForm({ variante, form, waHref, siguiente }: P
   const mal = 'border-red-500 ring-4 ring-red-500/10';
 
   return (
-    <form ref={formRef} onSubmit={onSubmit} noValidate className="flex flex-col gap-4">
+    <form ref={formRef} onSubmit={onSubmit} onFocusCapture={alEmpezar} noValidate className="flex flex-col gap-4">
       <div className="flex items-center gap-3" aria-hidden="true">
         <div className="h-1.5 flex-1 overflow-hidden rounded-full bg-ice-2">
           <div
@@ -336,22 +354,6 @@ export default function SpeedToLeadForm({ variante, form, waHref, siguiente }: P
         </div>
       </Campo>
 
-      <Campo label="Correo" id="stl-correo" error={errores.correo}>
-        <input
-          id="stl-correo"
-          type="email"
-          inputMode="email"
-          autoComplete="email"
-          placeholder="tu@empresa.com"
-          className={`${campo} w-full ${errores.correo ? mal : bien}`}
-          value={data.correo}
-          onChange={(e) => set('correo', e.target.value)}
-          aria-invalid={!!errores.correo}
-          aria-describedby={errores.correo ? 'stl-correo-err' : undefined}
-          required
-        />
-      </Campo>
-
       <Campo label={form.orgLabel} id="stl-org" error={errores.organizacion}>
         <input
           id="stl-org"
@@ -403,6 +405,21 @@ export default function SpeedToLeadForm({ variante, form, waHref, siguiente }: P
         </div>
       </Campo>
 
+      <Campo label="Correo" opcional id="stl-correo" error={errores.correo}>
+        <input
+          id="stl-correo"
+          type="email"
+          inputMode="email"
+          autoComplete="email"
+          placeholder="tu@empresa.com"
+          className={`${campo} w-full ${errores.correo ? mal : bien}`}
+          value={data.correo}
+          onChange={(e) => set('correo', e.target.value)}
+          aria-invalid={!!errores.correo}
+          aria-describedby={errores.correo ? 'stl-correo-err' : undefined}
+        />
+      </Campo>
+
       <label className="mt-1 flex items-start gap-3 text-[0.95rem] leading-relaxed text-ink-2">
         <input
           type="checkbox"
@@ -417,7 +434,8 @@ export default function SpeedToLeadForm({ variante, form, waHref, siguiente }: P
           aria-describedby={errores.consentimiento ? 'stl-consentimiento-err' : undefined}
         />
         <span>
-          Acepto que IonosHub me contacte por WhatsApp, llamada o correo sobre esta solicitud.{' '}
+          Acepto que IonosHub me contacte por WhatsApp, llamada o correo sobre esta solicitud y que, para medir sus anuncios, le confirme a Meta que la envié,
+          con mis datos cifrados.{' '}
           <a href="/politica-de-privacidad" target="_blank" rel="noopener" className="font-semibold text-cobalt-ink underline">
             Cómo tratamos tus datos
           </a>
@@ -455,16 +473,17 @@ export default function SpeedToLeadForm({ variante, form, waHref, siguiente }: P
           </svg>
         )}
       </button>
-      <p className="text-sm text-ink-3">Sin compromiso de compra. Usamos tus datos sólo para esta solicitud.</p>
+      <p className="text-sm text-ink-3">Sin compromiso de compra. Nunca vendemos tus datos.</p>
     </form>
   );
 }
 
-function Campo({ label, id, error, children }: { label: string; id: string; error?: string; children: ReactNode }) {
+function Campo({ label, id, error, opcional, children }: { label: string; id: string; error?: string; opcional?: boolean; children: ReactNode }) {
   return (
     <div>
       <label htmlFor={id} className="mb-1.5 block text-[0.95rem] font-semibold text-ink">
         {label}
+        {opcional && <span className="font-normal text-ink-3"> (opcional)</span>}
       </label>
       {children}
       {error && (
