@@ -12,9 +12,12 @@ export const prerender = false;
  *
  * Freno propio (`stl`): quien deja sus datos en la landing y además escribe al chat no se bloquea.
  *
- * Con el lead entregado, el mismo `Lead` que dispara el Pixel sale a la API de Conversiones de Meta
- * (`lib/meta.ts`), con su `event_id` para que Meta no lo cuente dos veces. Sólo si `meta.consent`:
- * el navegador lo marca cuando la persona aceptó la publicidad en el aviso de cookies.
+ * Con el lead entregado, el `Lead` sale a la API de Conversiones de Meta (`lib/meta.ts`) con su `event_id`.
+ * Va siempre: la casilla de permiso del formulario, obligatoria, incluye confirmarle a Meta que se envió la
+ * solicitud. Así Meta ve cada lead de la pauta aunque la persona no acepte las cookies; si además las aceptó,
+ * el Pixel manda el mismo evento desde el navegador y Meta se queda con uno (mismo `event_id`).
+ *
+ * El correo es opcional; si viene, tiene que ser válido.
  */
 
 interface Body {
@@ -28,7 +31,7 @@ interface Body {
   consentimiento?: boolean;
   pagina_origen?: string;
   utm?: Record<string, unknown>;
-  meta?: { consent?: boolean; event_id?: string; fbp?: string; fbc?: string };
+  meta?: { event_id?: string; fbp?: string; fbc?: string };
   website?: string; // honeypot
 }
 
@@ -38,7 +41,10 @@ const json = (body: unknown, status = 200) =>
     headers: { 'Content-Type': 'application/json', 'Cache-Control': 'no-store' },
   });
 
-const limpio = (valor: unknown, max: number) => String(valor ?? '').trim().slice(0, max);
+const limpio = (valor: unknown, max: number) =>
+  String(valor ?? '')
+    .trim()
+    .slice(0, max);
 
 export const POST: APIRoute = async ({ request }) => {
   let body: Body;
@@ -63,7 +69,7 @@ export const POST: APIRoute = async ({ request }) => {
 
   const faltan: string[] = [];
   if (nombre.length < 3) faltan.push('nombre');
-  if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(correo)) faltan.push('correo');
+  if (correo && !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(correo)) faltan.push('correo');
   if (telefonoNacional.replace(/\D/g, '').length < 7) faltan.push('teléfono');
   if (!organizacion) faltan.push('organización');
   // La pregunta de calificación sólo acepta las opciones de su variante.
@@ -107,14 +113,12 @@ export const POST: APIRoute = async ({ request }) => {
 
   // Sin destino configurado: en desarrollo se acepta para poder probar la interfaz; en producción se avisa.
   if (result === 'sin-canal') {
-    return import.meta.env.DEV
-      ? json({ ok: true, delivered: false })
-      : json({ error: 'No pudimos enviar tu solicitud. Escríbenos por WhatsApp.' }, 503);
+    return import.meta.env.DEV ? json({ ok: true, delivered: false }) : json({ error: 'No pudimos enviar tu solicitud. Escríbenos por WhatsApp.' }, 503);
   }
   if (result === 'error') return json({ error: 'No pudimos enviar tu solicitud. Inténtalo de nuevo.' }, 502);
 
   const eventId = limpio(body.meta?.event_id, 64);
-  if (body.meta?.consent === true && /^[\w-]{8,64}$/.test(eventId)) {
+  if (/^[\w-]{8,64}$/.test(eventId)) {
     await sendMetaLead({
       eventId,
       sourceUrl: limpio(body.pagina_origen, 300) || new URL(landing.route, request.url).href,
@@ -123,8 +127,8 @@ export const POST: APIRoute = async ({ request }) => {
       nombre,
       ip: clientIp(request),
       userAgent: request.headers.get('user-agent') ?? undefined,
-      fbp: limpio(body.meta.fbp, 120) || undefined,
-      fbc: limpio(body.meta.fbc, 300) || undefined,
+      fbp: limpio(body.meta?.fbp, 120) || undefined,
+      fbc: limpio(body.meta?.fbc, 300) || undefined,
       fbclid: utm.fbclid,
       variante: landing.id,
       calificacion,

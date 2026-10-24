@@ -3,8 +3,9 @@
  * servidor. El Pixel del navegador manda el mismo evento con el mismo `event_id`, y Meta se queda con
  * uno de los dos (deduplicación). El del servidor llega aunque un bloqueador corte el Pixel.
  *
- * Sólo se envía si la persona aceptó la publicidad en el aviso de cookies (el Pixel estaba cargado) y
- * con los datos de contacto en SHA-256, como pide Meta. Sólo servidor: el token nunca llega al navegador.
+ * Se envía con cada lead: la casilla de permiso del formulario incluye confirmarle a Meta que se envió la
+ * solicitud. Sin las cookies del Pixel (`_fbp`, `_fbc`), la atribución al anuncio sale del `fbclid` de la URL
+ * de llegada y de los datos de contacto en SHA-256, como pide Meta. Sólo servidor: el token nunca llega al navegador.
  *
  * Variables: `META_CAPI_TOKEN` (el Pixel es `META_PIXEL_ID` de `site.ts`, o `PUBLIC_META_PIXEL_ID`) y, para probar en el Administrador de eventos,
  * `META_TEST_EVENT_CODE`. Ver docs/META-PIXEL.md.
@@ -45,11 +46,12 @@ export async function sendMetaLead(lead: MetaLead): Promise<void> {
 
   const [nombre, ...apellidos] = lead.nombre.trim().toLowerCase().split(/\s+/);
   const user_data: Record<string, unknown> = {
-    em: [sha256(lead.correo.trim().toLowerCase())],
     // Sólo dígitos con el código de país, sin "+".
     ph: [sha256(toE164(lead.telefono).replace(/\D/g, ''))],
     fn: [sha256(nombre)],
   };
+  // El correo es opcional en el formulario.
+  if (lead.correo.trim()) user_data.em = [sha256(lead.correo.trim().toLowerCase())];
   if (apellidos.length) user_data.ln = [sha256(apellidos.join(' '))];
   if (lead.ip) user_data.client_ip_address = lead.ip;
   if (lead.userAgent) user_data.client_user_agent = lead.userAgent;

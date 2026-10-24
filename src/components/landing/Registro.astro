@@ -6,8 +6,11 @@
  * 1. Barra con la marca (sin enlaces: tráfico de pauta) y un atajo al formulario.
  * 2. Portada: titular y promesas sobre blanco, el formulario flotando sobre el campo de color (cobalto en
  *    la general, noche con video en los nichos). En móvil, el campo es una banda a sangre tras el titular.
+ *    Bajo las credenciales, la prueba más cercana al formulario: un caso con cifra y logos de clientes.
+ *    Si hay un testimonio en video (`testimonials.ts`), va en una banda justo después de la portada.
  * 3. Qué pasa después de enviar: los cuatro pasos reales, que se encienden en secuencia.
- * 4. El ecosistema (general: pilares + flujo hacia el CRM) o la demostración del sector (nicho).
+ * 4. El ecosistema (general: pilares + flujo hacia el CRM), la demostración del sector (nicho) o cómo se
+ *    construye, con capturas reales (variantes de servicio, `process`).
  * 5. Prueba en noche: casos reales con cifra, cliente del sector y logos.
  * 6. Quién atiende: los cofundadores y el equipo.
  * 7. Cierre en cobalto y pie legal mínimo.
@@ -21,6 +24,7 @@ import BrandMark from '../BrandMark.astro';
 import ClientLogo from '../ClientLogo.astro';
 import FlowDemo from '../demos/FlowDemo.astro';
 import NicheDemo from '../demos/NicheDemo.astro';
+import MediaGallery from '../MediaGallery.astro';
 import MotionBackdrop from './MotionBackdrop.astro';
 import FormWindow from './FormWindow.astro';
 import { team } from '../../data/team';
@@ -28,6 +32,7 @@ import { successCases } from '../../data/cases';
 import { clients, partners } from '../../data/site-content';
 import { pillars } from '../../data/pillars';
 import { testimonials } from '../../data/testimonials';
+import { systemsGallery } from '../../data/photos';
 import { waLink } from '../../lib/site';
 import type { LandingVariant } from '../../data/landings';
 import type { Niche } from '../../data/niches';
@@ -41,12 +46,28 @@ const { landing, niche } = Astro.props;
 const founders = team.filter((m) => m.area === 'Dirección');
 const resto = team.filter((m) => m.area !== 'Dirección');
 
-// El caso del sector va primero si existe; se completa hasta tres con los casos con cifra más claros.
-const slugs = [...new Set([niche?.proof.caseSlug, 'zona-gamers', 'daniela-vidal', 'pawau'].filter(Boolean))].slice(0, 3);
+// El caso del sector (o de la variante) va primero si existe; se completa hasta tres con los casos con cifra más claros.
+const slugs = [...new Set([niche?.proof.caseSlug ?? landing.caseSlug, 'zona-gamers', 'daniela-vidal', 'pawau'].filter(Boolean))].slice(0, 3);
 const casos = slugs
   .map((slug) => successCases.find((c) => c.slug === slug))
   .filter((c): c is (typeof successCases)[number] => Boolean(c));
 const loop = [...clients, ...clients];
+
+// Junto al formulario: el caso principal y seis logos, con el del caso primero.
+const destacado = casos[0];
+const logosCerca = [...clients].sort((a, b) => Number(b.src === destacado?.logo) - Number(a.src === destacado?.logo)).slice(0, 6);
+
+// Testimonios: el primero con video sale tras la portada; los de texto, en la banda de casos (sólo la general).
+const conVideo = testimonials.find((t) => t.video);
+const deTexto = testimonials.filter((t) => !t.video);
+
+// Variantes de servicio: cuatro capturas reales, con la del caso de la variante primero.
+const capturas = landing.process
+  ? {
+      ...systemsGallery,
+      items: [...systemsGallery.items].sort((a, b) => Number(b.label === destacado?.client) - Number(a.label === destacado?.client)).slice(0, 4),
+    }
+  : undefined;
 const anio = new Date().getFullYear();
 ---
 
@@ -102,7 +123,8 @@ const anio = new Date().getFullYear();
       </div>
     </div>
 
-    <div class="min-w-0 pb-12 lg:col-span-6 lg:row-start-2 lg:self-start lg:pb-0 lg:pr-4">
+    <!-- En móvil la prueba (caso + logos) sube a ser lo primero bajo el formulario; en escritorio cierra la columna. -->
+    <div class="flex min-w-0 flex-col pb-12 lg:col-span-6 lg:row-start-2 lg:self-start lg:pb-0 lg:pr-4">
       <ul class="flex flex-col gap-3 lg:mt-7">
         {
           landing.promises.map((p, i) => (
@@ -147,10 +169,71 @@ const anio = new Date().getFullYear();
           ))
         }
       </ul>
+
+      <div class="hero-in rounded-[1.25rem] border border-line bg-ice-3 p-5 max-lg:order-first max-lg:mb-8 lg:mt-7" style="--d: 500ms">
+        {
+          destacado && (
+            <p class="leading-snug">
+              <span class="tnum block text-[1.4rem] font-semibold text-cobalt-ink">{destacado.highlight.replace(/(\d) %/g, '$1\u00a0%')}</span>
+              <span class="mt-1 block text-[0.92rem] text-ink-2">
+                <span class="font-semibold text-ink">{destacado.client}</span> · {destacado.result}
+              </span>
+            </p>
+          )
+        }
+        <p class="mt-4 text-[0.72rem] font-semibold uppercase tracking-wide text-ink-3">Negocios que ya trabajan con nosotros</p>
+        <ul class="mt-2.5 grid grid-cols-3 gap-2 sm:grid-cols-6" aria-label="Clientes de IonosHub">
+          {
+            logosCerca.map((c) => (
+              <li>
+                <ClientLogo src={c.src} alt={c.alt} size="sm" class="!w-full" />
+              </li>
+            ))
+          }
+        </ul>
+      </div>
     </div>
 
   </div>
 </section>
+
+{
+  conVideo?.video && (
+    <section class="pb-16 lg:py-20" aria-label={`Testimonio de ${conVideo.name}`}>
+      <div class="wrap grid gap-8 lg:grid-cols-12 lg:items-center lg:gap-16">
+        <div class:list={['min-w-0 lg:order-2', conVideo.video.vertical ? 'lg:col-span-5 lg:col-start-8' : 'lg:col-span-7']} data-reveal>
+          <div class:list={['overflow-clip rounded-[1.5rem] border border-line bg-night shadow-lift', conVideo.video.vertical && 'mx-auto max-w-[22rem]']}>
+            <video
+              controls
+              playsinline
+              preload="none"
+              poster={conVideo.video.poster}
+              class:list={['block w-full bg-night object-cover', conVideo.video.vertical ? 'aspect-[9/16]' : 'aspect-video']}
+            >
+              {conVideo.video.webm && <source src={conVideo.video.webm} type="video/webm" />}
+              <source src={conVideo.video.mp4} type="video/mp4" />
+            </video>
+          </div>
+        </div>
+        <div class="min-w-0 lg:order-1 lg:col-span-5">
+          <h2 class="display-tight text-[clamp(2rem,4.2vw,3.25rem)] font-semibold text-ink" data-reveal>Lo cuenta {conVideo.name.split(' ')[0]}.</h2>
+          <blockquote class="mt-5 text-[clamp(1.05rem,1.4vw,1.25rem)] leading-relaxed text-ink-2" data-reveal data-reveal-delay="60">“{conVideo.quote}”</blockquote>
+          <div class="mt-6 flex items-center gap-4" data-reveal data-reveal-delay="120">
+            {conVideo.logo && <ClientLogo src={conVideo.logo} alt={conVideo.company} size="sm" />}
+            <p class="text-[0.92rem] leading-tight text-ink-2">
+              <span class="block font-semibold text-ink">{conVideo.name}</span>
+              {conVideo.role} · {conVideo.company}
+            </p>
+          </div>
+          <a href="#formulario" class="btn btn-primary mt-8 max-sm:w-full" data-stl-goto data-reveal data-reveal-delay="160">
+            {landing.form.cta}
+            <Icon name="arrow-right" size={18} />
+          </a>
+        </div>
+      </div>
+    </section>
+  )
+}
 
 <!-- 3 · Qué pasa después de enviar -->
 <section class="bg-ice-3 py-20 lg:py-28">
@@ -191,9 +274,39 @@ const anio = new Date().getFullYear();
   </div>
 </section>
 
-<!-- 4 · El ecosistema (general) o la demostración del sector (nicho) -->
+<!-- 4 · El ecosistema (general), la demostración del sector (nicho) o cómo se construye (servicio) -->
 {
-  niche ? (
+  landing.process && capturas ? (
+    <section class="py-20 lg:py-28">
+      <div class="wrap grid gap-12 lg:grid-cols-12 lg:items-center lg:gap-16">
+        <div class="min-w-0 lg:col-span-5">
+          <h2 class="display-tight text-[clamp(2rem,4.2vw,3.25rem)] font-semibold text-ink" data-reveal>
+            {landing.process.title}
+          </h2>
+          <p class="mt-5 text-[clamp(1.05rem,1.4vw,1.25rem)] leading-relaxed text-ink-2" data-reveal data-reveal-delay="60">
+            {landing.process.lead}
+          </p>
+          <ol class="mt-8 divide-y divide-line border-y border-line" data-reveal data-reveal-delay="120">
+            {landing.process.steps.map((p, i) => (
+              <li class="flex items-start gap-4 py-4">
+                <span class="tnum flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-cobalt text-[0.95rem] font-semibold text-white">{i + 1}</span>
+                <div>
+                  <p class="text-[1.05rem] font-semibold text-ink">{p.title}</p>
+                  <p class="mt-0.5 text-[0.92rem] leading-snug text-ink-2">{p.detail}</p>
+                </div>
+              </li>
+            ))}
+          </ol>
+          <p class="mt-6 text-[0.98rem] font-semibold text-cobalt-ink" data-reveal data-reveal-delay="160">
+            {landing.process.forWhom}
+          </p>
+        </div>
+        <div class="min-w-0 lg:col-span-7" data-reveal data-reveal-delay="100">
+          <MediaGallery gallery={capturas} variant="screen" />
+        </div>
+      </div>
+    </section>
+  ) : niche ? (
     <section class="py-20 lg:py-28">
       <div class="wrap grid gap-12 lg:grid-cols-12 lg:items-center lg:gap-16">
         <div class="min-w-0 lg:col-span-6" data-reveal>
@@ -301,9 +414,9 @@ const anio = new Date().getFullYear();
     }
 
     {
-      testimonials.length > 0 && !niche && (
+      deTexto.length > 0 && !niche && (
         <ul class="mt-5 grid gap-5 md:grid-cols-2" aria-label="Testimonios">
-          {testimonials.slice(0, 2).map((t) => (
+          {deTexto.slice(0, 2).map((t) => (
             <li class="rounded-[1.5rem] border border-night-line p-6 sm:p-7" data-reveal>
               <blockquote class="text-[1.05rem] leading-relaxed text-white">“{t.quote}”</blockquote>
               <div class="mt-4 flex items-center gap-3">

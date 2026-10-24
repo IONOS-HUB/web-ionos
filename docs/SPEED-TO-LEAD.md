@@ -5,15 +5,17 @@
 | Variante | URL | Contenido |
 | --- | --- | --- |
 | `general` | `/speed-to-lead` | Formulario sobre campo cobalto; el ecosistema (cuatro pilares + flujo hacia el CRM); casos reales, logos y testimonios (si hay). |
+| `software` | `/speed-to-lead/software` | Para el anuncio de software a medida: su mismo gancho como titular, cómo se construye (diagnóstico, diseño contigo, 30 días) con capturas de sistemas reales, y Ecu593 como caso principal. |
 | `instituciones` | `/speed-to-lead/instituciones` | Formulario sobre campo noche con video del nicho `institutos`; demostración del sector, lo que hace y lo que nunca hace; casos. Sin testimonios. |
 | `clinicas` | `/speed-to-lead/clinicas` | Igual con el nicho `clinicas` y su cliente real del sector. Sin testimonios. |
 
 Las tres usan la misma página, `components/landing/Registro.astro` (ventanilla del formulario en `FormWindow.astro`, campo animado en `MotionBackdrop.astro`), en este orden:
 
 1. Barra con el logo (sin enlace) y un atajo "Agendar" que lleva al formulario y enfoca el primer campo.
-2. Portada: titular, promesas, cofundadores y credenciales sobre blanco; el formulario flota sobre el campo de color. En móvil el formulario va justo después del titular, en una banda a sangre.
+2. Portada: titular, promesas, cofundadores y credenciales sobre blanco; el formulario flota sobre el campo de color. En móvil el formulario va justo después del titular, en una banda a sangre. Bajo las credenciales (en móvil, justo bajo el formulario), el caso principal con su cifra y seis logos de clientes.
+   Si hay un testimonio con video en `testimonials.ts`, va en una banda justo después de la portada.
 3. Qué pasa después de enviar: los cuatro pasos de `steps` (en `landings.ts`), que se encienden en secuencia.
-4. General: pilares + `FlowDemo`. Nicho: `NicheDemo`, `jobs` y `redLines` del sector.
+4. General: pilares + `FlowDemo`. Nicho: `NicheDemo`, `jobs` y `redLines` del sector. Servicio (`process`): los pasos de cómo se construye y capturas reales (`systemsGallery`).
 5. Casos reales con cifra (el del sector primero, si existe), cliente del sector y franja de logos, en noche.
 6. Cofundadores y equipo.
 7. Cierre en cobalto y pie legal mínimo (privacidad, términos, preferencias de cookies).
@@ -24,7 +26,9 @@ Son sólo para tráfico de pauta: se accede por URL directa y **ningún enlace d
 Para la pauta, usa la URL con UTMs, p. ej. `https://ionoshub.net/speed-to-lead/clinicas?utm_source=meta&utm_campaign=clinicas-oct`.
 Medición en Meta (Pixel + API de Conversiones, evento `Lead`): `docs/META-PIXEL.md`.
 
-El contenido de cada variante es un objeto en `src/data/landings.ts` (titular, promesas, etiquetas del formulario, pregunta de calificación, fondo, mensaje de WhatsApp, meta). Para añadir una: el objeto ahí, su archivo en `src/pages/speed-to-lead/` y su id en `LandingId`.
+El contenido de cada variante es un objeto en `src/data/landings.ts` (titular, promesas, etiquetas del formulario, pregunta de calificación, fondo, caso principal, mensaje de WhatsApp, meta). Para añadir una: el objeto ahí, su archivo en `src/pages/speed-to-lead/` y su id en `LandingId`. Cada anuncio apunta a la variante que repite su mensaje: si el anuncio habla de software y la página de IA, la persona se va.
+
+El formulario pide nombre, WhatsApp, negocio, la pregunta de calificación y el permiso; el **correo es opcional** (si lo deja, se valida). La casilla de permiso incluye confirmarle a Meta que se envió la solicitud (ver `docs/META-PIXEL.md`).
 
 ## Videos de fondo (instituciones y clínicas)
 
@@ -38,6 +42,8 @@ Si los archivos no existen, la página usa el fondo motion en CSS (halos cobalto
 ## Testimonios
 
 `src/data/testimonials.ts` está vacío a propósito (PRODUCT.md: nada inventado). Al añadir entradas reales, la sección aparece sola en la landing general.
+
+**Testimonio en video:** el archivo en `public/videos/testimonios/<cliente>.mp4` (H.264, idealmente < 8 MB; webm opcional) con su póster `<cliente>.webp` (primer fotograma), y en `testimonials.ts` una entrada con nombre, cargo, empresa, una cita corta de lo que dice y `video: { mp4, poster, vertical }` (`vertical: true` si se grabó con el celular parado). Sale en todas las variantes, en una banda justo después de la portada, con el botón al formulario. Sólo con autorización del cliente.
 
 ## Endpoint
 
@@ -58,7 +64,7 @@ Si los archivos no existen, la página usa el fondo motion en CSS (halos cobalto
 }
 ```
 
-`calificacion` sólo acepta las opciones de su variante.
+`calificacion` sólo acepta las opciones de su variante. `correo` es opcional (vacío o válido).
 
 ## GoHighLevel
 

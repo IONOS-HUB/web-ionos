@@ -8,6 +8,8 @@ import type { NicheId } from './niches';
  *
  * - `general` muestra el ecosistema completo (los cuatro pilares y el flujo hacia el CRM), casos, equipo y
  *   testimonios (si existen).
+ * - Las de servicio (`software`) cuentan cómo se construye (`process`) con capturas de trabajo real, en lugar
+ *   del ecosistema completo. Su titular repite el gancho del anuncio que lleva a ellas.
  * - Las de nicho no llevan testimonios: la demostración del sector, lo que el agente hace y sus líneas rojas
  *   salen de `niches.ts` para no duplicar copy, y el campo del formulario es noche con video (o motion en CSS).
  *
@@ -16,7 +18,7 @@ import type { NicheId } from './niches';
  * Las páginas que posicionan por sector son `/servicios/inteligencia-artificial/<slug>`.
  */
 
-export type LandingId = 'general' | 'instituciones' | 'clinicas';
+export type LandingId = 'general' | 'instituciones' | 'clinicas' | 'software';
 
 /** Un paso de lo que pasa después de enviar el formulario. Es el proceso real, no una promesa nueva. */
 export interface LandingStep {
@@ -40,6 +42,10 @@ export interface LandingVariant {
   promises: string[];
   /** Los cuatro pasos desde que envía el formulario hasta el diagnóstico o la demostración */
   steps: LandingStep[];
+  /** Caso real que va primero, junto al formulario y en la banda de casos. En los nichos manda el de `niches.ts`. */
+  caseSlug?: string;
+  /** Variantes por servicio: cómo se construye, en la sección del medio (en vez del ecosistema completo) */
+  process?: { title: string; lead: string; steps: { title: string; detail: string }[]; forWhom: string };
   form: {
     title: string;
     nameLabel: string;
@@ -77,6 +83,7 @@ export const landings: LandingVariant[] = [
       { when: 'En menos de un día hábil', title: 'Te escribe un cofundador', detail: 'Por WhatsApp, para elegir el horario que te venga bien.' },
       { when: '30 minutos', title: 'Diagnóstico gratuito', detail: 'Sales con un plan concreto de IA, automatización o marketing.' },
     ],
+    caseSlug: 'zona-gamers',
     form: {
       title: 'Agenda tu diagnóstico gratuito',
       nameLabel: 'Tu nombre',
@@ -184,6 +191,52 @@ export const landings: LandingVariant[] = [
     metaTitle: 'IA que contesta las llamadas de tu clínica | IonosHub',
     metaDescription:
       'IA de voz y WhatsApp que agenda, confirma y reagenda pacientes 24/7 sin diagnosticar. Solicita una demostración para tu clínica o consultorio.',
+  },
+  {
+    id: 'software',
+    slug: 'software',
+    route: '/speed-to-lead/software',
+    h1: 'Te vendieron un sistema.',
+    h1Accent: 'Nadie te preguntó qué necesitabas.',
+    lead: 'Diseñamos contigo, pantalla por pantalla, el sistema que tu equipo sí va a usar, y lo entregamos en 30 días. Deja tus datos y un cofundador de IonosHub te contacta para una asesoría gratuita.',
+    promises: ['Te contactamos en menos de un día hábil', 'Asesoría gratuita, sin compromiso de compra', 'Tu sistema en 30 días, con acompañamiento'],
+    steps: [
+      { when: 'Ahora', title: 'Dejas tus datos', detail: 'Cinco campos. Te toma menos de un minuto.' },
+      { when: 'Al instante', title: 'Entran a nuestro CRM', detail: 'Tu solicitud queda registrada y asignada. No se pierde en un chat.' },
+      { when: 'En menos de un día hábil', title: 'Te escribe un cofundador', detail: 'Por WhatsApp, para elegir el horario de tu asesoría.' },
+      { when: '30 minutos', title: 'Asesoría gratuita', detail: 'Revisamos cómo opera tu negocio y qué tendría que hacer tu sistema.' },
+    ],
+    caseSlug: 'ecu593',
+    process: {
+      title: 'No vendemos sistemas. Te asesoramos.',
+      lead: 'Primero entendemos cómo trabaja tu negocio; después lo construimos contigo. Lo que no entra en los 30 días se planifica como segunda fase, sin sorpresas.',
+      steps: [
+        {
+          title: 'Diagnóstico de cómo opera tu negocio',
+          detail: 'Quién va a usar el sistema, qué registra y qué reportes necesitas. Ahí se cierra el alcance.',
+        },
+        { title: 'Diseño contigo, pantalla por pantalla', detail: 'Ves cada pantalla antes de construirla. Nada de funciones que nadie va a usar.' },
+        { title: 'Tu sistema en 30 días, con acompañamiento', detail: 'Lo entregamos funcionando y te acompañamos mientras tu equipo empieza a usarlo.' },
+      ],
+      forWhom: 'Para retail, farmacias, centros médicos y escuelas.',
+    },
+    form: {
+      title: 'Agenda tu asesoría gratuita',
+      nameLabel: 'Tu nombre',
+      namePlaceholder: 'Ana Torres',
+      orgLabel: 'Tu negocio',
+      orgPlaceholder: 'Farmacia San José',
+      qualify: {
+        label: '¿Con qué llevas hoy tu negocio?',
+        options: ['Excel, cuadernos o papel', 'Un sistema que no nos sirve', 'Varios programas que no se conectan', 'Todavía con nada', 'Otro'],
+      },
+      servicioInteres: 'Software a medida',
+      cta: 'Quiero mi asesoría gratuita',
+    },
+    waMessage: 'Hola IonosHub, vengo de su anuncio de software a medida y quiero agendar una asesoría gratuita para mi negocio.',
+    metaTitle: 'Software a medida para tu negocio, en 30 días | IonosHub',
+    metaDescription:
+      'Diseñamos contigo, pantalla por pantalla, el sistema que tu negocio necesita y lo entregamos en 30 días. Agenda una asesoría gratuita con IonosHub.',
   },
 ];
 

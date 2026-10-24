@@ -59,6 +59,10 @@ const metaVerification = import.meta.env.PUBLIC_META_DOMAIN_VERIFICATION as stri
 // Meta Pixel sólo en las landings de pauta y sólo con consentimiento de publicidad (CookieConsent).
 const metaPixelId = landing ? (import.meta.env.PUBLIC_META_PIXEL_ID as string | undefined) || META_PIXEL_ID : '';
 
+// Vercel Web Analytics: visitas sin cookies ni datos que identifiquen a la persona, así que no espera al aviso de
+// cookies y cuenta también a quien no lo acepta. Se activa en Vercel → Analytics; hasta entonces el script da 404.
+const vercelAnalytics = import.meta.env.PROD;
+
 // El chat va visible salvo que se apague con PUBLIC_CHAT_UI=0 (oculta la burbuja), también en las landings de pauta.
 // Para cortar también el endpoint, CHAT_ENABLED=0 en Vercel.
 const chatUi = import.meta.env.PUBLIC_CHAT_UI !== '0' && !interno;
@@ -116,6 +120,14 @@ const orgJsonLd = {
     <meta name="twitter:image" content={ogImageAbs} />
 
     <script type="application/ld+json" set:html={JSON.stringify(orgJsonLd)} />
+    {
+      vercelAnalytics && (
+        <>
+          <script is:inline>window.va = window.va || function () {(window.vaq = window.vaq || []).push(arguments);};</script>
+          <script is:inline defer src="/_vercel/insights/script.js"></script>
+        </>
+      )
+    }
     <slot name="head" />
   </head>
   <body class="min-h-dvh flex flex-col">
