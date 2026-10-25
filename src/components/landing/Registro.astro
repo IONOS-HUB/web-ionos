@@ -57,8 +57,9 @@ const loop = [...clients, ...clients];
 const destacado = casos[0];
 const logosCerca = [...clients].sort((a, b) => Number(b.src === destacado?.logo) - Number(a.src === destacado?.logo)).slice(0, 6);
 
-// Testimonios: el primero con video sale tras la portada; los de texto, en la banda de casos (sólo la general).
-const conVideo = testimonials.find((t) => t.video);
+// Testimonios: el video del servicio de esta landing (o el general) sale tras la portada; los de texto, en la
+// banda de casos (sólo la general).
+const conVideo = testimonials.find((t) => t.video && t.landings?.includes(landing.id)) ?? testimonials.find((t) => t.video && !t.landings);
 const deTexto = testimonials.filter((t) => !t.video);
 
 // Variantes de servicio: cuatro capturas reales, con la del caso de la variante primero.
@@ -202,7 +203,7 @@ const anio = new Date().getFullYear();
     <section class="pb-16 lg:py-20" aria-label={`Testimonio de ${conVideo.name}`}>
       <div class="wrap grid gap-8 lg:grid-cols-12 lg:items-center lg:gap-16">
         <div class="min-w-0 lg:col-span-5">
-          <h2 class="display-tight text-[clamp(2rem,4.2vw,3.25rem)] font-semibold text-ink" data-reveal>Lo cuenta {conVideo.name.split(' ')[0]}.</h2>
+          <h2 class="display-tight text-[clamp(2rem,4.2vw,3.25rem)] font-semibold text-ink" data-reveal>Lo cuenta {conVideo.shortName ?? conVideo.name.split(' ')[0]}.</h2>
           <blockquote class="mt-5 text-[clamp(1.05rem,1.4vw,1.25rem)] leading-relaxed text-ink-2" data-reveal data-reveal-delay="60">“{conVideo.quote}”</blockquote>
           <div class="mt-6 flex items-center gap-4" data-reveal data-reveal-delay="120">
             {conVideo.logo && <ClientLogo src={conVideo.logo} alt={conVideo.company} size="sm" />}

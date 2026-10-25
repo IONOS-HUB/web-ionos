@@ -41,7 +41,7 @@ Si los archivos no existen, la página usa el fondo motion en CSS (halos cobalto
 
 ## Testimonios
 
-`src/data/testimonials.ts` sólo lleva testimonios reales y autorizados (PRODUCT.md: nada inventado). Hoy tiene uno: el video de Mary Chamorro (Aura Beauty Studio), con la cita tomada de sus subtítulos. Los de texto aparecen solos en la banda de casos de la landing general.
+`src/data/testimonials.ts` sólo lleva testimonios reales y autorizados (PRODUCT.md: nada inventado). Hoy tiene dos videos, con la cita tomada de sus subtítulos: Abg. Ismael A. (Ecu593 English, su sistema académico a medida) en `software` e `instituciones`, y Mary Chamorro (Aura Beauty Studio, su página web) en las demás. Cada landing toma el testimonio que la nombra en `landings` y, si ninguno, el que no tiene `landings`. Los de texto aparecen solos en la banda de casos de la landing general.
 
 **Testimonio en video:** el archivo en `public/videos/testimonios/<cliente>.mp4` (H.264, idealmente < 8 MB; webm opcional) con su póster `<cliente>.webp` (primer fotograma), y en `testimonials.ts` una entrada con nombre, cargo, empresa, una cita corta de lo que dice y `video: { mp4, poster, vertical }` (`vertical: true` si se grabó con el celular parado). Sale en todas las variantes, en una banda justo después de la portada, con el botón al formulario. Sólo con autorización del cliente.
 
