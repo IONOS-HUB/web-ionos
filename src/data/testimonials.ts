@@ -6,8 +6,8 @@
  * su foto en `public/imgs/testimonios/` (cuadrada, ~240 px, .webp).
  *
  * Con `video`, sale en las landings de pauta justo después de la portada, cerca del formulario (la cita va
- * como resumen de lo que dice). Cada landing toma el primero que la nombre en `landings` (el testimonio de su
- * servicio) y, si ninguno la nombra, el primero sin `landings`. Archivos en `public/videos/testimonios/`: mp4 H.264
+ * como resumen de lo que dice). Cada landing junta hasta dos: primero los que la nombran en `landings` (el
+ * testimonio de su servicio) y después los que no tienen `landings`, que valen para todas. Archivos en `public/videos/testimonios/`: mp4 H.264
  * (idealmente < 8 MB), webm opcional y póster .webp con el primer fotograma.
  */
 export interface Testimonial {
@@ -46,7 +46,7 @@ export const testimonials: Testimonial[] = [
       'Antes de trabajar con IONOS estaba desorganizado en cuanto a cómo poder organizar las clases y los cursos… nos permitió unificar todas estas tareas en una sola aplicación. Me dieron una atención personalizada y estoy bastante satisfecho con los resultados obtenidos.',
     logo: '/imgs/clientes/marca/ecu593.webp',
     video: { mp4: '/videos/testimonios/ecu593.mp4', poster: '/videos/testimonios/ecu593.webp', vertical: true },
-    // Su caso es el sistema académico a medida: va en la de software y en la de instituciones educativas.
+    // Su caso es el sistema académico a medida: va primero en la de software y en la de instituciones educativas.
     landings: ['software', 'instituciones'],
   },
 ];
