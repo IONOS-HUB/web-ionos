@@ -8,6 +8,7 @@
  *    la general, noche con video en los nichos). En móvil, el campo es una banda a sangre tras el titular.
  *    Bajo las credenciales, la prueba más cercana al formulario: un caso con cifra y logos de clientes.
  *    Si hay un testimonio en video (`testimonials.ts`), va en una banda justo después de la portada.
+ *    Se repiten como tarjetas oscuras en la sección «Prueba» (casos), para quien baja hasta ahí.
  * 3. Qué pasa después de enviar: los cuatro pasos reales, que se encienden en secuencia.
  * 4. El ecosistema (general: pilares + flujo hacia el CRM), la demostración del sector (nicho) o cómo se
  *    construye, con capturas reales (variantes de servicio, `process`).
@@ -445,6 +446,33 @@ const anio = new Date().getFullYear();
         ))
       }
     </ul>
+
+    {
+      conVideo.length > 0 && (
+        <ul class:list={['mt-5 grid gap-5', conVideo.length > 1 && 'lg:grid-cols-2']} aria-label="Testimonios en video">
+          {conVideo.map((t, i) => (
+            <li class="flex flex-col gap-5 rounded-[1.5rem] border border-night-line bg-night-2 p-4 sm:flex-row sm:p-5" data-reveal data-reveal-delay={String(100 + i * 90)}>
+              <div class="w-full max-w-[16rem] shrink-0 overflow-clip rounded-[1.25rem] bg-night max-sm:mx-auto sm:w-[44%] sm:max-w-none">
+                <video controls playsinline preload="none" poster={t.video?.poster} class:list={['block w-full bg-night object-cover', t.video?.vertical ? 'aspect-[9/16]' : 'aspect-video']}>
+                  {t.video?.webm && <source src={t.video.webm} type="video/webm" />}
+                  <source src={t.video?.mp4} type="video/mp4" />
+                </video>
+              </div>
+              <div class="flex min-w-0 flex-col sm:py-2">
+                <blockquote class="text-[1rem] leading-relaxed text-white">“{t.quote}”</blockquote>
+                <div class="mt-auto flex items-center gap-3 pt-5">
+                  {t.logo && <ClientLogo src={t.logo} alt={t.company} size="sm" class="!border-transparent" />}
+                  <p class="text-[0.9rem] leading-tight text-night-text">
+                    <span class="block font-semibold text-white">{t.name}</span>
+                    {[t.role, t.company].filter(Boolean).join(' · ')}
+                  </p>
+                </div>
+              </div>
+            </li>
+          ))}
+        </ul>
+      )
+    }
 
     {
       niche?.proof.clientLogo && !niche.proof.caseSlug && (
