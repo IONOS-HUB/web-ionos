@@ -85,7 +85,7 @@ contacto ficticio.
 1. **Clasificar:** el campo «Interés principal» ya tiene las opciones de los cinco servicios (se añadieron
    «Página web o landing» y «Marketing y pauta»). Es lo que leen el cuestionario y el mensaje para elegir el
    servicio.
-2. **Etapas (lo único manual):** en el pipeline «Pauta · Diagnóstico IONIC», crear **«Enviar formulario»** y
+2. **Etapas (lo único manual):** en el pipeline «Leads», crear **«Enviar formulario»** y
    **«Formulario recibido»**, en ese orden, entre «6. Diagnóstico realizado» y «7. Propuesta enviada». La
    numeración del nombre no importa: n8n compara sin números, mayúsculas ni tildes. Mientras no existan, el envío
    automático no hace nada y el cierre deja nota y etiquetas pero no mueve oportunidades.
