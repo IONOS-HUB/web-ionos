@@ -86,7 +86,7 @@ contacto ficticio.
    «Página web o landing» y «Marketing y pauta»). Es lo que leen el cuestionario y el mensaje para elegir el
    servicio.
 2. **Etapas (lo único manual):** en el pipeline «Leads», crear **«Enviar formulario»** y
-   **«Formulario recibido»**, en ese orden, entre «7. Diagnóstico realizado» y «8. Propuesta enviada». La
+   **«Formulario recibido»**, en ese orden, entre «9. Diagnóstico realizado» y «10. Propuesta enviada». La
    numeración del nombre no importa: n8n compara sin números, mayúsculas ni tildes. Mientras no existan, el envío
    automático no hace nada y el cierre deja nota y etiquetas pero no mueve oportunidades.
 3. **Enviar el cuestionario = mover la oportunidad a «Enviar formulario».** No hace falta un workflow en GHL: n8n
