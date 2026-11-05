@@ -1,0 +1,694 @@
+{
+ "Borrar Estado Orlo": [
+  {
+   "json": {}
+  }
+ ],
+ "Agente de Bienvenida": [
+  {
+   "json": {
+    "output": "{\"descartar\": true, \"motivo\": \"estudiante\", \"mensaje_despedida\": \"Entiendo, gracias por escribirnos. Si más adelante emprendes algo, aquí estamos para ayudarte 🙌\"}"
+   }
+  }
+ ],
+ "Borrar Memoria Orlo": [
+  {
+   "json": {}
+  }
+ ],
+ "Reiniciar T&C Orlo": [
+  {
+   "json": {}
+  }
+ ],
+ "Inicio de Buffer Timer": [
+  {
+   "json": {}
+  }
+ ],
+ "Tiempo de espera entre mensajes": [
+  {
+   "json": {}
+  }
+ ],
+ "Recopilar datos del usuario": [
+  {
+   "json": {
+    "propertyName": [
+     "{\"id\": \"555001\", \"t\": \"hola\"}"
+    ]
+   }
+  }
+ ],
+ "Borrar de memoria caché": [
+  {
+   "json": {
+    "propertyName": [
+     "{\"id\": \"555001\", \"t\": \"hola\"}"
+    ]
+   }
+  }
+ ],
+ "Extraer lat y lon OpenStreetMaps": [
+  {
+   "json": {}
+  }
+ ],
+ "Extraer ubicación Google Maps": [
+  {
+   "json": {}
+  }
+ ],
+ "Consulta PDF enviado por usuario": [
+  {
+   "json": {}
+  }
+ ],
+ "Extraer texto de PDF": [
+  {
+   "json": {}
+  }
+ ],
+ "Consulta imagen enviada": [
+  {
+   "json": {}
+  }
+ ],
+ "Describir imagen enviada": [
+  {
+   "json": {}
+  }
+ ],
+ "Consulta audio enviado": [
+  {
+   "json": {}
+  }
+ ],
+ "Transcribir audio enviado": [
+  {
+   "json": {}
+  }
+ ],
+ "Consulta Estado Usuario": [
+  {
+   "json": {
+    "Get State": null
+   }
+  }
+ ],
+ "Cambiar estado T&C mostrados": [
+  {
+   "json": {}
+  }
+ ],
+ "Tiempo de espera": [
+  {
+   "json": {}
+  }
+ ],
+ "Consultar estado T&C": [
+  {
+   "json": {
+    "Get State": "1"
+   }
+  }
+ ],
+ "Mensaje recibido IONIC": [
+  {
+   "json": {
+    "event": "message_created",
+    "message_type": "incoming",
+    "content": "hola",
+    "content_type": "text",
+    "private": false,
+    "id": 555001,
+    "account": {
+     "id": 1,
+     "name": "IONOS HUB"
+    },
+    "inbox": {
+     "id": 3,
+     "name": "WhatsApp"
+    },
+    "sender": {
+     "id": 9001,
+     "name": "Prueba Simulada",
+     "phone_number": "+593990000001",
+     "type": "contact",
+     "custom_attributes": {
+      "campana": "pymes",
+      "nicho": "general",
+      "ad_headline": "Anuncio de prueba"
+     }
+    },
+    "conversation": {
+     "id": 99999,
+     "inbox_id": 3,
+     "labels": [],
+     "can_reply": true,
+     "messages": [
+      {
+       "id": 555001,
+       "content": "hola",
+       "processed_message_content": "hola",
+       "conversation_id": 99999,
+       "inbox_id": 3,
+       "message_type": 0
+      }
+     ]
+    }
+   }
+  }
+ ],
+ "Reabrir la conversación": [
+  {
+   "json": {}
+  }
+ ],
+ "Mensaje T&C": [
+  {
+   "json": {}
+  }
+ ],
+ "Enviar Respuesta Bienvenida": [
+  {
+   "json": {}
+  }
+ ],
+ "Guardar Estado Diagnóstico": [
+  {
+   "json": {}
+  }
+ ],
+ "Confirmar Lead y Pedir Detalle": [
+  {
+   "json": {}
+  }
+ ],
+ "Agente de Diagnóstico": [
+  {
+   "json": {}
+  }
+ ],
+ "Enviar Respuesta Diagnóstico": [
+  {
+   "json": {}
+  }
+ ],
+ "Reiniciar T&C David": [
+  {
+   "json": {}
+  }
+ ],
+ "Borrar Estado David": [
+  {
+   "json": {}
+  }
+ ],
+ "Borrar Memoria David": [
+  {
+   "json": {}
+  }
+ ],
+ "Confirmar Cita Diagnóstico": [
+  {
+   "json": {}
+  }
+ ],
+ "Crear Evento Calendario Diagnóstico": [
+  {
+   "json": {}
+  }
+ ],
+ "Marcar Estado Cita Agendada": [
+  {
+   "json": {}
+  }
+ ],
+ "Agente de Software": [
+  {
+   "json": {}
+  }
+ ],
+ "Notificar Cita Diagnóstico Gmail": [
+  {
+   "json": {}
+  }
+ ],
+ "Guardar Empresa en Redis": [
+  {
+   "json": {}
+  }
+ ],
+ "Obtener Empresa Diagnóstico": [
+  {
+   "json": {}
+  }
+ ],
+ "Guardar Fecha Cita en Redis": [
+  {
+   "json": {}
+  }
+ ],
+ "Borrar Empresa David": [
+  {
+   "json": {}
+  }
+ ],
+ "Sugerir Horario Alternativo Diagnóstico": [
+  {
+   "json": {}
+  }
+ ],
+ "Verificar Disponibilidad Calendario Diagnóstico": [
+  {
+   "json": {}
+  }
+ ],
+ "Enviar Respuesta Software": [
+  {
+   "json": {}
+  }
+ ],
+ "Confirmar Cita Software": [
+  {
+   "json": {}
+  }
+ ],
+ "Crear Evento Calendario Software": [
+  {
+   "json": {}
+  }
+ ],
+ "Limpiar Estado Post-Cita Software": [
+  {
+   "json": {}
+  }
+ ],
+ "Notificar Cita Software Gmail": [
+  {
+   "json": {}
+  }
+ ],
+ "Obtener Empresa Software": [
+  {
+   "json": {}
+  }
+ ],
+ "Limpiar Empresa Post-Cita Software": [
+  {
+   "json": {}
+  }
+ ],
+ "Sugerir Horario Alternativo Software": [
+  {
+   "json": {}
+  }
+ ],
+ "Verificar Disponibilidad Calendario Software": [
+  {
+   "json": {}
+  }
+ ],
+ "Agente de Marketing": [
+  {
+   "json": {}
+  }
+ ],
+ "Enviar Respuesta Marketing": [
+  {
+   "json": {}
+  }
+ ],
+ "Verificar Disponibilidad Calendario Marketing": [
+  {
+   "json": {}
+  }
+ ],
+ "Obtener Empresa Marketing": [
+  {
+   "json": {}
+  }
+ ],
+ "Crear Evento Calendario Marketing": [
+  {
+   "json": {}
+  }
+ ],
+ "Notificar Cita Marketing Gmail": [
+  {
+   "json": {}
+  }
+ ],
+ "Confirmar Cita Marketing": [
+  {
+   "json": {}
+  }
+ ],
+ "Limpiar Estado Post-Cita Marketing": [
+  {
+   "json": {}
+  }
+ ],
+ "Limpiar Empresa Post-Cita Marketing": [
+  {
+   "json": {}
+  }
+ ],
+ "Sugerir Horario Alternativo Marketing": [
+  {
+   "json": {}
+  }
+ ],
+ "Enviar correo Asesor Humano": [
+  {
+   "json": {}
+  }
+ ],
+ "Guardar Lead en Redis": [
+  {
+   "json": {}
+  }
+ ],
+ "Guardar Mensaje Lead en Memoria": [
+  {
+   "json": {}
+  }
+ ],
+ "Obtener Lead Guardado": [
+  {
+   "json": {}
+  }
+ ],
+ "Guardar Sugerencia en Memoria": [
+  {
+   "json": {}
+  }
+ ],
+ "Guardar Confirmación en Memoria": [
+  {
+   "json": {}
+  }
+ ],
+ "Obtener Cita Guardada": [
+  {
+   "json": {}
+  }
+ ],
+ "Respuesta Cita Agendada": [
+  {
+   "json": {}
+  }
+ ],
+ "Mensaje Traspaso a Humano": [
+  {
+   "json": {}
+  }
+ ],
+ "Etiquetar apagar_agente": [
+  {
+   "json": {}
+  }
+ ],
+ "Avisar Escalado Gmail": [
+  {
+   "json": {}
+  }
+ ],
+ "Consultar Agenda Próximos Días": [
+  {
+   "json": {}
+  }
+ ],
+ "GHL · Upsert Lead · Nuevo": [
+  {
+   "json": {}
+  }
+ ],
+ "GHL · Guardar contactId (Nuevo)": [
+  {
+   "json": {}
+  }
+ ],
+ "GHL · Upsert Lead · Calificado": [
+  {
+   "json": {}
+  }
+ ],
+ "GHL · Guardar contactId (Calificado)": [
+  {
+   "json": {}
+  }
+ ],
+ "GHL · Leer Flag Conversación": [
+  {
+   "json": {
+    "ghl_conv": "1"
+   }
+  }
+ ],
+ "GHL · Marcar Flag Conversación": [
+  {
+   "json": {}
+  }
+ ],
+ "GHL · Leer contactId (Conversación)": [
+  {
+   "json": {}
+  }
+ ],
+ "GHL · Mover Etapa · Conversación": [
+  {
+   "json": {}
+  }
+ ],
+ "GHL · Upsert Lead · Conversación (respaldo)": [
+  {
+   "json": {}
+  }
+ ],
+ "GHL · Leer contactId (Cita)": [
+  {
+   "json": {}
+  }
+ ],
+ "GHL · Upsert Lead · Cita (respaldo)": [
+  {
+   "json": {}
+  }
+ ],
+ "GHL · Registrar Cita": [
+  {
+   "json": {}
+  }
+ ],
+ "GHL · Leer contactId (Escalado)": [
+  {
+   "json": {}
+  }
+ ],
+ "GHL · Etiquetas · Requiere humano": [
+  {
+   "json": {}
+  }
+ ],
+ "GHL · Upsert Lead · Escalado (respaldo)": [
+  {
+   "json": {}
+  }
+ ],
+ "GHL · Nota · Requiere humano": [
+  {
+   "json": {}
+  }
+ ],
+ "GHL · Leer Flag Bot Apagado": [
+  {
+   "json": {
+    "ghl_off": "1"
+   }
+  }
+ ],
+ "GHL · Marcar Flag Bot Apagado": [
+  {
+   "json": {}
+  }
+ ],
+ "GHL · Leer contactId (Bot apagado)": [
+  {
+   "json": {}
+  }
+ ],
+ "GHL · Etiquetas · Bot apagado": [
+  {
+   "json": {}
+  }
+ ],
+ "GHL · Upsert Lead · Bot apagado (respaldo)": [
+  {
+   "json": {}
+  }
+ ],
+ "Agenda GHL · Huecos": [
+  {
+   "json": {}
+  }
+ ],
+ "Agenda GHL · Reservar": [
+  {
+   "json": {}
+  }
+ ],
+ "Agenda GHL · Huecos Alternativos": [
+  {
+   "json": {}
+  }
+ ],
+ "GHL · Guardar Email (Cita)": [
+  {
+   "json": {}
+  }
+ ],
+ "Enviar Invitación Email": [
+  {
+   "json": {}
+  }
+ ],
+ "GHL · Validar contactId (Conversación)": [
+  {
+   "json": {}
+  }
+ ],
+ "GHL · Validar contactId (Cita)": [
+  {
+   "json": {}
+  }
+ ],
+ "GHL · Validar contactId (Escalado)": [
+  {
+   "json": {}
+  }
+ ],
+ "GHL · Validar contactId (Bot apagado)": [
+  {
+   "json": {}
+  }
+ ],
+ "WhatsApp · Visto y escribiendo": [
+  {
+   "json": {}
+  }
+ ],
+ "Anuncio · Buscar Contacto": [
+  {
+   "json": {
+    "payload": [
+     {
+      "id": 9001,
+      "phone_number": "+593990000001",
+      "custom_attributes": {
+       "campana": "pymes",
+       "nicho": "general",
+       "ad_headline": "Anuncio de prueba"
+      }
+     }
+    ]
+   }
+  }
+ ],
+ "Esperar a META > CW (anuncio)": [
+  {
+   "json": {}
+  }
+ ],
+ "Anuncio · Buscar Contacto (reintento)": [
+  {
+   "json": {
+    "payload": [
+     {
+      "id": 9001,
+      "phone_number": "+593990000001",
+      "custom_attributes": {
+       "campana": "pymes",
+       "nicho": "general",
+       "ad_headline": "Anuncio de prueba"
+      }
+     }
+    ]
+   }
+  }
+ ],
+ "GHL · Mover Etapa · Requiere asesor": [
+  {
+   "json": {}
+  }
+ ],
+ "Umbral · Contar mensajes": [
+  {
+   "json": {
+    "+593990000001_umbral_msj": 31
+   }
+  }
+ ],
+ "Umbral · Contar adjuntos": [
+  {
+   "json": {
+    "+593990000001_umbral_txt": 1
+   }
+  }
+ ],
+ "Umbral · Etiquetar apagar_agente": [
+  {
+   "json": {}
+  }
+ ],
+ "Umbral · Reiniciar mensajes": [
+  {
+   "json": {}
+  }
+ ],
+ "Umbral · Reiniciar adjuntos": [
+  {
+   "json": {}
+  }
+ ],
+ "Despedida (Descarte)": [
+  {
+   "json": {}
+  }
+ ],
+ "Etiquetar apagar_agente (Descarte)": [
+  {
+   "json": {}
+  }
+ ],
+ "GHL · Leer contactId (Descarte)": [
+  {
+   "json": {
+    "ghl_contactId": "contacto_prueba"
+   }
+  }
+ ],
+ "GHL · Validar contactId (Descarte)": [
+  {
+   "json": {
+    "ghl_contactId": "contacto_prueba"
+   }
+  }
+ ],
+ "GHL · Etiquetas · Descarte": [
+  {
+   "json": {}
+  }
+ ],
+ "GHL · Mover Etapa · No calificado": [
+  {
+   "json": {}
+  }
+ ],
+ "GHL · Nota · Descarte": [
+  {
+   "json": {}
+  }
+ ]
+}
