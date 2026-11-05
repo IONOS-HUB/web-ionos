@@ -21,13 +21,17 @@ export function waLink(message: string = DEFAULT_WA_MESSAGE): string {
   return `https://wa.me/${WHATSAPP_NUMBER}?text=${encodeURIComponent(message)}`;
 }
 
-/** Agenda de diagnósticos (Google Calendar). El corto abre en una pestaña; el largo se incrusta. */
 /** Meta Pixel (conjunto de datos "IonosHub · Web"). Público; `PUBLIC_META_PIXEL_ID` lo sobreescribe. */
 export const META_PIXEL_ID = '1472397644734399';
 
-export const CALENDAR_URL = 'https://calendar.app.google/LSjLcpH2TpMAasgN6';
-export const CALENDAR_EMBED_URL =
-  'https://calendar.google.com/calendar/appointments/schedules/AcZssZ2fkQPDl0FF5Em6-T_xqHSd5jGjlM4nrgd5a7htOGIVQSf3tIFviKK7k7ru8ZeTq96U1yxsbpn1?gv=true';
+/**
+ * Agenda de diagnósticos: el calendario «Diagnóstico IONIC · 30 min» de GoHighLevel, el mismo en el que agenda
+ * IONIC por WhatsApp. Así una reserva desde la web entra al CRM y n8n («Sincronizar citas») se la avisa a IONIC.
+ * La misma URL sirve para abrir en una pestaña y para incrustar.
+ */
+export const CALENDAR_HOST = 'api.leadconnectorhq.com';
+export const CALENDAR_URL = `https://${CALENDAR_HOST}/widget/booking/htMrFJ3JRuWsDYlsq10G`;
+export const CALENDAR_EMBED_URL = CALENDAR_URL;
 
 /** Navegación: los pilares agrupados en "Servicios"; el resto suelto. */
 export const NAV_SERVICES = [

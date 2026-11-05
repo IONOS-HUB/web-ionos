@@ -2,6 +2,8 @@
  * Límites y saneado del chat. Todo se aplica en el servidor: el navegador no es fuente de verdad.
  */
 
+import { CALENDAR_HOST } from '../site';
+
 export const LIMITS = {
   /** Mensajes que puede enviar la persona en una sesión. */
   maxUserMessages: 12,
@@ -24,7 +26,7 @@ export const LIMITS = {
 } as const;
 
 /** Únicos destinos de enlace que puede contener una respuesta. */
-const ALLOWED_HOSTS = ['ionoshub.net', 'www.ionoshub.net', 'wa.me', 'calendar.app.google', 'calendar.google.com'];
+const ALLOWED_HOSTS = ['ionoshub.net', 'www.ionoshub.net', 'wa.me', CALENDAR_HOST];
 
 /** Nunca debemos pedir ni repetir esto en el chat. */
 const SENSITIVE =
