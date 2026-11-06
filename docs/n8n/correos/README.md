@@ -18,6 +18,8 @@ Las capturas usan datos ficticios.
   - Mensaje del Gmail: `{{ $json.html || $('Datos Correo …').item.json.html_simple }}`.
   - Si la plantilla fallara, el correo sale igual con un HTML sencillo: un aviso nunca se pierde por el diseño.
 
+> **En IONIC (más de 200 nodos), el paso `Datos Correo …` es un nodo Set, no un Code.** Es un Set en modo JSON con una expresión `{{ (() => { …; return {…}; })() }}`. Allí, un Code que lee otros nodos con `$()` dejaba la ejecución colgada. El Set evalúa la expresión en el proceso principal, como cualquier otro campo, y tarda milisegundos. En flujos pequeños, el Code funciona bien.
+
 ## Campos
 
 | Campo | Para qué |
